@@ -1,15 +1,15 @@
 [workspace]
 resolver = "2"
 members = [
-    "forge-core",
-    "forge-middleware",
-    "forge-auth",
-    "forge-db",
-    "forge-cli",
-    "forge-queue",
-    "forge-cache",
-    "forge-config",
-    "forge-realtime",
-    "forge-security",
-    "forge-utils",
+    "oxidite-core",
+    "oxidite-middleware",
+    "oxidite-auth",
+    "oxidite-db",
+    "oxidite-cli",
+    "oxidite-queue",
+    "oxidite-cache",
+    "oxidite-config",
+    "oxidite-realtime",
+    "oxidite-security",
+    "oxidite-utils",
 ]
