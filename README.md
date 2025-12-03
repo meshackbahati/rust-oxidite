@@ -1,6 +1,6 @@
-# Forge
+# Oxidite
 
-Forge is a batteries-included Rust backend web framework inspired by FastAPI, Laravel, Express, and Django.
+Oxidite is a batteries-included Rust backend web framework inspired by FastAPI, Laravel, Express, and Django.
 It provides:
 
 * High-performance HTTP server supporting all HTTP versions (1.0, 1.1, 2, 3)
@@ -28,18 +28,18 @@ It provides:
 
 ## Repo Structure
 ```
-rust-forge/
-  forge-core/          # Router, extractors, HTTP handling
-  forge-middleware/    # Middleware pipeline
-  forge-auth/          # JWT, sessions, role-based access
-  forge-db/            # SQL + NoSQL models, Alembic-style migrations
-  forge-cli/           # Scaffolding, dev server, lint, test
-  forge-queue/         # Background jobs, scheduling
-  forge-cache/         # In-memory & Redis caching
-  forge-config/        # Environment & config system
-  forge-realtime/      # WebSockets, SSE, pub/sub
-  forge-security/      # Rate limiting, CORS, headers, CSRF
-  forge-utils/         # Logging, tracing, helpers
+rust-oxidite/
+  oxidite-core/          # Router, extractors, HTTP handling
+  oxidite-middleware/    # Middleware pipeline
+  oxidite-auth/          # JWT, sessions, role-based access
+  oxidite-db/            # SQL + NoSQL models, Alembic-style migrations
+  oxidite-cli/           # Scaffolding, dev server, lint, test
+  oxidite-queue/         # Background jobs, scheduling
+  oxidite-cache/         # In-memory & Redis caching
+  oxidite-config/        # Environment & config system
+  oxidite-realtime/      # WebSockets, SSE, pub/sub
+  oxidite-security/      # Rate limiting, CORS, headers, CSRF
+  oxidite-utils/         # Logging, tracing, helpers
   examples/            # Sample apps
   docs/
     architecture/
