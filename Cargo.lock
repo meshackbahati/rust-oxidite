@@ -3,45 +3,45 @@
 version = 4
 
 [[package]]
-name = "forge-auth"
+name = "oxidite-auth"
 version = "0.1.0"
 
 [[package]]
-name = "forge-cache"
+name = "oxidite-cache"
 version = "0.1.0"
 
 [[package]]
-name = "forge-cli"
+name = "oxidite-cli"
 version = "0.1.0"
 
 [[package]]
-name = "forge-config"
+name = "oxidite-config"
 version = "0.1.0"
 
 [[package]]
-name = "forge-core"
+name = "oxidite-core"
 version = "0.1.0"
 
 [[package]]
-name = "forge-db"
+name = "oxidite-db"
 version = "0.1.0"
 
 [[package]]
-name = "forge-middleware"
+name = "oxidite-middleware"
 version = "0.1.0"
 
 [[package]]
-name = "forge-queue"
+name = "oxidite-queue"
 version = "0.1.0"
 
 [[package]]
-name = "forge-realtime"
+name = "oxidite-realtime"
 version = "0.1.0"
 
 [[package]]
-name = "forge-security"
+name = "oxidite-security"
 version = "0.1.0"
 
 [[package]]
-name = "forge-utils"
+name = "oxidite-utils"
 version = "0.1.0"
