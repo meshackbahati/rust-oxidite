@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Atom/Molecule Icon -->
+  <g transform="translate(10, 30)">
+    <!-- Center circle -->
+    <circle cx="15" cy="0" r="4" fill="url(#grad1)"/>
+    
+    <!-- Orbital rings -->
+    <ellipse cx="15" cy="0" rx="12" ry="6" fill="none" stroke="url(#grad1)" stroke-width="1.5" opacity="0.7"/>
+    <ellipse cx="15" cy="0" rx="6" ry="12" fill="none" stroke="url(#grad1)" stroke-width="1.5" opacity="0.7"/>
+    
+    <!-- Electron dots -->
+    <circle cx="27" cy="0" r="2.5" fill="#667eea"/>
+    <circle cx="3" cy="0" r="2.5" fill="#764ba2"/>
+    <circle cx="15" cy="12" r="2.5" fill="#667eea"/>
+    <circle cx="15" cy="-12" r="2.5" fill="#764ba2"/>
+  </g>
+  
+  <!-- OXIDITE Text -->
+  <text x="50" y="38" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="url(#grad1)">OXIDITE</text>
+</svg>

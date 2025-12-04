@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Welcome - Oxidite Framework{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h2>Build Lightning-Fast Web Apps with Rust</h2>
+    <p>Oxidite is a modern, full-featured web framework that combines the performance of Rust with the elegance of
+        modern web development.</p>
+
+    <div class="cta-buttons">
+        <a href="/users" class="btn">👥 View Users</a>
+        <a href="/posts" class="btn btn-success">📝 Browse Posts</a>
+        <a href="/users/new" class="btn btn-secondary">➕ Create User</a>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature">
+        <h3>📡 RESTful API</h3>
+        <ul>
+            <li><code>GET /api/v1/users</code> - List users</li>
+            <li><code>POST /api/v1/users</code> - Create user</li>
+            <li><code>GET /api/v2/users</code> - API v2</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>🔐 Authentication</h3>
+        <ul>
+            <li><code>POST /auth/register</code> - Register</li>
+            <li><code>POST /auth/login</code> - JWT Login</li>
+            <li><code>POST /auth/oauth/google</code> - OAuth2</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>🌐 Real-time</h3>
+        <ul>
+            <li><code>GET /ws</code> - WebSocket</li>
+            <li><code>GET /sse</code> - Server-Sent Events</li>
+            <li>Live updates and notifications</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>💾 Database</h3>
+        <ul>
+            <li>SQLite with migrations</li>
+            <li>Connection pooling</li>
+            <li>Type-safe queries</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>🎨 Template Engine</h3>
+        <ul>
+            <li>Server-side rendering</li>
+            <li>Layout inheritance</li>
+            <li>Custom filters</li>
+        </ul>
+    </div>
+
+    <div class="feature">
+        <h3>⚡ Performance</h3>
+        <ul>
+            <li>Zero-cost abstractions</li>
+            <li>Async/await support</li>
+            <li>Blazing fast response times</li>
+        </ul>
+    </div>
+</div>
+
+<div class="text-center mt-30 mb-30">
+    <h2>Ready to Get Started?</h2>
+    <p class="text-muted mb-20">Explore the demo features above or check out the API documentation</p>
+    <a href="/api/v1/users" class="btn">📚 View API Documentation</a>
+</div>
+{% endblock %}

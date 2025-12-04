@@ -2,6 +2,7 @@
 name = "oxidite-template"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 
 [dependencies]
 regex = "1.11.3"

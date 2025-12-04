@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ user.name }}'s Posts - Oxidite{% endblock %}
+
+{% block content %}
+<div class="mb-20">
+    <a href="/users" class="btn btn-secondary">← Back to Users</a>
+</div>
+
+<div class="card mb-30">
+    <h2>{{ user.name }}'s Posts</h2>
+    <p class="text-muted">📧 {{ user.email }}</p>
+    <p class="text-muted">ID: {{ user.id }}</p>
+</div>
+
+<div class="mb-30">
+    <a href="/posts/new?user_id={{ user.id }}" class="btn">✍️ Create New Post</a>
+</div>
+
+<div id="posts-list">
+    {% for post in posts %}
+    <div class="card">
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+        <p class="text-muted">Posted {{ post.created_at }}</p>
+    </div>
+    {% endfor %}
+
+    {% if posts|length == 0 %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <p>{{ user.name }} hasn't posted anything yet.</p>
+        <a href="/posts/new?user_id={{ user.id }}" class="btn">Create First Post</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

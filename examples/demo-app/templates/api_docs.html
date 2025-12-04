@@ -1,0 +1,200 @@
+{% extends "layout.html" %}
+
+{% block title %}API Documentation - Oxidite{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .api-docs {
+        font-family: monospace;
+    }
+
+    .endpoint {
+        margin-bottom: 30px;
+    }
+
+    .method {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: white;
+        margin-right: 10px;
+    }
+
+    .method-get {
+        background: #61affe;
+    }
+
+    .method-post {
+        background: #49cc90;
+    }
+
+    .method-put {
+        background: #fca130;
+    }
+
+    .method-delete {
+        background: #f93e3e;
+    }
+
+    .endpoint-path {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .try-it-btn {
+        margin-top: 15px;
+    }
+
+    .response-example {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+
+    pre {
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding: 40px 20px;">
+    <h2>📚 API Documentation</h2>
+    <p>Interactive documentation for the Oxidite Framework Demo API</p>
+</div>
+
+<div class="card">
+    <h3>🌐 Base URL</h3>
+    <p><code>http://localhost:8080</code></p>
+</div>
+
+<h2 class="mt-30 mb-20">Users API</h2>
+
+<div class="endpoint card">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-path">/api/v1/users</span>
+
+    <p class="mt-20">List all users from the database</p>
+
+    <h4>Response Example</h4>
+    <div class="response-example">
+        <pre>{
+  "users": [
+    {
+      "id": "uuid-here",
+      "email": "user@example.com",
+      "name": "John Doe"
+    }
+  ],
+  "total": 1
+}</pre>
+    </div>
+
+    <div class="try-it-btn">
+        <button onclick="tryEndpoint('GET', '/api/v1/users')" class="btn">▶️ Try it out</button>
+    </div>
+</div>
+
+<div class="endpoint card">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-path">/api/v1/users</span>
+
+    <p class="mt-20">Create a new user</p>
+
+    <h4>Request Body</h4>
+    <div class="response-example">
+        <pre>{
+  "email": "user@example.com",
+  "name": "John Doe"
+}</pre>
+    </div>
+
+    <h4>Response Example</h4>
+    <div class="response-example">
+        <pre>{
+  "success": true,
+  "message": "User created",
+  "user": {
+    "id": "uuid-here",
+    "email": "user@example.com",
+    "name": "John Doe"
+  }
+}</pre>
+    </div>
+</div>
+
+<h2 class="mt-30 mb-20">Posts API</h2>
+
+<div class="endpoint card">
+    <span class="method method-get">GET</span>
+    <span class="endpoint-path">/api/v1/posts</span>
+
+    <p class="mt-20">List all posts</p>
+
+    <h4>Response Example</h4>
+    <div class="response-example">
+        <pre>{
+  "posts": [
+    {
+      "id": "uuid-here",
+      "user_id": "user-uuid",
+      "title": "Post Title",
+      "content": "Post content here"
+    }
+  ],
+  "total": 1
+}</pre>
+    </div>
+
+    <div class="try-it-btn">
+        <button onclick="tryEndpoint('GET', '/api/v1/posts')" class="btn">▶️ Try it out</button>
+    </div>
+</div>
+
+<div class="endpoint card">
+    <span class="method method-post">POST</span>
+    <span class="endpoint-path">/api/v1/posts</span>
+
+    <p class="mt-20">Create a new post</p>
+
+    <h4>Request Body</h4>
+    <div class="response-example">
+        <pre>{
+  "user_id": "user-uuid",
+  "title": "Post Title",
+  "content": "Post content"
+}</pre>
+    </div>
+</div>
+
+<div id="tryResult" class="card mt-30" style="display: none;">
+    <h3>API Response</h3>
+    <div class="response-example">
+        <pre id="resultContent"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function tryEndpoint(method, path) {
+        const resultDiv = document.getElementById('tryResult');
+        const resultContent = document.getElementById('resultContent');
+
+        try {
+            const response = await fetch(path);
+            const data = await response.json();
+
+            resultContent.textContent = JSON.stringify(data, null, 2);
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        } catch (error) {
+            resultContent.textContent = 'Error: ' + error.message;
+            resultDiv.style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}

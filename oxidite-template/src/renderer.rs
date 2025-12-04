@@ -1,21 +1,62 @@
-use crate::{Context, TemplateNode, TemplateError, Result, filters::Filters};
+use crate::{Context, TemplateNode, TemplateError, Result, filters::Filters, TemplateEngine, Template};
 use serde_json::Value;
+use std::collections::HashMap;
 
 /// Template renderer
 pub struct Renderer<'a> {
     context: &'a Context,
     filters: Filters,
+    engine: Option<&'a TemplateEngine>,
+    blocks: HashMap<String, Vec<TemplateNode>>,
 }
 
 impl<'a> Renderer<'a> {
-    pub fn new(context: &'a Context) -> Self {
+    pub fn new(context: &'a Context, engine: Option<&'a TemplateEngine>) -> Self {
         Self {
             context,
             filters: Filters::new(),
+            engine,
+            blocks: HashMap::new(),
         }
     }
 
-    pub fn render(&self, nodes: &[TemplateNode]) -> Result<String> {
+    pub fn render(&mut self, template: &Template) -> Result<String> {
+        // Check for Extends (ignoring leading whitespace)
+        let extends_node = template.parsed.iter().find(|node| {
+            match node {
+                TemplateNode::Text(t) => !t.trim().is_empty(),
+                _ => true,
+            }
+        });
+
+        if let Some(TemplateNode::Extends(parent_name)) = extends_node {
+            // Collect blocks from current template (child)
+            // We only collect top-level blocks in the child template
+            for node in &template.parsed {
+                if let TemplateNode::Block { name, body } = node {
+                    // Only insert if not already present (child overrides parent, but we are going up)
+                    // Wait, we start at child. Child blocks should override everything.
+                    // So we insert. But if we are in a chain C -> B -> A.
+                    // We render C. C extends B. We collect C blocks. Recurse to B.
+                    // B extends A. We collect B blocks. If B defines "content" and C defined "content", C wins.
+                    // So we use entry().or_insert().
+                    self.blocks.entry(name.clone()).or_insert(body.clone());
+                }
+            }
+
+            if let Some(engine) = self.engine {
+                let parent = engine.get_template(parent_name)
+                    .ok_or_else(|| TemplateError::RenderError(format!("Parent template not found: {}", parent_name)))?;
+                return self.render(parent);
+            } else {
+                return Err(TemplateError::RenderError("Extends used without TemplateEngine".to_string()));
+            }
+        }
+
+        self.render_nodes(&template.parsed)
+    }
+
+    fn render_nodes(&mut self, nodes: &[TemplateNode]) -> Result<String> {
         let mut output = String::new();
 
         for node in nodes {
@@ -34,6 +75,37 @@ impl<'a> Renderer<'a> {
                 TemplateNode::For { item, iterable, body } => {
                     let value = self.render_for(item, iterable, body)?;
                     output.push_str(&value);
+                }
+                TemplateNode::Block { name, body } => {
+                    // If block is overridden, use that, else use default body
+                    if let Some(override_body) = self.blocks.get(name).cloned() {
+                        // We need to render the override body
+                        let nodes = override_body; 
+                        output.push_str(&self.render_nodes(&nodes)?);
+                    } else {
+                        output.push_str(&self.render_nodes(body)?);
+                    }
+                }
+                TemplateNode::Extends(_) => {
+                    // Should not happen inside render_nodes (only at top level)
+                    // But if it does, ignore or error?
+                    // Ignore for now.
+                }
+                TemplateNode::Include(template_name) => {
+                    if let Some(engine) = self.engine {
+                        let template = engine.get_template(template_name)
+                            .ok_or_else(|| TemplateError::RenderError(format!("Included template not found: {}", template_name)))?;
+                        
+                        // Includes are rendered in-place with current context
+                        // They do NOT inherit blocks (usually).
+                        // So we create a new renderer for the include, but share context/engine.
+                        // But we don't pass `self.blocks`?
+                        // Correct, includes are isolated from inheritance chain usually.
+                        let mut sub_renderer = Renderer::new(self.context, self.engine);
+                        output.push_str(&sub_renderer.render(template)?);
+                    } else {
+                         return Err(TemplateError::RenderError("Include used without TemplateEngine".to_string()));
+                    }
                 }
             }
         }
@@ -58,20 +130,20 @@ impl<'a> Renderer<'a> {
         Ok(result)
     }
 
-    fn render_if(&self, condition: &str, then_branch: &[TemplateNode], else_branch: &Option<Vec<TemplateNode>>) -> Result<String> {
+    fn render_if(&mut self, condition: &str, then_branch: &[TemplateNode], else_branch: &Option<Vec<TemplateNode>>) -> Result<String> {
         // Evaluate condition (simple truthy check)
         let is_truthy = self.evaluate_condition(condition);
 
         if is_truthy {
-            self.render(then_branch)
+            self.render_nodes(then_branch)
         } else if let Some(else_nodes) = else_branch {
-            self.render(else_nodes)
+            self.render_nodes(else_nodes)
         } else {
             Ok(String::new())
         }
     }
 
-    fn render_for(&self, item: &str, iterable: &str, body: &[TemplateNode]) -> Result<String> {
+    fn render_for(&mut self, item: &str, iterable: &str, body: &[TemplateNode]) -> Result<String> {
         let array = self.context.get(iterable)
             .ok_or_else(|| TemplateError::VariableNotFound(iterable.to_string()))?;
 
@@ -83,8 +155,12 @@ impl<'a> Renderer<'a> {
                 let mut loop_context = self.context.clone();
                 loop_context.data.insert(item.to_string(), item_value.clone());
 
-                let renderer = Renderer::new(&loop_context);
-                output.push_str(&renderer.render(body)?);
+                let mut renderer = Renderer::new(&loop_context, self.engine);
+                // Pass blocks to loop renderer?
+                // Loops are inside the template, so they should have access to blocks?
+                // Yes, if I use a block inside a loop?
+                renderer.blocks = self.blocks.clone();
+                output.push_str(&renderer.render_nodes(body)?);
             }
         }
 

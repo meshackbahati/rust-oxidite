@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Page Not Found - Oxidite{% endblock %}
+
+{% block content %}
+<div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <h2>404 - Page Not Found</h2>
+    <p>The page you're looking for doesn't exist or has been moved.</p>
+    <div class="mt-30">
+        <a href="/" class="btn">🏠 Go Home</a>
+        <a href="/users" class="btn btn-secondary">👥 View Users</a>
+    </div>
+</div>
+{% endblock %}

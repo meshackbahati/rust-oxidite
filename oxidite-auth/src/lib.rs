@@ -3,12 +3,12 @@ pub mod jwt;
 pub mod middleware;
 
 pub use hasher::{PasswordHasher, hash_password, verify_password};
-pub use jwt::{JwtToken, create_token, verify_token, Claims};
+pub use jwt::{JwtManager, create_token, verify_token, Claims};
 pub use middleware::AuthMiddleware;
 pub mod session;
 pub mod session_middleware;
 
-pub use session::{Session, SessionStore, InMemorySessionStore, RedisSessionStore};
+pub use session::{Session, SessionStore, InMemorySessionStore, RedisSessionStore, SessionManager};
 pub use session_middleware::{SessionMiddleware, SessionLayer};
 
 pub mod oauth2;

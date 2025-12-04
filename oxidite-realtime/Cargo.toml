@@ -2,5 +2,16 @@
 name = "oxidite-realtime"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
+description = "Realtime features for Oxidite - SSE, WebSockets, and pub/sub"
 
 [dependencies]
+tokio = { version = "1.48", features = ["full"] }
+tokio-stream = "0.1"
+tokio-tungstenite = "0.24"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+uuid = { version = "1.11", features = ["v4"] }
+async-trait = "0.1"
+futures = "0.3"

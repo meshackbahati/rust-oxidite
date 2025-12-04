@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ post.title }} - Oxidite Demo{% endblock %}
+
+{% block content %}
+<div class="mb-20">
+    <a href="/posts" class="btn btn-secondary">← Back to Posts</a>
+</div>
+
+<div class="card">
+    <h2>{{ post.title }}</h2>
+    <div class="mb-20">
+        <span class="text-muted">By User ID: <a href="/users/{{ post.user_id }}/posts">{{ post.user_id }}</a></span>
+        <span class="text-muted" style="margin-left: 15px;">Posted: {{ post.created_at }}</span>
+    </div>
+
+    <div class="post-content" style="font-size: 1.1em; line-height: 1.8;">
+        {{ post.content }}
+    </div>
+</div>
+{% endblock %}

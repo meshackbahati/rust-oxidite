@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block title %}New Post - Oxidite Demo{% endblock %}
+
+{% block content %}
+<h2>✍️ Create New Post</h2>
+
+<div class="card">
+    <form action="/posts" method="POST" id="postForm">
+        <div class="form-group">
+            <label for="user_id">Author</label>
+            <select id="user_id" name="user_id" required>
+                <option value="">Select a user...</option>
+            </select>
+            <small class="text-muted">Select which user is creating this post</small>
+        </div>
+
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required placeholder="Enter post title">
+        </div>
+
+        <div class="form-group">
+            <label for="content">Content</label>
+            <textarea id="content" name="content" required placeholder="Write your post content here..."></textarea>
+        </div>
+
+        <div class="flex gap-15">
+            <button type="submit" class="btn">Create Post</button>
+            <a href="/posts" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load users for dropdown
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/v1/users');
+            const data = await response.json();
+            const select = document.getElementById('user_id');
+
+            data.users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email})`;
+                select.appendChild(option);
+            });
+
+            // Pre-select user if provided in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user_id');
+            if (userId) {
+                select.value = userId;
+            }
+        } catch (error) {
+            console.error('Failed to load users:', error);
+        }
+    }
+
+    loadUsers();
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const data = {
+            title: formData.get('title'),
+            content: formData.get('content'),
+            user_id: formData.get('user_id')
+        };
+
+        try {
+            const response = await fetch('/api/v1/posts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                window.location.href = `/users/${data.user_id}/posts`;
+            } else {
+                const error = await response.json();
+                alert('Error creating post: ' + (error.message || 'Unknown error'));
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+</script>
+{% endblock %}

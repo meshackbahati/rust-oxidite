@@ -1,5 +1,7 @@
 use serde_json::Value;
 use std::collections::HashMap;
+use std::path::Path;
+use std::fs;
 
 pub mod parser;
 pub mod renderer;
@@ -57,7 +59,91 @@ impl Default for Context {
     }
 }
 
-/// Template engine
+/// Template engine to manage multiple templates
+pub struct TemplateEngine {
+    templates: HashMap<String, Template>,
+}
+
+impl TemplateEngine {
+    pub fn new() -> Self {
+        Self {
+            templates: HashMap::new(),
+        }
+    }
+
+    pub fn add_template(&mut self, name: impl Into<String>, source: impl Into<String>) -> Result<()> {
+        let template = Template::new(source)?;
+        self.templates.insert(name.into(), template);
+        Ok(())
+    }
+
+    pub fn get_template(&self, name: &str) -> Option<&Template> {
+        self.templates.get(name)
+    }
+
+    pub fn render(&self, name: &str, context: &Context) -> Result<String> {
+        let template = self.get_template(name)
+            .ok_or_else(|| TemplateError::RenderError(format!("Template not found: {}", name)))?;
+        
+        let mut renderer = Renderer::new(context, Some(self));
+        renderer.render(template)
+    }
+    
+    /// Load all templates from a directory (recursive)
+    pub fn load_dir(&mut self, dir: impl AsRef<Path>) -> Result<usize> {
+        let dir = dir.as_ref();
+        let mut count = 0;
+        
+        if !dir.is_dir() {
+            return Err(TemplateError::RenderError(format!("Not a directory: {:?}", dir)));
+        }
+        
+        self.load_dir_recursive(dir, dir, &mut count)?;
+        Ok(count)
+    }
+    
+    fn load_dir_recursive(&mut self, base_dir: &Path, current_dir: &Path, count: &mut usize) -> Result<()> {
+        for entry in fs::read_dir(current_dir)
+            .map_err(|e| TemplateError::RenderError(format!("Failed to read directory: {}", e)))? 
+        {
+            let entry = entry.map_err(|e| TemplateError::RenderError(e.to_string()))?;
+            let path = entry.path();
+            
+            if path.is_dir() {
+                // Recursively load templates from subdirectories
+                self.load_dir_recursive(base_dir, &path, count)?;
+            } else if path.is_file() {
+                if let Some(ext) = path.extension() {
+                    if ext == "html" || ext == "htm" {
+                        let content = fs::read_to_string(&path)
+                            .map_err(|e| TemplateError::RenderError(format!("Failed to read file: {}", e)))?;
+                        
+                        // Get relative path from base_dir to preserve directory structure
+                        let relative_path = path.strip_prefix(base_dir)
+                            .map_err(|e| TemplateError::RenderError(e.to_string()))?;
+                        
+                        let name = relative_path.to_str()
+                            .ok_or_else(|| TemplateError::RenderError("Invalid filename".to_string()))?;
+                        
+                        self.add_template(name, content)?;
+                        *count += 1;
+                    }
+                }
+            }
+        }
+        
+        Ok(())
+    }
+}
+
+impl Default for TemplateEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Template
+#[derive(Debug, Clone)]
 pub struct Template {
     source: String,
     parsed: Vec<TemplateNode>,
@@ -73,8 +159,8 @@ impl Template {
     }
 
     pub fn render(&self, context: &Context) -> Result<String> {
-        let renderer = Renderer::new(context);
-        renderer.render(&self.parsed)
+        let mut renderer = Renderer::new(context, None);
+        renderer.render(self)
     }
 }
 

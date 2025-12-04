@@ -2,5 +2,14 @@
 name = "oxidite-security"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
+description = "Security utilities for Oxidite - encryption, sanitization, and secure random"
 
 [dependencies]
+thiserror = "2.0"
+rand = "0.9"
+base64 = "0.22"
+sha2 = "0.10"
+hmac = "0.12"
+aes-gcm = "0.10"
+hex = "0.4"

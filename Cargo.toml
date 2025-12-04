@@ -12,5 +12,8 @@ members = [
     "oxidite-realtime",
     "oxidite-security",
     "oxidite-utils",
-    "oxidite-websocket", "oxidite-template", "oxidite-storage", "oxidite-mail",
+    "oxidite-template",
+    "oxidite-storage",
+    "oxidite-mail",
+    "examples/demo-app",
 ]
