@@ -1,4 +1,4 @@
-use crate::{TemplateError, Result};
+use crate::Result;
 use regex::Regex;
 
 /// Template AST nodes
@@ -8,6 +8,9 @@ pub enum TemplateNode {
     Variable { name: String, filters: Vec<String> },
     If { condition: String, then_branch: Vec<TemplateNode>, else_branch: Option<Vec<TemplateNode>> },
     For { item: String, iterable: String, body: Vec<TemplateNode> },
+    Block { name: String, body: Vec<TemplateNode> },
+    Extends(String),
+    Include(String),
 }
 
 /// Template parser
@@ -49,7 +52,7 @@ impl Parser {
             return self.parse_variable(source);
         }
 
-        // Control structures: {% if %}, {% for %}
+        // Control structures: {% if %}, {% for %}, {% block %}, {% extends %}, {% include %}
         if source.starts_with("{%") {
             return self.parse_control(source);
         }
@@ -85,6 +88,21 @@ impl Parser {
         // {% for item in iterable %}
         if source.starts_with("{% for ") {
             return self.parse_for(source);
+        }
+
+        // {% block name %}
+        if source.starts_with("{% block ") {
+            return self.parse_block(source);
+        }
+
+        // {% extends "template" %}
+        if source.starts_with("{% extends ") {
+            return self.parse_extends(source);
+        }
+
+        // {% include "template" %}
+        if source.starts_with("{% include ") {
+            return self.parse_include(source);
         }
 
         Ok(None)
@@ -161,9 +179,102 @@ impl Parser {
         Ok(None)
     }
 
+    fn parse_block(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
+        let re_block = Regex::new(r"\{%\s*block\s+([a-zA-Z0-9_]+)\s*%\}").unwrap();
+        
+        if let Some(cap) = re_block.captures(source) {
+            let name = cap.get(1).unwrap().as_str().to_string();
+            let start_pos = cap.get(0).unwrap().end();
+
+            // Find matching {% endblock %}
+            let mut nesting = 1;
+            let mut current_pos = start_pos;
+            
+            while nesting > 0 {
+                 let next_open = source[current_pos..].find("{% block ");
+                 let next_close = source[current_pos..].find("{% endblock %}");
+                 
+                 match (next_open, next_close) {
+                     (Some(open), Some(close)) => {
+                         if open < close {
+                             nesting += 1;
+                             current_pos += open + 9; // length of "{% block "
+                         } else {
+                             nesting -= 1;
+                             if nesting == 0 {
+                                 // Found matching endblock
+                                 let endblock_pos = current_pos + close;
+                                 let body_source = &source[start_pos..endblock_pos];
+                                 let parser = Parser::new(body_source);
+                                 let body = parser.parse()?;
+                                 
+                                 let total_len = endblock_pos + 14; // length of "{% endblock %}"
+                                 return Ok(Some((TemplateNode::Block { name, body }, total_len)));
+                             }
+                             current_pos += close + 14;
+                         }
+                     },
+                     (None, Some(close)) => {
+                         nesting -= 1;
+                         if nesting == 0 {
+                             let endblock_pos = current_pos + close;
+                             let body_source = &source[start_pos..endblock_pos];
+                             let parser = Parser::new(body_source);
+                             let body = parser.parse()?;
+                             let total_len = endblock_pos + 14;
+                             return Ok(Some((TemplateNode::Block { name, body }, total_len)));
+                         }
+                         current_pos += close + 14;
+                     },
+                     (Some(open), None) => {
+                         nesting += 1;
+                         current_pos += open + 9;
+                     },
+                     (None, None) => break,
+                 }
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn parse_extends(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
+        let re_extends = Regex::new(r#"\{%\s*extends\s+"([^"]+)"\s*%\}"#).unwrap();
+        
+        if let Some(cap) = re_extends.captures(source) {
+            let template = cap.get(1).unwrap().as_str().to_string();
+            let len = cap.get(0).unwrap().len();
+            
+            return Ok(Some((TemplateNode::Extends(template), len)));
+        }
+
+        Ok(None)
+    }
+
+    fn parse_include(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
+        let re_include = Regex::new(r#"\{%\s*include\s+"([^"]+)"\s*%\}"#).unwrap();
+        
+        if let Some(cap) = re_include.captures(source) {
+            let template = cap.get(1).unwrap().as_str().to_string();
+            let len = cap.get(0).unwrap().len();
+            
+            return Ok(Some((TemplateNode::Include(template), len)));
+        }
+
+        Ok(None)
+    }
+
     fn parse_text(&self, source: &str) -> Option<(String, usize)> {
         // Find next template tag
-        let next_tag = source.find("{{").or_else(|| source.find("{%"));
+        let pos_var = source.find("{{");
+        let pos_tag = source.find("{%");
+
+        let next_tag = match (pos_var, pos_tag) {
+            (Some(v), Some(t)) => Some(std::cmp::min(v, t)),
+            (Some(v), None) => Some(v),
+            (None, Some(t)) => Some(t),
+            (None, None) => None,
+        };
         
         if let Some(pos) = next_tag {
             if pos > 0 {

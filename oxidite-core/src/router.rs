@@ -96,33 +96,54 @@ impl Router {
     pub async fn handle(&self, mut req: OxiditeRequest) -> Result<OxiditeResponse> {
         let method = req.method().clone();
         let path = req.uri().path().to_string();
+        let path_for_error = path.clone();
 
-        if let Some(routes) = self.routes.get(&method) {
-            for route in routes {
-                if let Some(captures) = route.pattern.captures(&path) {
-                    // Extract path parameters
-                    let mut params = serde_json::Map::new();
-                    for (i, name) in route.param_names.iter().enumerate() {
-                        if let Some(value) = captures.get(i + 1) {
-                            params.insert(
-                                name.clone(),
-                                serde_json::Value::String(value.as_str().to_string()),
-                            );
+        // Helper to try matching routes for a specific method
+        let try_match = |target_method: &Method, req: &mut OxiditeRequest| -> Option<Arc<Route>> {
+            if let Some(routes) = self.routes.get(target_method) {
+                for route in routes {
+                    if let Some(captures) = route.pattern.captures(&path) {
+                        // Extract path parameters
+                        let mut params = serde_json::Map::new();
+                        for (i, name) in route.param_names.iter().enumerate() {
+                            if let Some(value) = captures.get(i + 1) {
+                                params.insert(
+                                    name.clone(),
+                                    serde_json::Value::String(value.as_str().to_string()),
+                                );
+                            }
                         }
-                    }
 
-                    // Store params in request extensions
-                    if !params.is_empty() {
-                        req.extensions_mut().insert(crate::extract::PathParams(
-                            serde_json::Value::Object(params),
-                        ));
+                        // Store params in request extensions
+                        if !params.is_empty() {
+                            req.extensions_mut().insert(crate::extract::PathParams(
+                                serde_json::Value::Object(params),
+                            ));
+                        }
+                        
+                        return Some(route.clone());
                     }
-
-                    return route.handler.call(req).await;
                 }
+            }
+            None
+        };
+
+        // 1. Try exact method match
+        if let Some(route) = try_match(&method, &mut req) {
+            return route.handler.call(req).await;
+        }
+
+        // 2. If HEAD, try GET
+        if method == Method::HEAD {
+            if let Some(route) = try_match(&Method::GET, &mut req) {
+                // For HEAD requests, we execute the GET handler but the server/hyper 
+                // will strip the body automatically since it's a HEAD response.
+                return route.handler.call(req).await;
             }
         }
 
+        // Log which path was not found
+        eprintln!("🔍 Route not found: {} {}", method, path_for_error);
         Err(Error::NotFound)
     }
 }

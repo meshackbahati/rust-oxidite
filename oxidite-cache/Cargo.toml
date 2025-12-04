@@ -2,6 +2,7 @@
 name = "oxidite-cache"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 
 [dependencies]
 async-trait = "0.1.89"

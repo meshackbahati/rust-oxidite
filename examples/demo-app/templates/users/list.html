@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Users - Oxidite Demo{% endblock %}
+
+{% block content %}
+<h2>👥 Users</h2>
+
+<div class="mb-30">
+    <a href="/users/new" class="btn">➕ Add New User</a>
+</div>
+
+<div id="users-list">
+    {% for user in users %}
+    <div class="card">
+        <h3>{{ user.name }}</h3>
+        <p>📧 {{ user.email }}</p>
+        <p class="text-muted">ID: {{ user.id }}</p>
+        <div class="card-actions">
+            <a href="/users/{{ user.id }}/posts">View Posts</a>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if users|length == 0 %}
+    <div class="empty-state">
+        <div class="empty-state-icon">👤</div>
+        <p>No users yet. Create your first user!</p>
+        <a href="/users/new" class="btn">Create User</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

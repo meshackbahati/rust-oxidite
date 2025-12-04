@@ -59,16 +59,16 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 
 #### Tasks
 - [x] Basic path matching
-- [ ] Typed path parameter extraction
-- [ ] Query parameter parsing & validation
-- [ ] Header extraction
+- [x] Typed path parameter extraction
+- [x] Query parameter parsing & validation
+- [x] Header extraction
 - [ ] Cookie parsing
 - [ ] Request body deserialization
 - [ ] Route grouping & prefixes
 - [ ] API versioning (v1, v2)
 - [ ] Route-level middleware
-- [ ] OpenAPI 3.1 spec generation
-- [ ] Swagger UI integration
+- [x] OpenAPI 3.0 spec generation
+- [x] Swagger UI integration
 
 #### Dependencies
 - `serde` for serialization
@@ -97,14 +97,14 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 - [x] Tower-based middleware integration
 - [x] Logger middleware
 - [ ] Compression (gzip, brotli, zstd)
-- [ ] CORS with configurable policies
-- [ ] CSRF token validation
-- [ ] Security headers (CSP, HSTS, etc.)
-- [ ] Request ID generation
-- [ ] Timeout middleware
-- [ ] Body size limits
-- [ ] Rate limiting (token bucket)
-- [ ] Error transformation pipeline
+- [x] CORS with configurable policies
+- [x] CSRF token validation
+- [x] Security headers (CSP, HSTS, etc.)
+- [x] Request ID generation
+- [x] Timeout middleware
+- [x] Body size limits
+- [x] Rate limiting (token bucket)
+- [x] Error transformation pipeline
 
 #### Dependencies
 - `tower-http` for common middleware
@@ -126,7 +126,7 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 
 #### Tasks
 - [x] Basic CLI structure with clap
-- [ ] Project scaffolding (`new`)
+- [x] Project scaffolding (`new`)
 - [ ] Development server (`dev`)
 - [ ] Production build (`build`)
 - [ ] Code generation commands
@@ -169,8 +169,8 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Universal database abstraction with type-safe queries
 
 #### Tasks
-- [ ] Database trait abstraction
-- [ ] Connection pooling
+- [x] Database trait abstraction
+- [x] Connection pooling
 - [ ] SQL Support
   - [ ] PostgreSQL via `tokio-postgres`
   - [ ] MySQL via `mysql_async`
@@ -178,7 +178,7 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 - [ ] NoSQL Support
   - [ ] MongoDB via `mongodb`
   - [ ] Redis via `redis-rs`
-- [ ] Query builder (type-safe)
+- [x] Query builder (type-safe)
 - [ ] Model macro (`#[derive(Model)]`)
 - [ ] Relationships
   - [ ] One-to-one
@@ -217,10 +217,10 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Database schema versioning and management
 
 #### Tasks
-- [ ] Migration file format (up/down)
-- [ ] Schema introspection
-- [ ] Auto-diff generator
-- [ ] Migration runner
+- [x] Migration file format (up/down)
+- [x] Schema introspection
+- [x] Auto-diff generator
+- [x] Migration runner
 - [ ] Rollback support
 - [ ] Seeding system
 - [ ] Migration history table
@@ -245,11 +245,11 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Enterprise-grade authentication and authorization
 
 #### Tasks
-- [ ] Password hashing (Argon2id)
-- [ ] Session management
-  - [ ] Cookie-based sessions
+- [x] Password hashing (Argon2id)
+- [x] Session management
+  - [x] Cookie-based sessions
   - [ ] Redis session store
-- [ ] JWT implementation
+- [x] JWT implementation
   - [ ] Access & refresh tokens
   - [ ] Token rotation
 - [ ] Paseto tokens
@@ -291,7 +291,7 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Reliable background job processing
 
 #### Tasks
-- [ ] Job trait definition
+- [x] Job trait definition
 - [ ] Queue backends
   - [ ] In-memory queue
   - [ ] Redis queue
@@ -303,7 +303,7 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 - [ ] Job priorities
 - [ ] Retry logic with backoff
 - [ ] Dead letter queue
-- [ ] Worker pool management
+- [x] Worker pool management
 - [ ] Job monitoring & stats
 - [ ] Graceful shutdown
 
@@ -326,8 +326,8 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Multi-layer caching for performance
 
 #### Tasks
-- [ ] Cache trait abstraction
-- [ ] In-memory cache (LRU)
+- [x] Cache trait abstraction
+- [x] In-memory cache (LRU)
 - [ ] Redis cache backend
 - [ ] Memcached support
 - [ ] TTL support
@@ -355,8 +355,8 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Flexible, environment-aware configuration
 
 #### Tasks
-- [ ] .env file parsing
-- [ ] TOML config (`oxidite.toml`)
+- [x] .env file parsing
+- [x] TOML config (`oxidite.toml`)
 - [ ] YAML config support
 - [ ] Environment profiles (dev/test/prod)
 - [ ] Config validation
@@ -383,8 +383,8 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: WebSocket and pub/sub support
 
 #### Tasks
-- [ ] WebSocket handler
-- [ ] Room/channel system
+- [x] WebSocket handler
+- [x] Room/channel system
 - [ ] Redis pub/sub integration
 - [ ] Presence tracking
 - [ ] Broadcasting to channels
@@ -438,10 +438,10 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 **Goal**: Server-side rendering support
 
 #### Tasks
-- [ ] Template parser
-- [ ] Variable interpolation
-- [ ] Control structures (if/for)
-- [ ] Layouts & blocks
+- [x] Template parser
+- [x] Variable interpolation
+- [x] Control structures (if/for)
+- [x] Layouts & blocks
 - [ ] Includes & partials
 - [ ] Custom filters
 - [ ] Custom helpers

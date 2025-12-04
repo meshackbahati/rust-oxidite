@@ -39,6 +39,10 @@ where
                     .serve_connection(io, hyper_service)
                     .await
                 {
+                    // This `err` is a `hyper::Error`, not `crate::error::Error`.
+                    // The user's requested logging for `crate::error::Error` types
+                    // is now handled within the `hyper_compatible_service` wrapper.
+                    // This `eprintln` now only catches connection-level `hyper::Error`s.
                     eprintln!("Error serving connection: {:?}", err);
                 }
             });

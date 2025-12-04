@@ -2,6 +2,7 @@
 name = "oxidite-auth"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 
 [dependencies]
 argon2 = "0.5"

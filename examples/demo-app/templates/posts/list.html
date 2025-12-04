@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Posts - Oxidite Demo{% endblock %}
+
+{% block content %}
+<h2>📝 Posts</h2>
+
+<div class="mb-30">
+    <a href="/posts/new" class="btn">✍️ Create New Post</a>
+</div>
+
+<div id="posts-list">
+    {% for post in posts %}
+    <div class="card">
+        <h3>{{ post.title }}</h3>
+        <p>{{ post.content }}</p>
+        <p class="text-muted">By User ID: {{ post.user_id }}</p>
+        <div class="card-actions">
+            <a href="/posts/{{ post.id }}">Read More</a>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if posts|length == 0 %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <p>No posts yet. Create your first post!</p>
+        <a href="/posts/new" class="btn">Create Post</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

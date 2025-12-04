@@ -137,47 +137,28 @@ Hyper serializes response
 
 ## 🎨 Core Components
 
-### oxidite-core
+### oxidite-core (Implemented)
 
-**Purpose**: HTTP server foundation and request/response handling
+**Purpose**: HTTP server foundation, request/response handling, and routing.
 
 **Key Types**:
-- `Server<S>`: Generic HTTP server accepting any Tower service
-- `OxiditeRequest`: Alias for `Request<Incoming>`
-- `OxiditeResponse`: Alias for `Response<BoxBody>`
-- `Error`: Common error type
-- `Result<T>`: Common result type
+- `Server<S>`: Generic HTTP server accepting any Tower service.
+- `Router`: Main routing struct implementing `Service`.
+- `OxiditeRequest`: Alias for `Request<Incoming>`.
+- `OxiditeResponse`: Alias for `Response<BoxBody>`.
+- `Path<T>`, `Query<T>`, `Json<T>`: Extractors for typed parameters and bodies.
+- `Error`: Common error type.
+- `Result<T>`: Common result type.
 
 **Responsibilities**:
-- TCP connection management
-- HTTP protocol handling (via Hyper)
-- Service integration (via Tower)
-- Error propagation
+- TCP connection management and HTTP protocol handling (via Hyper).
+- Service integration (via Tower).
+- Path matching, HTTP method routing, and parameter extraction.
+- Error propagation.
 
 ---
 
-### oxidite-router
-
-**Purpose**: Request routing and parameter extraction
-
-**Key Types**:
-- `Router`: Main routing struct implementing `Service`
-- `Handler`: Trait for route handlers
-- `Path<T>`: Extract typed path parameters
-- `Query<T>`: Extract typed query parameters
-- `Json<T>`: Extract/return JSON bodies
-- `RouteGroup`: Group routes with shared middleware
-
-**Responsibilities**:
-- Path matching (exact, params, wildcards)
-- HTTP method routing
-- Parameter extraction and validation
-- Route grouping
-- OpenAPI spec generation
-
----
-
-### oxidite-middleware
+### oxidite-middleware (Implemented)
 
 **Purpose**: Cross-cutting concerns via Tower layers
 
@@ -206,7 +187,7 @@ impl<S> Service<Request> for Middleware<S> {
 
 ---
 
-### oxidite-db
+### oxidite-db (In Progress)
 
 **Purpose**: Database abstraction and ORM
 
@@ -241,7 +222,7 @@ pub trait Model: Sized {
 
 ---
 
-### oxidite-migrate
+### oxidite-migrate (Planned)
 
 **Purpose**: Database schema migrations
 
@@ -262,7 +243,7 @@ pub struct Migration {
 
 ---
 
-### oxidite-auth
+### oxidite-auth (In Progress)
 
 **Purpose**: Authentication and authorization
 
@@ -288,7 +269,7 @@ pub trait Authorizable {
 
 ---
 
-### oxidite-queue
+### oxidite-queue (In Progress)
 
 **Purpose**: Background job processing
 
@@ -320,7 +301,7 @@ Queue::new()
 
 ---
 
-### oxidite-cache
+### oxidite-cache (In Progress)
 
 **Purpose**: Multi-layer caching
 
@@ -341,7 +322,7 @@ cache.remember("user:123", Duration::from_secs(300), || async {
 
 ---
 
-### oxidite-realtime
+### oxidite-realtime (In Progress)
 
 **Purpose**: WebSockets and pub/sub
 
@@ -364,7 +345,7 @@ Broadcast::to_channel("notifications")
 
 ---
 
-### oxidite-cli
+### oxidite-cli (In Progress)
 
 **Purpose**: Command-line interface
 

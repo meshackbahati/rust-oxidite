@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use crate::{Message, Result, WebSocketError};
+use super::{Message, Result, WebSocketError};
 
 /// A room/channel for grouping WebSocket connections
 pub struct Room {

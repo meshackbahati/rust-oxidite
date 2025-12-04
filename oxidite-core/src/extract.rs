@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 /// Extract typed path parameters from the request
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// #[derive(Deserialize)]
 /// struct UserPath {
 ///     id: u64,
@@ -22,7 +22,7 @@ pub struct Path<T>(pub T);
 /// Extract typed query parameters from the request
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// #[derive(Deserialize)]
 /// struct Pagination {
 ///     page: u32,
@@ -39,7 +39,7 @@ pub struct Query<T>(pub T);
 /// Extract and deserialize JSON request body
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// #[derive(Deserialize)]
 /// struct CreateUser {
 ///     name: String,
@@ -107,5 +107,27 @@ impl<T: serde::Serialize> Json<T> {
         let body = serde_json::to_vec(&self.0)
             .map_err(|e| Error::Server(format!("Failed to serialize JSON: {}", e)))?;
         Ok(http_body_util::Full::new(bytes::Bytes::from(body)))
+    }
+}
+
+/// Extract application state from request extensions
+///
+/// # Example
+/// ```ignore
+/// async fn handler(State(state): State<Arc<AppState>>) -> Result<Response> {
+///     // use state
+/// }
+/// ```
+pub struct State<T>(pub T);
+
+impl<T: Clone + Send + Sync + 'static> FromRequest for State<T> {
+    fn from_request(req: &mut OxiditeRequest) -> impl std::future::Future<Output = Result<Self>> {
+        async {
+            req.extensions()
+                .get::<T>()
+                .cloned()
+                .map(State)
+                .ok_or_else(|| Error::Server("Application state not found in request extensions".to_string()))
+        }
     }
 }

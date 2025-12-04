@@ -2,6 +2,7 @@
 name = "oxidite-middleware"
 version = "0.1.0"
 edition = "2021"
+authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 
 [dependencies]
 oxidite-core = { version = "0.1.0", path = "../oxidite-core" }
@@ -12,3 +13,4 @@ uuid = { version = "1.11.0", features = ["v4"] }
 sha2 = "0.10.9"
 base64 = "0.22.1"
 rand = "0.9.1"
+thiserror = "2.0"

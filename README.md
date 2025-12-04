@@ -1,265 +1,149 @@
-# Oxidite
+# Oxidite Web Framework
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status: Alpha](https://img.shields.io/badge/status-alpha-yellow.svg)](ROADMAP.md)
+<div align="center">
 
-> **A next-generation, batteries-included Rust backend web framework**
+<img src="docs/logo/oxidite.svg" width="200" alt="Oxidite Logo">
 
-Oxidite combines the best features of FastAPI, Laravel, Express.js, and Django into a single, powerful Rust framework that's **fast**, **secure by default**, and **beginner-friendly**.
+A modern, high-performance web framework for Rust, inspired by FastAPI and Express.js.
 
----
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/github-Kyle6012%2Frust--oxidite-black)](https://github.com/Kyle6012/rust-oxidite)
+[![Documentation](https://docs.rs/oxidite/badge.svg)](https://docs.rs/oxidite)
 
-## 🚀 Features
+Built with ❤️ by [Meshack Bahati Ouma](https://github.com/Kyle6012)
 
-### ⚡ High Performance
-- Built on **Tokio** and **Hyper** for maximum throughput
-- Support for **HTTP/1.1, HTTP/2, and HTTP/3 (QUIC)**
-- 100k+ requests/second capability
-- Zero-cost abstractions
-
-### 🛣️ Advanced Routing
-- Type-safe path, query, and body parameters
-- Automatic **OpenAPI/Swagger** documentation
-- Route grouping and versioning
-- Middleware at route and global levels
-
-### 🔧 Powerful Middleware
-- **Tower**-based middleware ecosystem
-- Built-in logging, compression, CORS, CSRF protection
-- Rate limiting and security headers
-- Custom middleware support
-
-### 🗄️ Universal Database Support
-- **SQL**: PostgreSQL, MySQL, SQLite
-- **NoSQL**: MongoDB, Redis
-- Type-safe query builder
-- **Alembic-style migrations** with auto-diffing
-- Model relationships and transactions
-
-### 🔐 Enterprise-Grade Security
-- **Argon2** password hashing
-- **JWT and Paseto** tokens
-- **OAuth2** support
-- **RBAC** and **PBAC** authorization
-- Built-in CSRF, XSS, and SQL injection protection
-
-### 📬 Background Jobs
-- Async job queues with Redis or PostgreSQL
-- Cron-style scheduling
-- Retry logic with exponential backoff
-- Worker clustering
-
-### 💾 Multi-Layer Caching
-- In-memory and Redis caching
-- TTL and tag-based invalidation
-- Response caching middleware
-
-### 🔴 Real-Time Features
-- **WebSockets** with room support
-- **Server-Sent Events (SSE)**
-- Redis pub/sub for horizontal scaling
-- Presence tracking
-
-### 🛠️ Developer-First CLI
-```bash
-oxidite new myapp        # Scaffold new project
-oxidite dev              # Hot-reload dev server
-oxidite make:model User  # Generate models
-oxidite migrate          # Run migrations
-oxidite queue:work       # Start job workers
-oxidite test             # Run test suite
-```
-
-### 📊 Built-In Admin Dashboard
-- User and role management
-- Queue monitoring
-- Log viewer
-- Health checks
-
-### 🎨 Template Engine
-- Server-side rendering with Blade/Django-like syntax
-- Auto-escaping for XSS protection
-- Layout inheritance
-
-### 🔌 Plugin System
-- Service provider pattern
-- Hook-based extensibility
-- Dependency injection
+</div>
 
 ---
+
+## 🚀 What is Oxidite?
+
+Oxidite is a batteries-included web framework that combines Rust's performance with developer-friendly APIs inspired by Django, Rails, and FastAPI. Build scalable web applications with confidence.
+
+##  Features
+
+### Core Framework
+- ⚡ **High Performance** - Built on `hyper` and `tokio`
+- 🛣️ **Expressive Routing** - Path parameters, regex routes, API versioning
+- 🔐 **Built-in Security** - CORS, CSRF, encryption, sanitization
+- 📦 **Middleware Stack** - Logger, compression, rate limiting, timeouts
+
+### Data & Persistence
+- 🗄️ **Database** - PostgreSQL, MySQL, SQLite with query builder
+- 💾 **Caching** - Memory and Redis with TTL support
+- 📁 **Storage** - Local filesystem and S3-compatible cloud storage
+- 🔄 **Migrations** - Database migration management
+
+### Real-time & Communication
+- 🌐 **WebSockets** - Full WebSocket support with rooms
+- 📡 **Server-Sent Events** - Real-time push updates
+- 📬 **Pub/Sub** - Internal event messaging
+- 📧 **Email** - SMTP with HTML templates and attachments
+
+### Authentication & Authorization
+- 🔑 **JWT** - Stateless authentication
+- 🎫 **Sessions** - Memory and Redis-backed sessions
+- 🔐 **OAuth2** - Google, GitHub, Microsoft providers
+- 👤 **Password Hashing** - Argon2 secure hashing
+
+### Developer Experience
+- 🎨 **Template Engine** - Django-style templates with inheritance
+- 🛠️ **CLI Tools** - Project scaffolding, migrations, code generation
+- 📚 **Comprehensive Docs** - Guides, examples, API reference
+- 🧰 **Utilities** - Date, ID generation, validation, string manipulation
 
 ## 📦 Quick Start
 
-### Installation
-
 ```bash
-# Install the CLI
+# Install CLI
 cargo install oxidite-cli
 
-# Create a new project
-oxidite new myapp
-cd myapp
+# Create new project
+oxidite new my-app
+cd my-app
 
-# Start development server
-oxidite dev
+# Run server
+cargo run
 ```
 
-### Your First API
+Visit `http://localhost:8080`
+
+## 💡 Example
 
 ```rust
-use oxidite::prelude::*;
+use oxidite_core::{Router, Server, Request, Response};
 
-#[derive(Deserialize)]
-struct CreateUser {
-    name: String,
-    email: String,
-}
-
-async fn create_user(Json(user): Json<CreateUser>) -> Result<Json<User>> {
-    let new_user = User::create(user).await?;
-    Ok(Json(new_user))
+async fn hello(_req: Request) -> Result<Response, oxidite_core::Error> {
+    Ok(Response::json(serde_json::json!({
+        "message": "Hello, Oxidite!"
+    })))
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let mut app = Router::new();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut router = Router::new();
+    router.get("/api/hello", hello);
     
-    app.post("/users", create_user);
+    let server = Server::new("127.0.0.1:8080".parse()?, router);
+    println!("🚀 Server running on http://127.0.0.1:8080");
+    server.run().await?;
     
-    Server::new(app)
-        .listen("127.0.0.1:3000")
-        .await
+    Ok(())
 }
 ```
 
----
+## 📖 Documentation
+
+- [Getting Started](docs/guides/getting-started.md)
+- [Database Guide](docs/guides/database.md)
+- [Authentication Guide](docs/guides/authentication.md)
+- [Templating Guide](docs/guides/templating.md)
+- [Realtime Guide](docs/guides/realtime.md)
 
 ## 🏗️ Architecture
 
-Oxidite is built as a modular mono-repo with the following crates:
+Oxidite is composed of 14 modular crates:
 
-```
-oxidite/
-├── oxidite-core          # HTTP server, router, request/response
-├── oxidite-middleware    # Middleware ecosystem
-├── oxidite-auth          # Authentication & authorization
-├── oxidite-db            # Database abstraction & ORM
-├── oxidite-migrate       # Schema migrations
-├── oxidite-queue         # Background jobs
-├── oxidite-cache         # Caching layer
-├── oxidite-config        # Configuration management
-├── oxidite-realtime      # WebSockets, SSE, pub/sub
-├── oxidite-admin         # Admin dashboard
-├── oxidite-template      # Template engine
-├── oxidite-plugin        # Plugin system
-├── oxidite-cli           # Command-line tool
-├── oxidite-security      # Security utilities
-└── oxidite-utils         # Common utilities
-```
-
----
-
-## 📚 Documentation
-
-- [**Getting Started Guide**](docs/guides/getting-started.md)
-- [**Architecture Overview**](docs/architecture/overview.md)
-- [**API Reference**](https://docs.rs/oxidite)
-- [**Complete Roadmap**](ROADMAP.md)
-
----
-
-## 🎯 Project Status
-
-Oxidite is currently in **active development**. See the [ROADMAP](ROADMAP.md) for detailed progress.
-
-### Current Status
-- ✅ Core HTTP server (HTTP/1.1)
-- ✅ Basic routing
-- ✅ Middleware foundation
-- 🚧 Advanced routing features
-- 🚧 Database layer
-- 🚧 CLI tool
-- ⏳ Authentication
-- ⏳ Background jobs
-
----
+| Crate | Description |
+|-------|-------------|
+| `oxidite-core` | HTTP server, routing, versioning |
+| `oxidite-auth` | JWT, sessions, OAuth2 |
+| `oxidite-db` | Database abstraction, migrations |
+| `oxidite-middleware` | CORS, CSRF, rate limiting, timeouts |
+| `oxidite-template` | Template engine with inheritance |
+| `oxidite-realtime` | WebSockets, SSE, Pub/Sub |
+| `oxidite-storage` | File storage (Local/S3) |
+| `oxidite-mail` | Email with SMTP |
+| `oxidite-queue` | Background job processing |
+| `oxidite-cache` | Memory and Redis caching |
+| `oxidite-config` | Configuration management |
+| `oxidite-security` | Encryption, hashing, sanitization |
+| `oxidite-utils` | Common utilities |
+| `oxidite-cli` | Command-line tools |
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/Kyle6012/rust-oxidite
-cd rust-oxidite
-
-# Build all crates
-cargo build
-
-# Run tests
-cargo test
-
-# Run the example
-cargo run --example hello-world
-```
-
----
-
-## 📊 Benchmarks
-
-Coming soon! We'll provide comprehensive benchmarks comparing Oxidite to other popular frameworks.
-
----
-
-## 🛡️ Security
-
-Security is a top priority. Please see [SECURITY.md](SECURITY.md) for our security policy and how to report vulnerabilities.
-
----
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
 
 ## 📄 License
 
-Oxidite is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+**Meshack Bahati Ouma**
+- GitHub: [@Kyle6012](https://github.com/Kyle6012)
+- Email: bahatikylemeshack@gmail.com
+
+## 🌟 Show Your Support
+
+Give a ⭐️ if this project helped you!
 
 ---
 
-## 🌟 Inspiration
+<div align="center">
 
-Oxidite draws inspiration from:
+Made with ❤️ using Rust
 
-- **FastAPI** - Type-safe APIs and automatic documentation
-- **Laravel** - Elegant ORM, comprehensive tooling
-- **Express.js** - Simplicity and middleware-first design
-- **Django** - Admin tools, security-first approach
-
----
-
-## 🎁 What Makes Oxidite Different?
-
-| Feature | Oxidite | FastAPI | Laravel | Express | Django |
-|---------|---------|---------|---------|---------|--------|
-| Language | Rust | Python | PHP | JavaScript | Python |
-| Performance | ⚡⚡⚡ | ⚡⚡ | ⚡ | ⚡⚡ | ⚡ |
-| Type Safety | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Async/Await | ✅ | ✅ | ❌ | ✅ | ⚠️ |
-| ORM | ✅ | ⚠️ | ✅ | ⚠️ | ✅ |
-| Migrations | ✅ | ⚠️ | ✅ | ⚠️ | ✅ |
-| Admin UI | ✅ | ❌ | ⚠️ | ❌ | ✅ |
-| WebSockets | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| Background Jobs | ✅ | ⚠️ | ✅ | ⚠️ | ⚠️ |
-| OpenAPI | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| Memory Safety | ✅ | ❌ | ❌ | ❌ | ❌ |
-
----
-
-## 📬 Contact
-
-- **GitHub Issues**: [Report bugs or request features](https://github.com/Kyle6012/rust-oxidite/issues)
-- **Discussions**: [Join the community](https://github.com/Kyle6012/rust-oxidite/discussions)
-
----
-
-**Built with ❤️ and Rust**
+</div>

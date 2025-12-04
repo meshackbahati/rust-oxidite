@@ -8,6 +8,8 @@ pub enum Error {
     NotFound,
     #[error("Bad request: {0}")]
     BadRequest(String),
+    #[error("Unauthorized: {0}")]
+    Unauthorized(String),
     #[error(transparent)]
     Hyper(#[from] hyper::Error),
     #[error(transparent)]

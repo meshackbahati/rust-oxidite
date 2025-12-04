@@ -69,11 +69,7 @@ use http_body_util::Full;
 use bytes::Bytes;
 
 async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(hyper::Response::new(Full::new(Bytes::from("Hello, World!"))))
-}
-
-async fn greet(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(hyper::Response::new(Full::new(Bytes::from("Greetings from Oxidite!"))))
+    Ok(hyper::Response::new(Full::new(Bytes::from("Hello, Oxidite!"))))
 }
 
 #[tokio::main]
@@ -83,7 +79,6 @@ async fn main() -> Result<()> {
     
     // Register routes
     router.get("/", hello);
-    router.get("/greet", greet);
     
     // Add middleware
     let service = ServiceBuilder::new()
@@ -125,33 +120,45 @@ struct User {
 }
 
 async fn list_users(_req: OxiditeRequest) -> Result<OxiditeResponse> {
+    // In a real app, this would query the database
     let users = vec![
-        User { id: 1, name: "Alice".into(), email: "alice@example.com".into() },
-        User { id: 2, name: "Bob".into(), email: "bob@example.com".into() },
+        User {
+            id: 1,
+            name: "Alice".to_string(),
+            email: "alice@example.com".to_string(),
+        },
+        User {
+            id: 2,
+            name: "Bob".to_string(),
+            email: "bob@example.com".to_string(),
+        },
     ];
-    
-    let json = serde_json::to_vec(&users).unwrap();
-    
+
+    let body = serde_json::to_vec(&users)
+        .map_err(|e| oxidite_core::Error::Server(format!("Serialization error: {}", e)))?;
+
     Ok(hyper::Response::builder()
         .header("content-type", "application/json")
-        .body(Full::new(Bytes::from(json)))
+        .body(Full::new(Bytes::from(body)))
         .unwrap())
 }
 
-async fn create_user(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    // In a real app, parse JSON body and save to database
+async fn create_user(req: OxiditeRequest) -> Result<OxiditeResponse> {
+    // In a real app, extract JSON body and create in database
+
     let user = User {
         id: 3,
-        name: "Charlie".into(),
-        email: "charlie@example.com".into(),
+        name: "Charlie".to_string(),
+        email: "charlie@example.com".to_string(),
     };
-    
-    let json = serde_json::to_vec(&user).unwrap();
-    
+
+    let body = serde_json::to_vec(&user)
+        .map_err(|e| oxidite_core::Error::Server(format!("Serialization error: {}", e)))?;
+
     Ok(hyper::Response::builder()
         .status(201)
         .header("content-type", "application/json")
-        .body(Full::new(Bytes::from(json)))
+        .body(Full::new(Bytes::from(body)))
         .unwrap())
 }
 

@@ -216,3 +216,39 @@ impl SessionStore for RedisSessionStore {
         Ok(0)
     }
 }
+
+/// Session Manager
+#[derive(Clone)]
+pub struct SessionManager {
+    store: Arc<dyn SessionStore>,
+}
+
+impl SessionManager {
+    pub fn new(store: Arc<dyn SessionStore>) -> Self {
+        Self { store }
+    }
+    
+    pub fn new_memory() -> Self {
+        Self::new(Arc::new(InMemorySessionStore::new()))
+    }
+    
+    pub fn new_redis(url: &str, prefix: &str) -> Result<Self> {
+        Ok(Self::new(Arc::new(RedisSessionStore::new(url, prefix)?)))
+    }
+    
+    pub async fn create(&self, session: Session) -> Result<String> {
+        self.store.create(session).await
+    }
+    
+    pub async fn get(&self, session_id: &str) -> Result<Option<Session>> {
+        self.store.get(session_id).await
+    }
+    
+    pub async fn update(&self, session: Session) -> Result<()> {
+        self.store.update(session).await
+    }
+    
+    pub async fn delete(&self, session_id: &str) -> Result<()> {
+        self.store.delete(session_id).await
+    }
+}

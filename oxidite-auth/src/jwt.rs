@@ -58,20 +58,20 @@ impl Claims {
     }
 }
 
-/// JWT Token struct
-pub struct JwtToken {
+/// JWT Manager for creating and verifying tokens
+pub struct JwtManager {
     secret: String,
 }
 
-impl JwtToken {
+impl JwtManager {
     pub fn new(secret: String) -> Self {
         Self { secret }
     }
 
-    pub fn create(&self, claims: Claims) -> Result<String> {
+    pub fn generate_token<T: Serialize>(&self, claims: &T) -> Result<String> {
         let token = encode(
             &Header::default(),
-            &claims,
+            claims,
             &EncodingKey::from_secret(self.secret.as_bytes()),
         )?;
         Ok(token)
@@ -90,13 +90,13 @@ impl JwtToken {
 /// Create a JWT token
 pub fn create_token(user_id: String, secret: &str, expiry_secs: u64) -> Result<String> {
     let claims = Claims::new(user_id, expiry_secs);
-    let jwt = JwtToken::new(secret.to_string());
-    jwt.create(claims)
+    let jwt = JwtManager::new(secret.to_string());
+    jwt.generate_token(&claims)
 }
 
 /// Verify a JWT token
 pub fn verify_token(token: &str, secret: &str) -> Result<Claims> {
-    let jwt = JwtToken::new(secret.to_string());
+    let jwt = JwtManager::new(secret.to_string());
     jwt.verify(token)
 }
 
