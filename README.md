@@ -193,8 +193,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/oxidite
-cd oxidite
+git clone https://github.com/Kyle6012/rust-oxidite
+cd rust-oxidite
 
 # Build all crates
 cargo build
@@ -257,8 +257,8 @@ Oxidite draws inspiration from:
 
 ## 📬 Contact
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/yourusername/oxidite/issues)
-- **Discussions**: [Join the community](https://github.com/yourusername/oxidite/discussions)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/Kyle6012/rust-oxidite/issues)
+- **Discussions**: [Join the community](https://github.com/Kyle6012/rust-oxidite/discussions)
 
 ---
 
