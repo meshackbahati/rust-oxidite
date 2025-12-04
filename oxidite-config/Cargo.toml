@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dotenv = "0.15.0"
+num_cpus = "1.17.0"
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "0.9.8"

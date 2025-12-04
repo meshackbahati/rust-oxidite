@@ -1,0 +1,10 @@
+[package]
+name = "oxidite-template"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.11.3"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+thiserror = "2.0.17"

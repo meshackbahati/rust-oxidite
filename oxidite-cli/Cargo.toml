@@ -4,3 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bytes = "1.11.0"
+clap = { version = "4.5.53", features = ["derive"] }
+http-body-util = "0.1.3"
+hyper = { version = "1.8.1", features = ["full"] }
+oxidite-core = { version = "0.1.0", path = "../oxidite-core" }
+oxidite-middleware = { version = "0.1.0", path = "../oxidite-middleware" }
+tokio = { version = "1.48.0", features = ["full"] }
+chrono = "0.4.42"
