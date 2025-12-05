@@ -56,8 +56,8 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 ## 📦 Quick Start
 
 ```bash
-# Install CLI
-cargo install oxidite-cli
+# Install CLI from local source (recommended for development)
+cargo install --path oxidite-cli
 
 # Create new project
 oxidite new my-app
@@ -67,7 +67,22 @@ cd my-app
 cargo run
 ```
 
-Visit `http://localhost:8080`
+Visit `http://localhost:3000`
+
+## 🎮 Running the Demo App
+
+To see Oxidite in action with a full-featured example:
+
+```bash
+cd examples/demo-app
+cargo run
+```
+
+Visit `http://localhost:3000` to explore the demo application featuring:
+- Authentication (Login/Register)
+- Database interactions
+- Real-time chat
+- Template rendering
 
 ## 💡 Example
 
