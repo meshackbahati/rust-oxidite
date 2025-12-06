@@ -1,11 +1,14 @@
-use oxidite_core::{Request, Response, Error};
+use oxidite_core::{Request, Response, Error, Result};
 use std::path::Path;
+use std::sync::Arc;
+use std::future::Future;
+use std::pin::Pin;
 
 /// Configuration for static file serving
 #[derive(Clone)]
 pub struct StaticFiles {
     root: String,
-    url_prefix: String,
+    url_prefix: Option<String>,
 }
 
 impl StaticFiles {
@@ -13,21 +16,25 @@ impl StaticFiles {
     /// 
     /// # Arguments
     /// * `root` - The directory on the filesystem to serve files from (e.g., "public")
-    /// * `url_prefix` - The URL prefix to strip from the request path (e.g., "/public")
-    pub fn new(root: impl Into<String>, url_prefix: impl Into<String>) -> Self {
+    /// * `url_prefix` - Optional URL prefix to strip from the request path (e.g., "/public")
+    pub fn new(root: impl Into<String>, url_prefix: Option<String>) -> Self {
         Self {
             root: root.into(),
-            url_prefix: url_prefix.into(),
+            url_prefix,
         }
     }
 
     /// Serve a static file based on the request
-    pub async fn serve(&self, req: Request) -> Result<Response, Error> {
+    pub async fn serve(&self, req: Request) -> Result<Response> {
         let path = req.uri().path();
         
-        // Remove prefix
-        let file_path = if path.starts_with(&self.url_prefix) {
-            path.strip_prefix(&self.url_prefix).unwrap_or(path)
+        // Remove prefix if configured
+        let file_path = if let Some(prefix) = &self.url_prefix {
+            if path.starts_with(prefix) {
+                path.strip_prefix(prefix).unwrap_or(path)
+            } else {
+                path
+            }
         } else {
             path
         };
@@ -76,11 +83,29 @@ impl StaticFiles {
     }
 }
 
-/// Helper function to serve static files from a "public" directory
-/// mapped to "/public" URL prefix.
+/// Create a static file handler for a specific directory.
 /// 
-/// This is a convenience wrapper around `StaticFiles`.
-pub async fn serve_static(req: Request) -> Result<Response, Error> {
-    let static_files = StaticFiles::new("public", "/public");
+/// # Example
+/// ```rust
+/// router.get("/assets/*", static_handler("public"));
+/// ```
+pub fn static_handler(root: impl Into<String>) -> impl Fn(Request) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> + Send + Sync + 'static {
+    let root = root.into();
+    let static_files = Arc::new(StaticFiles::new(root, None));
+    
+    move |req| {
+        let static_files = static_files.clone();
+        Box::pin(async move {
+            static_files.serve(req).await
+        })
+    }
+}
+
+/// Helper function to serve static files from the "public" directory.
+/// 
+/// This handler serves files relative to the root of the "public" directory.
+/// For example, a request to `/style.css` will serve `public/style.css`.
+pub async fn serve_static(req: Request) -> Result<Response> {
+    let static_files = StaticFiles::new("public", None);
     static_files.serve(req).await
 }

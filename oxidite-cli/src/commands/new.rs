@@ -247,7 +247,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     routes::register(&mut router);
     
     // Static files
-    router.get("/public/*", serve_static);
+    // Static files (fallback)
+    router.get("/*", serve_static);
 
     let server = Server::new(addr.parse()?, router);
     println!("🚀 Server running on http://{}", addr);

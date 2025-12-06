@@ -59,12 +59,12 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 # Install CLI from local source (recommended for development)
 cargo install --path oxidite-cli
 
-# Create new project
+# Create new project (interactive)
 oxidite new my-app
 cd my-app
 
-# Run server
-cargo run
+# Run development server with hot reload
+oxidite dev
 ```
 
 Visit `http://localhost:3000`

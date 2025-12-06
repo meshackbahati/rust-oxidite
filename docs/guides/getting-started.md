@@ -1,287 +1,78 @@
 # Getting Started with Oxidite
 
-Welcome to Oxidite! This guide will help you build your first web application with Oxidite.
-
----
+Oxidite is a modern, high-performance web framework for Rust. This guide will help you set up your environment and create your first Oxidite application.
 
 ## Prerequisites
 
-- **Rust 1.75 or later** ([Install Rust](https://www.rust-lang.org/tools/install))
-- **Basic knowledge of Rust** and async programming
-- A text editor or IDE (VS Code with rust-analyzer recommended)
-
----
+- **Rust**: You need Rust installed. If you haven't, install it via [rustup](https://rustup.rs/):
+  ```bash
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
 
 ## Installation
 
-Currently, Oxidite is in development. To use it:
+Oxidite provides a CLI tool to scaffold projects. Install it from the source:
 
 ```bash
-# Clone the repository
-git clone https://github.com/Kyle6012/rust-oxidite.git
-cd rust-oxidite
-
-# Build the project
-cargo build
+cargo install --path oxidite-cli
 ```
 
----
+## Creating a New Project
 
-## Your First Application
-
-### 1. Create a New Binary Project
-
-Since Oxidite doesn't have a `new` command yet, create manually:
+The `oxidite new` command is interactive and helps you choose the right template for your needs.
 
 ```bash
-mkdir my-oxidite-app
-cd my-oxidite-app
-cargo init
+oxidite new my-app
 ```
 
-### 2. Add Oxidite as a Dependency
+You will be prompted to select a project type:
 
-Edit `Cargo.toml`:
+1. **Fullstack Application**: Includes templates, static files, and a complete folder structure.
+2. **REST API**: Optimized for backend-only services with JSON responses.
+3. **Microservice**: Minimal setup for specialized services.
+4. **Serverless Function**: Lightweight handler for event-driven architectures.
 
-```toml
-[package]
-name = "my-oxidite-app"
-version = "0.1.0"
-edition = "2021"
+### Non-Interactive Mode
 
-[dependencies]
-oxidite-core = { path = "../oxidite/oxidite-core" }
-oxidite-middleware = { path = "../oxidite/oxidite-middleware" }
-tokio = { version = "1", features = ["full"] }
-hyper = { version = "1", features = ["full"] }
-http-body-util = "0.1"
-bytes = "1"
-```
-
-### 3. Write Your First Handler
-
-Edit `src/main.rs`:
-
-```rust
-use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse, Result};
-use oxidite_middleware::{ServiceBuilder, LoggerLayer};
-use http_body_util::Full;
-use bytes::Bytes;
-
-async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(hyper::Response::new(Full::new(Bytes::from("Hello, Oxidite!"))))
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Create a router
-    let mut router = Router::new();
-    
-    // Register routes
-    router.get("/", hello);
-    
-    // Add middleware
-    let service = ServiceBuilder::new()
-        .layer(LoggerLayer)
-        .service(router);
-    
-    // Start the server
-    let server = Server::new(service);
-    println!("🚀 Server running on http://127.0.0.1:3000");
-    server.listen("127.0.0.1:3000".parse().unwrap()).await
-}
-```
-
-### 4. Run Your Application
+For CI/CD or scripts, you can pass the type directly:
 
 ```bash
-cargo run
+oxidite new my-api --project-type api
 ```
 
-Visit `http://127.0.0.1:3000` in your browser!
+## Project Structure
 
----
+A standard Oxidite project (API/Fullstack) looks like this:
 
-## Building a JSON API
-
-Let's build a simple user API:
-
-```rust
-use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse, Result};
-use serde::{Deserialize, Serialize};
-use http_body_util::Full;
-use bytes::Bytes;
-
-#[derive(Debug, Serialize, Deserialize)]
-struct User {
-    id: u64,
-    name: String,
-    email: String,
-}
-
-async fn list_users(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    // In a real app, this would query the database
-    let users = vec![
-        User {
-            id: 1,
-            name: "Alice".to_string(),
-            email: "alice@example.com".to_string(),
-        },
-        User {
-            id: 2,
-            name: "Bob".to_string(),
-            email: "bob@example.com".to_string(),
-        },
-    ];
-
-    let body = serde_json::to_vec(&users)
-        .map_err(|e| oxidite_core::Error::Server(format!("Serialization error: {}", e)))?;
-
-    Ok(hyper::Response::builder()
-        .header("content-type", "application/json")
-        .body(Full::new(Bytes::from(body)))
-        .unwrap())
-}
-
-async fn create_user(req: OxiditeRequest) -> Result<OxiditeResponse> {
-    // In a real app, extract JSON body and create in database
-
-    let user = User {
-        id: 3,
-        name: "Charlie".to_string(),
-        email: "charlie@example.com".to_string(),
-    };
-
-    let body = serde_json::to_vec(&user)
-        .map_err(|e| oxidite_core::Error::Server(format!("Serialization error: {}", e)))?;
-
-    Ok(hyper::Response::builder()
-        .status(201)
-        .header("content-type", "application/json")
-        .body(Full::new(Bytes::from(body)))
-        .unwrap())
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/users", list_users);
-    router.post("/users", create_user);
-    
-    let server = Server::new(router);
-    println!("🚀 API running on http://127.0.0.1:3000");
-    server.listen("127.0.0.1:3000".parse().unwrap()).await
-}
+```
+my-app/
+├── src/
+│   ├── controllers/   # Request handlers
+│   ├── models/        # Database models
+│   ├── routes/        # Route definitions
+│   ├── services/      # Business logic
+│   ├── middleware/    # Custom middleware
+│   ├── utils/         # Helper functions
+│   └── main.rs        # Entry point
+├── config/            # Configuration files
+├── tests/             # Integration tests
+├── Cargo.toml         # Dependencies
+└── config.toml        # App configuration
 ```
 
-Test it:
+## Running the Server
+
+Oxidite comes with a built-in development server that supports hot reloading.
 
 ```bash
-# List users
-curl http://127.0.0.1:3000/users
-
-# Create user
-curl -X POST http://127.0.0.1:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Charlie","email":"charlie@example.com"}'
+cd my-app
+oxidite dev
 ```
 
----
-
-## Middleware
-
-Oxidite uses Tower middleware. Here's how to add CORS:
-
-```rust
-use oxidite_middleware::{ServiceBuilder, LoggerLayer, tower_http};
-use tower_http::cors::{CorsLayer, Any};
-
-let service = ServiceBuilder::new()
-    .layer(LoggerLayer)
-    .layer(
-        CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods(Any)
-    )
-    .service(router);
-```
-
----
-
-## Error Handling
-
-Oxidite has built-in error handling:
-
-```rust
-use oxidite_core::Error;
-
-async fn might_fail(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    if some_condition {
-        return Err(Error::BadRequest("Invalid input".to_string()));
-    }
-    
-    // ... handle request
-    Ok(response)
-}
-```
-
----
+The server will start on `http://127.0.0.1:8080` (or the port defined in `config.toml`).
+Any changes to your code will automatically restart the server.
 
 ## Next Steps
 
-- [Architecture Overview](../architecture/overview.md)
-- [Routing Guide](routing.md) _(coming soon)_
-- [Database Guide](database.md) _(coming soon)_
-- [Authentication Guide](auth.md) _(coming soon)_
-
----
-
-## Examples
-
-Check out the `examples/` directory:
-
-- `hello-world.rs` - Basic hello world
-- `full-api.rs` - Complete REST API example
-
-Run them with:
-
-```bash
-cargo run --example hello-world
-cargo run --example full-api
-```
-
----
-
-## Common Issues
-
-### Error: `cannot find type OxiditeRequest`
-
-Make sure you've imported the prelude:
-
-```rust
-use oxidite_core::{OxiditeRequest, OxiditeResponse, Result};
-```
-
-### Slow compile times
-
-Oxidite uses many dependencies. First compilation is slow but subsequent builds use incremental compilation.
-
-### Port already in use
-
-Change the port in your `listen call:
-
-```rust
-server.listen("127.0.0.1:8080".parse().unwrap()).await
-```
-
----
-
-## Getting Help
-
-- [GitHub Discussions](https://github.com/Kyle6012/rust-oxidite/discussions)
-- [GitHub Issues](https://github.com/Kyle6012/rust-oxidite/issues)
-- Read the [Architecture Documentation](../architecture/overview.md)
-
----
-
-Happy coding with Oxidite! 🦀
+- [Database Guide](database.md) - Learn how to use the ORM.
+- [CLI Guide](cli.md) - Explore all CLI commands.
