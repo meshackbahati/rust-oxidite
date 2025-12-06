@@ -24,22 +24,22 @@ impl Model for {} {{
     }}
     
     async fn find(id: i64, conn: &dyn Connection) -> Result<Option<Self>> {{
-        // TODO: Implement
+        // TODO: Implement find
         todo!()
     }}
     
     async fn create(self, conn: &dyn Connection) -> Result<Self> {{
-        // TODO: Implement
+        // TODO: Implement create
         todo!()
     }}
     
     async fn update(&self, conn: &dyn Connection) -> Result<()> {{
-        // TODO: Implement
+        // TODO: Implement update
         todo!()
     }}
     
     async fn delete(&self, conn: &dyn Connection) -> Result<()> {{
-        // TODO: Implement
+        // TODO: Implement delete
         todo!()
     }}
 }}
@@ -59,46 +59,44 @@ pub fn make_controller(name: &str) -> Result<(), Box<dyn std::error::Error>> {
         fs::create_dir_all(controllers_dir)?;
     }
     
-    let controller_template = format!(r#"use oxidite_core::{{OxiditeRequest, OxiditeResponse, Result, Json}};
-use http_body_util::Full;
-use bytes::Bytes;
-use serde::{{Deserialize, Serialize}};
+    let controller_template = format!(r#"use oxidite_core::{{Request, Response, Result, Error}};
+use serde_json::json;
 
 pub struct {} {{}}
 
 impl {} {{
-    pub async fn index(_req: OxiditeRequest) -> Result<OxiditeResponse> {{
-        let response = serde_json::json!({{
+    pub async fn index(_req: Request) -> Result<Response, Error> {{
+        Ok(Response::json(json!({{
             "message": "List endpoint"
-        }});
-        
-        let json = serde_json::to_vec(&response)
-            .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
-        
-        Ok(hyper::Response::builder()
-            .header("content-type", "application/json")
-            .body(Full::new(Bytes::from(json)))
-            .unwrap())
+        }})))
     }}
     
-    pub async fn show(_req: OxiditeRequest) -> Result<OxiditeResponse> {{
+    pub async fn show(_req: Request) -> Result<Response, Error> {{
         // TODO: Implement show
-        todo!()
+        Ok(Response::json(json!({{
+            "message": "Show endpoint"
+        }})))
     }}
     
-    pub async fn create(_req: OxiditeRequest) -> Result<OxiditeResponse> {{
+    pub async fn create(_req: Request) -> Result<Response, Error> {{
         // TODO: Implement create
-        todo!()
+        Ok(Response::json(json!({{
+            "message": "Create endpoint"
+        }})))
     }}
     
-    pub async fn update(_req: OxiditeRequest) -> Result<OxiditeResponse> {{
+    pub async fn update(_req: Request) -> Result<Response, Error> {{
         // TODO: Implement update
-        todo!()
+        Ok(Response::json(json!({{
+            "message": "Update endpoint"
+        }})))
     }}
     
-    pub async fn destroy(_req: OxiditeRequest) -> Result<OxiditeResponse> {{
+    pub async fn destroy(_req: Request) -> Result<Response, Error> {{
         // TODO: Implement destroy
-        todo!()
+        Ok(Response::json(json!({{
+            "message": "Destroy endpoint"
+        }})))
     }}
 }}
 "#, name, name);
@@ -117,7 +115,7 @@ pub fn make_middleware(name: &str) -> Result<(), Box<dyn std::error::Error>> {
         fs::create_dir_all(middleware_dir)?;
     }
     
-    let middleware_template = format!(r#"use oxidite_core::{{OxiditeRequest, OxiditeResponse, Error as CoreError}};
+    let middleware_template = format!(r#"use oxidite_core::{{Request, Response, Error}};
 use tower::{{Service, Layer}};
 use std::task::{{Context, Poll}};
 use std::future::Future;
@@ -134,9 +132,9 @@ impl<S> {}<S> {{
     }}
 }}
 
-impl<S> Service<OxiditeRequest> for {}<S>
+impl<S> Service<Request> for {}<S>
 where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = CoreError> + Clone + Send + 'static,
+    S: Service<Request, Response = Response, Error = Error> + Clone + Send + 'static,
     S::Future: Send + 'static,
 {{
     type Response = S::Response;
@@ -147,7 +145,7 @@ where
         self.inner.poll_ready(cx)
     }}
 
-    fn call(&mut self, req: OxiditeRequest) -> Self::Future {{
+    fn call(&mut self, req: Request) -> Self::Future {{
         let mut inner = self.inner.clone();
         
         Box::pin(async move {{

@@ -25,6 +25,9 @@ enum Commands {
     New {
         /// Project name
         name: String,
+        /// Project type (api, fullstack, microservice, serverless)
+        #[arg(short, long)]
+        project_type: Option<String>,
     },
     /// Generate code
     Make {
@@ -36,6 +39,8 @@ enum Commands {
         #[command(subcommand)]
         migration: MigrateCommand,
     },
+    /// Start development server with hot reload
+    Dev,
 }
 
 #[derive(Subcommand)]
@@ -81,8 +86,8 @@ async fn main() -> Result<()> {
             println!("🚀 Server running on http://{}", addr);
             server.listen(addr.parse().unwrap()).await
         }
-        Commands::New { name } => {
-            commands::create_project(&name)
+        Commands::New { name, project_type } => {
+            commands::create_project(&name, project_type)
                 .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
             Ok(())
         }
@@ -125,6 +130,11 @@ async fn main() -> Result<()> {
                         .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
                 }
             }
+            Ok(())
+        }
+        Commands::Dev => {
+            commands::dev::start_dev_server()
+                .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
             Ok(())
         }
     }

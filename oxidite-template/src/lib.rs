@@ -6,10 +6,12 @@ use std::fs;
 pub mod parser;
 pub mod renderer;
 pub mod filters;
+pub mod static_files;
 
 pub use parser::{Parser, TemplateNode};
 pub use renderer::Renderer;
 pub use filters::Filters;
+pub use static_files::{StaticFiles, serve_static};
 
 /// Template context for variable interpolation
 #[derive(Debug, Clone)]

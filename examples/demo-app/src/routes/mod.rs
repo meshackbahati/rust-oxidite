@@ -114,45 +114,6 @@ pub async fn favicon(_req: Request) -> Result<Response, Error> {
     Ok(response)
 }
 
-/// Serve static files
-pub async fn serve_static(req: Request) -> Result<Response, Error> {
-    let path = req.uri().path();
-    
-    // Remove /public/ prefix
-    let file_path = path.strip_prefix("/public/").unwrap_or(path);
-    let full_path = format!("public/{}", file_path);
-    
-    // Security: prevent directory traversal
-    if file_path.contains("..") {
-        return Err(Error::BadRequest("Invalid path".to_string()));
-    }
-    
-    // Read file
-    match std::fs::read_to_string(&full_path) {
-        Ok(content) => {
-            // Set content type based on extension
-            let content_type = if full_path.ends_with(".css") {
-                "text/css"
-            } else if full_path.ends_with(".js") {
-                "application/javascript"
-            } else if full_path.ends_with(".svg") {
-                "image/svg+xml"
-            } else if full_path.ends_with(".png") {
-                "image/png"
-            } else {
-                "text/plain"
-            };
-            
-            let mut response = Response::new(content.into());
-            response.headers_mut().insert(
-                "content-type",
-                content_type.parse().unwrap()
-            );
-            Ok(response)
-        },
-        Err(_) => Err(Error::NotFound)
-    }
-}
 
 /// 404 Not Found handler
 pub async fn not_found(_req: Request) -> Result<Response, Error> {

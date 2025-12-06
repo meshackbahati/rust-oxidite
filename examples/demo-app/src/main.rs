@@ -15,7 +15,7 @@ use oxidite_core::{Router, Server, Request, Response, Error};
 use oxidite_auth::{JwtManager, SessionManager};
 use oxidite_db::{DbPool, Database};
 use oxidite_middleware::{LoggerLayer, CorsLayer};
-use oxidite_template::TemplateEngine;
+use oxidite_template::{TemplateEngine, serve_static};
 use oxidite_config::Config;
 use std::sync::Arc;
 
@@ -108,7 +108,7 @@ fn setup_router(_state: Arc<AppState>) -> Router {
     let mut router = Router::new();
     
     // Static files
-    router.get("/public/*", routes::serve_static);
+    router.get("/public/*", serve_static);
     
     // Web routes (HTML pages)
     router.get("/", routes::index);

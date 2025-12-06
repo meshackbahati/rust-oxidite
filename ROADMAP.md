@@ -446,6 +446,7 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 - [x] Custom filters
 - [ ] Custom helpers
 - [x] Auto-escaping (XSS protection)
+- [x] Static file serving
 - [ ] Template caching
 
 #### Dependencies
