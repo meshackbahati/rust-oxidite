@@ -107,6 +107,7 @@ You can configure this in `src/main.rs`:
 
 ```rust
 // Serve static files from "public" directory (fallback route)
+// Register this LAST to avoid blocking other routes
 router.get("/*", serve_static);
 ```
 

@@ -79,6 +79,9 @@ In `src/main.rs`, the static file handler is registered as a fallback route:
 router.get("/*", serve_static);
 ```
 
+> [!IMPORTANT]
+> **Route Order Matters**: The Oxidite router matches routes in the order they are registered. You must register your application routes (e.g., controllers) **before** the static file fallback. If you register `/*` first, it will intercept all requests, including your API endpoints.
+
 ### Custom Directory
 
 You can serve files from a different directory using `static_handler`:

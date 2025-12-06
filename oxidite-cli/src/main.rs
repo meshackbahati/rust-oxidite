@@ -39,6 +39,11 @@ enum Commands {
         #[command(subcommand)]
         migration: MigrateCommand,
     },
+    /// Database seeders
+    Seed {
+        #[command(subcommand)]
+        seeder: SeedCommand,
+    },
     /// Start development server with hot reload
     Dev,
 }
@@ -63,6 +68,14 @@ enum MigrateCommand {
     Revert,
     /// Show migration status
     Status,
+}
+
+#[derive(Subcommand)]
+enum SeedCommand {
+    /// Run database seeders
+    Run,
+    /// Create a new seeder
+    Create { name: String },
 }
 
 async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
@@ -127,6 +140,20 @@ async fn main() -> Result<()> {
                 MigrateCommand::Status => {
                     commands::migrate::migration_status()
                         .await
+                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                }
+            }
+            Ok(())
+        }
+        Commands::Seed { seeder } => {
+            match seeder {
+                SeedCommand::Run => {
+                    commands::seed::run_seeders()
+                        .await
+                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                }
+                SeedCommand::Create { name } => {
+                    commands::seed::create_seeder(&name)
                         .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
                 }
             }

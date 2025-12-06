@@ -15,5 +15,5 @@ members = [
     "oxidite-template",
     "oxidite-storage",
     "oxidite-mail",
-    "examples/demo-app",
+    "examples/demo-app", "oxidite-macros",
 ]

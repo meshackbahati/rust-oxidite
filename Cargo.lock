@@ -2604,6 +2604,9 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "once_cell",
+ "oxidite-macros",
+ "regex",
  "serde",
  "serde_json",
  "sqlx",
@@ -2632,6 +2635,15 @@ dependencies = [
  "serde_json",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "oxidite-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

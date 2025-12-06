@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use sqlx::{any::{AnyPoolOptions, AnyRow}, AnyPool, Transaction};
 use std::fmt::Debug;
 
@@ -7,7 +6,16 @@ pub use sqlx;
 pub mod migrations;
 pub use migrations::{Migration, MigrationManager};
 
+pub mod relations;
+pub use relations::{HasMany, HasOne, BelongsTo};
+
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
+
+pub use oxidite_macros::Model;
+pub use async_trait::async_trait;
+pub use chrono;
+pub use regex;
+pub use once_cell;
 
 /// Database backend type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,6 +65,15 @@ pub trait Database: Send + Sync + Debug {
     
     /// Begin a transaction
     async fn begin_transaction(&self) -> Result<DbTransaction>;
+
+    /// Execute a sqlx Query
+    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64>;
+
+    /// Fetch all from a sqlx Query
+    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>>;
+
+    /// Fetch one from a sqlx Query
+    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>>;
 }
 
 /// Database connection pool wrapper
@@ -133,19 +150,39 @@ impl Database for DbPool {
     
     async fn begin_transaction(&self) -> Result<DbTransaction> {
         let tx = self.pool.begin().await?;
-        Ok(DbTransaction { tx: Some(tx) })
+        Ok(DbTransaction { tx: Arc::new(Mutex::new(Some(tx))) })
+    }
+
+    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64> {
+        let result = query.execute(&self.pool).await?;
+        Ok(result.rows_affected())
+    }
+
+    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> {
+        let rows = query.fetch_all(&self.pool).await?;
+        Ok(rows)
+    }
+
+    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> {
+        let row = query.fetch_optional(&self.pool).await?;
+        Ok(row)
     }
 }
 
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
 /// Database transaction
+#[derive(Clone, Debug)]
 pub struct DbTransaction {
-    tx: Option<Transaction<'static, sqlx::Any>>,
+    tx: Arc<Mutex<Option<Transaction<'static, sqlx::Any>>>>,
 }
 
 impl DbTransaction {
     /// Execute a query within the transaction
-    pub async fn execute(&mut self, query: &str) -> Result<u64> {
-        if let Some(ref mut tx) = self.tx {
+    pub async fn execute(&self, query: &str) -> Result<u64> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
             let result = sqlx::query(query).execute(&mut **tx).await?;
             Ok(result.rows_affected())
         } else {
@@ -154,8 +191,9 @@ impl DbTransaction {
     }
 
     /// Query multiple rows within the transaction
-    pub async fn query(&mut self, query: &str) -> Result<Vec<AnyRow>> {
-        if let Some(ref mut tx) = self.tx {
+    pub async fn query(&self, query: &str) -> Result<Vec<AnyRow>> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
             let rows = sqlx::query(query).fetch_all(&mut **tx).await?;
             Ok(rows)
         } else {
@@ -164,8 +202,9 @@ impl DbTransaction {
     }
 
     /// Query one row within the transaction
-    pub async fn query_one(&mut self, query: &str) -> Result<Option<AnyRow>> {
-        if let Some(ref mut tx) = self.tx {
+    pub async fn query_one(&self, query: &str) -> Result<Option<AnyRow>> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
             let row = sqlx::query(query).fetch_optional(&mut **tx).await?;
             Ok(row)
         } else {
@@ -174,26 +213,82 @@ impl DbTransaction {
     }
 
     /// Commit the transaction
-    pub async fn commit(mut self) -> Result<()> {
-        if let Some(tx) = self.tx.take() {
+    pub async fn commit(self) -> Result<()> {
+        let mut lock = self.tx.lock().await;
+        if let Some(tx) = lock.take() {
             tx.commit().await?;
         }
         Ok(())
     }
 
     /// Rollback the transaction
-    pub async fn rollback(mut self) -> Result<()> {
-        if let Some(tx) = self.tx.take() {
+    pub async fn rollback(self) -> Result<()> {
+        let mut lock = self.tx.lock().await;
+        if let Some(tx) = lock.take() {
             tx.rollback().await?;
         }
         Ok(())
     }
 }
 
-impl Drop for DbTransaction {
-    fn drop(&mut self) {
-        // If not committed or rolled back, the transaction will be rolled back automatically
-        // when dropped (SQLx default behavior)
+#[async_trait]
+impl Database for DbTransaction {
+    fn db_type(&self) -> DatabaseType {
+        // Still a placeholder, but consistent
+        DatabaseType::Postgres 
+    }
+
+    async fn execute(&self, query: &str) -> Result<u64> {
+        self.execute(query).await
+    }
+
+    async fn query(&self, query: &str) -> Result<Vec<AnyRow>> {
+        self.query(query).await
+    }
+
+    async fn query_one(&self, query: &str) -> Result<Option<AnyRow>> {
+        self.query_one(query).await
+    }
+
+    async fn ping(&self) -> Result<()> {
+        self.execute("SELECT 1").await?;
+        Ok(())
+    }
+    
+    async fn begin_transaction(&self) -> Result<DbTransaction> {
+        // Nested transactions not supported by this simple wrapper yet
+        // Could use savepoints if needed.
+        Err(sqlx::Error::Configuration("Nested transactions not supported".into()))
+    }
+
+    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
+            let result = query.execute(&mut **tx).await?;
+            Ok(result.rows_affected())
+        } else {
+            Err(sqlx::Error::PoolClosed)
+        }
+    }
+
+    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
+            let rows = query.fetch_all(&mut **tx).await?;
+            Ok(rows)
+        } else {
+            Err(sqlx::Error::PoolClosed)
+        }
+    }
+
+    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> {
+        let mut lock = self.tx.lock().await;
+        if let Some(ref mut tx) = *lock {
+            let row = query.fetch_optional(&mut **tx).await?;
+            Ok(row)
+        } else {
+            Err(sqlx::Error::PoolClosed)
+        }
     }
 }
 
@@ -264,5 +359,76 @@ impl QueryBuilder {
         }
 
         query
+    }
+}
+/// Model trait for database entities
+#[async_trait]
+pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow> {
+    /// Get the table name
+    fn table_name() -> &'static str;
+
+    /// Get the list of fields (columns)
+    fn fields() -> &'static [&'static str];
+
+    /// Check if the model supports soft deletes
+    fn has_soft_delete() -> bool {
+        false
+    }
+
+    /// Find a record by ID
+    async fn find(db: &impl Database, id: i64) -> Result<Option<Self>> {
+        let mut query = format!("SELECT * FROM {} WHERE id = {}", Self::table_name(), id);
+        if Self::has_soft_delete() {
+            query.push_str(" AND deleted_at IS NULL");
+        }
+        let row = db.query_one(&query).await?;
+        
+        match row {
+            Some(row) => Ok(Some(Self::from_row(&row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Find all records
+    async fn all(db: &impl Database) -> Result<Vec<Self>> {
+        let mut query = format!("SELECT * FROM {}", Self::table_name());
+        if Self::has_soft_delete() {
+            query.push_str(" WHERE deleted_at IS NULL");
+        }
+        let rows = db.query(&query).await?;
+        
+        let mut models = Vec::new();
+        for row in rows {
+            models.push(Self::from_row(&row)?);
+        }
+        Ok(models)
+    }
+    
+    /// Create a new record
+    async fn create(&mut self, db: &impl Database) -> Result<()>;
+
+    /// Update an existing record
+    async fn update(&mut self, db: &impl Database) -> Result<()>;
+
+    /// Delete the record (soft delete if supported, otherwise hard delete)
+    async fn delete(&self, db: &impl Database) -> Result<()>;
+    
+    /// Force delete the record (hard delete)
+    async fn force_delete(&self, db: &impl Database) -> Result<()>;
+    
+    /// Validate the model fields
+    fn validate(&self) -> std::result::Result<(), String> {
+        Ok(())
+    }
+
+    /// Save (create or update)
+    async fn save(&mut self, db: &impl Database) -> Result<()> {
+        if let Err(e) = self.validate() {
+            return Err(sqlx::Error::Protocol(e.into()));
+        }
+        // This default impl is tricky without knowing if it's new.
+        // For now, let's leave it to the user or macro to decide.
+        // But we can provide a helper if we had an `is_new()` method.
+        self.create(db).await
     }
 }

@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 use std::fs;
 use chrono::Utc;
+use sqlx::Row;
 
 /// Migration file
 #[derive(Debug)]
@@ -120,5 +121,67 @@ impl MigrationManager {
     pub fn create_migration(&self, name: &str) -> Result<PathBuf, std::io::Error> {
         let migration = Migration::new(name);
         migration.save(&self.migrations_dir)
+    }
+    
+    /// Ensure migrations table exists
+    pub async fn ensure_migrations_table(&self, db: &impl crate::Database) -> crate::Result<()> {
+        let sql = r#"
+            CREATE TABLE IF NOT EXISTS _migrations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                version TEXT NOT NULL UNIQUE,
+                applied_at INTEGER NOT NULL
+            )
+        "#;
+        db.execute(sql).await?;
+        Ok(())
+    }
+    
+    /// Get list of applied migrations
+    pub async fn get_applied_migrations(&self, db: &impl crate::Database) -> crate::Result<Vec<String>> {
+        self.ensure_migrations_table(db).await?;
+        
+        let rows = db.query("SELECT version FROM _migrations ORDER BY version").await?;
+        let mut versions = Vec::new();
+        
+        for row in rows {
+            if let Ok(version) = row.try_get::<String, _>("version") {
+                versions.push(version);
+            }
+        }
+        
+        Ok(versions)
+    }
+    
+    /// Mark migration as applied
+    pub async fn mark_migration_applied(&self, db: &impl crate::Database, version: &str) -> crate::Result<()> {
+        self.ensure_migrations_table(db).await?;
+        
+        let timestamp = chrono::Utc::now().timestamp();
+        let sql = format!(
+            "INSERT INTO _migrations (version, applied_at) VALUES ('{}', {})",
+            version, timestamp
+        );
+        db.execute(&sql).await?;
+        Ok(())
+    }
+    
+    /// Remove migration record (for rollback)
+    pub async fn mark_migration_reverted(&self, db: &impl crate::Database, version: &str) -> crate::Result<()> {
+        let sql = format!("DELETE FROM _migrations WHERE version = '{}'", version);
+        db.execute(&sql).await?;
+        Ok(())
+    }
+    
+    /// Get pending migrations
+    pub async fn get_pending_migrations(&self, db: &impl crate::Database) -> Result<Vec<Migration>, Box<dyn std::error::Error>> {
+        let all_migrations = self.list_migrations()?;
+        let applied = self.get_applied_migrations(db).await?;
+        
+        let pending: Vec<Migration> = all_migrations
+            .into_iter()
+            .filter(|m| !applied.contains(&m.version))
+            .collect();
+        
+        Ok(pending)
     }
 }
