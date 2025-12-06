@@ -15,7 +15,7 @@ pub use logger::LoggerLayer;
 pub use request_id::{RequestIdLayer, RequestIdMiddleware};
 pub use security_headers::{SecurityHeadersLayer, SecurityHeadersConfig, FrameOptions};
 pub use csrf::{CsrfLayer, CsrfConfig};
-pub use rate_limit::{RateLimitLayer, RateLimitConfig};
+pub use rate_limit::{RateLimiter, RateLimitConfig};
 pub use timeout::{TimeoutMiddleware, TimeoutError};
 pub use server_header::add_server_headers;
 

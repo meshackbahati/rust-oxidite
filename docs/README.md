@@ -92,6 +92,21 @@ router.get("/api/openapi.json", |req| async {
 **3. Serve Docs UI:**
 Create a route that renders the Swagger UI template (included in `oxidite-template` or custom).
 
+### How-To Guides
+
+Step-by-step guides for common tasks:
+
+- **[Building a Fullstack Application](guides/fullstack.md)** - Create a complete web app with Oxidite
+- **[CLI Tool Usage](guides/cli.md)** - Master the Oxidite command-line interface
+- **[Static File Serving](guides/static-files.md)** - Serve static assets efficiently
+- **[Authorization & Access Control](guides/authorization.md)** - Implement RBAC/PBAC
+- **[API Key Authentication](guides/api-keys.md)** - Secure your API with key-based auth
+
+### Project Status
+
+- **[Implementation Status](../STATUS.md)** - Current feature completeness and roadmap progress
+- **[Full Roadmap](../ROADMAP.md)** - Complete development roadmap
+
 ## 📖 Demo Application
 
 The `examples/demo-app` directory contains a complete full-stack application showcasing:

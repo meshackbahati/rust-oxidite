@@ -23,12 +23,17 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 
 ## ✨ Key Features
 
-- **⚡ High Performance**: Built on `hyper` and `tokio`.
-- **🛠️ Powerful CLI**: Scaffolding, hot-reloading dev server, code generation.
-- **🔋 Batteries Included**: Auth, Database (ORM), Queues, Caching, Email, Storage.
-- **🎨 Template Engine**: Django-style templates with inheritance.
-- **🔄 Real-time**: WebSockets and Pub/Sub support.
-- **📝 Type-Safe**: Strong typing for requests, responses, and database queries.
+- **⚡ High Performance**: Built on `hyper` and `tokio` for blazing speed
+- **🗄️ Advanced ORM**: Complete database layer with relationships, soft deletes, validation
+- **🛠️ Powerful CLI**: Scaffolding, migrations, hot-reload dev server, code generators
+- **🔋 Batteries Included**: RBAC/PBAC, API Keys, Queues, Caching, Email, Storage
+- **🔐 Enterprise Security**: Password hashing, JWT, OAuth2, 2FA, rate limiting
+- **🎨 Template Engine**: Jinja2-style templates with inheritance and auto-escaping
+- **🔄 Real-time**: WebSockets and Redis pub/sub support
+- **📝 Type-Safe**: Strong typing for requests, responses, and database queries
+- **📊 Auto-Documentation**: OpenAPI/Swagger UI generation
+
+> **Status**: See [STATUS.md](STATUS.md) for detailed feature completeness
 
 ## 📦 Installation
 

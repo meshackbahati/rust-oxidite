@@ -1,144 +1,150 @@
-use oxidite_core::{OxiditeRequest, OxiditeResponse, Error as CoreError};
-use tower::{Service, Layer};
-use std::task::{Context, Poll};
-use std::future::Future;
-use std::pin::Pin;
-use std::collections::HashMap;
+use oxidite_db::Database;
 use std::sync::Arc;
-use tokio::sync::RwLock;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
+use tokio::sync::Mutex;
 
 /// Rate limit configuration
 #[derive(Clone, Debug)]
 pub struct RateLimitConfig {
-    pub requests_per_window: usize,
-    pub window_secs: u64,
+    pub requests_per_minute: u32,
+    pub requests_per_hour: Option<u32>,
 }
 
 impl Default for RateLimitConfig {
     fn default() -> Self {
         Self {
-            requests_per_window: 100,
-            window_secs: 60,
+            requests_per_minute: 60,
+            requests_per_hour: Some(1000),
         }
     }
 }
 
-struct RateLimitEntry {
-    count: usize,
-    window_start: u64,
-}
-
-/// Rate limiting middleware
-#[derive(Clone)]
-pub struct RateLimitMiddleware<S> {
-    inner: S,
+/// In-memory rate limiter with sliding window
+pub struct RateLimiter {
+    db: Option<Arc<dyn Database>>,
     config: RateLimitConfig,
-    store: Arc<RwLock<HashMap<String, RateLimitEntry>>>,
+    // In-memory cache: identifier -> (timestamp, count)
+    cache: Arc<Mutex<HashMap<String, Vec<i64>>>>,
 }
 
-impl<S> RateLimitMiddleware<S> {
-    pub fn new(inner: S, config: RateLimitConfig) -> Self {
-        Self {
-            inner,
-            config,
-            store: Arc::new(RwLock::new(HashMap::new())),
-        }
-    }
-
-    fn get_client_ip(req: &OxiditeRequest) -> String {
-        // Try to get real IP from X-Forwarded-For or X-Real-IP
-        req.headers()
-            .get("x-forwarded-for")
-            .and_then(|h| h.to_str().ok())
-            .map(|s| s.split(',').next().unwrap_or("").trim().to_string())
-            .or_else(|| {
-                req.headers()
-                    .get("x-real-ip")
-                    .and_then(|h| h.to_str().ok())
-                    .map(|s| s.to_string())
-            })
-            .unwrap_or_else(|| "unknown".to_string())
-    }
-
-    fn current_timestamp() -> u64 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-    }
-}
-
-impl<S>Service<OxiditeRequest> for RateLimitMiddleware<S>
-where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = CoreError> + Clone + Send + 'static,
-    S::Future: Send + 'static,
-{
-    type Response = S::Response;
-    type Error = S::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: OxiditeRequest) -> Self::Future {
-        let client_ip = Self::get_client_ip(&req);
-        let config = self.config.clone();
-        let store = self.store.clone();
-        let mut inner = self.inner.clone();
-
-        Box::pin(async move {
-            let now = Self::current_timestamp();
-            let mut store = store.write().await;
-
-            let entry = store.entry(client_ip.clone()).or_insert(RateLimitEntry {
-                count: 0,
-                window_start: now,
-            });
-
-            // Reset window if expired
-            if now - entry.window_start >= config.window_secs {
-                entry.count = 0;
-                entry.window_start = now;
-            }
-
-            // Check rate limit
-            if entry.count >= config.requests_per_window {
-                drop(store); // Release lock
-                return Err(CoreError::BadRequest("Rate limit exceeded".to_string()));
-            }
-
-            entry.count += 1;
-            drop(store); // Release lock before calling inner service
-
-            inner.call(req).await
-        })
-    }
-}
-
-/// Layer for rate limiting middleware
-#[derive(Clone)]
-pub struct RateLimitLayer {
-    config: RateLimitConfig,
-}
-
-impl RateLimitLayer {
+impl RateLimiter {
     pub fn new(config: RateLimitConfig) -> Self {
-        Self { config }
-    }
-
-    pub fn with_defaults() -> Self {
         Self {
-            config: RateLimitConfig::default(),
+            db: None,
+            config,
+            cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
-}
-
-impl<S> Layer<S> for RateLimitLayer {
-    type Service = RateLimitMiddleware<S>;
-
-    fn layer(&self, inner: S) -> Self::Service {
-        RateLimitMiddleware::new(inner, self.config.clone())
+    
+    pub fn with_db(config: RateLimitConfig, db: Arc<dyn Database>) -> Self {
+        Self {
+            db: Some(db),
+            config,
+            cache: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+    
+    /// Check if request is allowed (returns true if allowed)
+    pub async fn check(&self, identifier: &str, endpoint: &str) -> bool {
+        let now = chrono::Utc::now().timestamp();
+        let minute_ago = now - 60;
+        let hour_ago = now - 3600;
+        
+        // Use in-memory cache for performance
+        let mut cache = self.cache.lock().await;
+        let key = format!("{}:{}", identifier, endpoint);
+        
+        // Get timestamps for this identifier+endpoint
+        let timestamps = cache.entry(key.clone()).or_insert_with(Vec::new);
+        
+        // Remove timestamps older than 1 hour
+        timestamps.retain(|&ts| ts > hour_ago);
+        
+        // Count requests in last minute
+        let minute_count = timestamps.iter().filter(|&&ts| ts > minute_ago).count() as u32;
+        
+        // Check minute limit
+        if minute_count >= self.config.requests_per_minute {
+            return false;
+        }
+        
+        // Check hour limit if configured
+        if let Some(hour_limit) = self.config.requests_per_hour {
+            let hour_count = timestamps.len() as u32;
+            if hour_count >= hour_limit {
+                return false;
+            }
+        }
+        
+        // Request allowed - add timestamp
+        timestamps.push(now);
+        
+        // Persist to database if configured (async, don't wait)
+        if let Some(db) = &self.db {
+            let db_clone = db.clone();
+            let ident = identifier.to_string();
+            let ep = endpoint.to_string();
+            tokio::spawn(async move {
+                let _ = Self::record_request(&*db_clone, &ident, &ep).await;
+            });
+        }
+        
+        true
+    }
+    
+    /// Record request in database
+    async fn record_request(db: &dyn Database, identifier: &str, endpoint: &str) -> oxidite_db::Result<()> {
+        let now = chrono::Utc::now().timestamp();
+        let window_start = (now / 60) * 60; // Round to minute
+        
+        // Try to increment existing record
+        let update_query = format!(
+            "UPDATE rate_limits 
+             SET request_count = request_count + 1, updated_at = {}
+             WHERE identifier = '{}' AND endpoint = '{}' AND window_start = {}",
+            now, identifier, endpoint, window_start
+        );
+        
+        let rows = db.execute(&update_query).await?;
+        
+        // If no existing record, insert new one
+        if rows == 0 {
+            let insert_query = format!(
+                "INSERT INTO rate_limits (identifier, endpoint, request_count, window_start, created_at, updated_at)
+                 VALUES ('{}', '{}', 1, {}, {}, {})",
+                identifier, endpoint, window_start, now, now
+            );
+            db.execute(&insert_query).await?;
+        }
+        
+        Ok(())
+    }
+    
+    /// Get remaining requests for identifier
+    pub async fn get_remaining(&self, identifier: &str, endpoint: &str) -> u32 {
+        let now = chrono::Utc::now().timestamp();
+        let minute_ago = now - 60;
+        
+        let cache = self.cache.lock().await;
+        let key = format!("{}:{}", identifier, endpoint);
+        
+        if let Some(timestamps) = cache.get(&key) {
+            let minute_count = timestamps.iter().filter(|&&ts| ts > minute_ago).count() as u32;
+            self.config.requests_per_minute.saturating_sub(minute_count)
+        } else {
+            self.config.requests_per_minute
+        }
+    }
+    
+    /// Clean up old entries from cache (call periodically)
+    pub async fn cleanup(&self) {
+        let now = chrono::Utc::now().timestamp();
+        let hour_ago = now - 3600;
+        
+        let mut cache = self.cache.lock().await;
+        cache.retain(|_, timestamps| {
+            timestamps.retain(|&ts| ts > hour_ago);
+            !timestamps.is_empty()
+        });
     }
 }

@@ -133,11 +133,11 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
   - [x] `make:model`
   - [x] `make:controller`
   - [x] `make:middleware`
-  - [ ] `make:migration`
-- [ ] Database commands
-  - [ ] `migrate`
-  - [ ] `rollback`
-  - [ ] `seed`
+  - [x] `make:migration`
+- [x] Database commands
+  - [x] `migrate`
+  - [x] `rollback`
+  - [x] `seed`
 - [ ] Queue commands
   - [ ] `queue:work`
   - [ ] `queue:list`
@@ -179,16 +179,16 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
   - [ ] MongoDB via `mongodb`
   - [ ] Redis via `redis-rs`
 - [x] Query builder (type-safe)
-- [ ] Model macro (`#[derive(Model)]`)
-- [ ] Relationships
-  - [ ] One-to-one
-  - [ ] One-to-many
-  - [ ] Many-to-many
+- [x] Model macro (`#[derive(Model)]`)
+- [x] Relationships
+  - [x] One-to-one (HasOne)
+  - [x] One-to-many (HasMany)
+  - [x] Many-to-many (BelongsTo)
   - [ ] Polymorphic
-- [ ] Transactions & rollback
-- [ ] Soft deletes
-- [ ] Timestamps (created_at, updated_at)
-- [ ] Validation layer
+- [x] Transactions & rollback
+- [x] Soft deletes
+- [x] Timestamps (created_at, updated_at)
+- [x] Validation layer
 - [x] Connection pooling (bb8/deadpool)
 
 #### Dependencies
@@ -200,8 +200,10 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 #### Acceptance Criteria
 - [x] CRUD operations on all databases
 - [x] Type-safe query builder
-- [ ] Relationship loading
-- [ ] Transaction example
+- [x] Relationship loading (HasOne, HasMany, BelongsTo)
+- [x] Transaction example
+- [x] Soft deletes & timestamps
+- [x] Field validation
 - [ ] 10k+ queries/sec benchmark
 
 #### Security Considerations
@@ -221,9 +223,9 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 - [x] Schema introspection
 - [x] Auto-diff generator
 - [x] Migration runner
-- [ ] Rollback support
-- [ ] Seeding system
-- [ ] Migration history table
+- [x] Rollback support
+- [x] Seeding system
+- [x] Migration history table
 - [ ] Squashing migrations
 - [ ] Multi-database support
 
@@ -234,8 +236,9 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 #### Acceptance Criteria
 - [x] Auto-generate migration from model changes
 - [x] `oxidite migrate` runs pending migrations
-- [ ] `oxidite rollback` reverts last migration
-- [ ] Seed data support
+- [x] `oxidite rollback` reverts last migration
+- [x] `oxidite seed` runs seed data
+- [x] Migration tracking in database
 
 #### Estimated Effort: 2-3 weeks
 
@@ -257,14 +260,14 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
   - [x] Authorization code
   - [x] Client credentials
   - [x] PKCE
-- [ ] Role-Based Access Control (RBAC)
-- [ ] Permission-Based Access Control (PBAC)
-- [ ] API key authentication
-- [ ] Two-factor authentication (TOTP)
-- [ ] Rate limiting per user
-- [ ] Brute-force protection
-- [ ] Password reset flow
-- [ ] Email verification
+- [x] Role-Based Access Control (RBAC)
+- [x] Permission-Based Access Control (PBAC)
+- [x] API key authentication
+- [x] Two-factor authentication (TOTP)
+- [x] Rate limiting per user
+- [x] Brute-force protection
+- [x] Password reset flow (core logic)
+- [x] Email verification (core logic)
 
 #### Dependencies
 - `argon2` for hashing
@@ -274,7 +277,9 @@ Oxidite aims to be the **most complete, batteries-included Rust web framework**,
 #### Acceptance Criteria
 - [x] Complete auth example app
 - [x] Multiple auth strategies
-- [ ] RBAC working
+- [x] RBAC/PBAC working with middleware
+- [x] API key authentication
+- [x] 2FA implementation
 - [x] OAuth2 provider example
 
 #### Security Considerations
