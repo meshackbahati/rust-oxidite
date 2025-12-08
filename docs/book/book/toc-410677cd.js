@@ -443,3 +443,4 @@ window.customElements.define('mdbook-sidebar-scrollbox', MDBookSidebarScrollbox)
     document.addEventListener('DOMContentLoaded', reloadCurrentHeader);
     document.addEventListener('scroll', reloadCurrentHeader, { passive: true });
 })();
+
