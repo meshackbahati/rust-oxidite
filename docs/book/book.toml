@@ -1,0 +1,8 @@
+[book]
+title = "Oxidite Documentation"
+authors = ["Meshack Bahati Ouma"]
+language = "en"
+
+[output.html]
+git-repository-url = "https://github.com/Kyle6012/rust-oxidite"
+edit-url-template = "https://github.com/Kyle6012/rust-oxidite/edit/main/{path}"

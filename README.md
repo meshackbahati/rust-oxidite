@@ -54,14 +54,30 @@ Oxidite provides an interactive wizard to set up your project.
 oxidite new my-app
 ```
 
-You will be prompted to select a project type:
+### 2. A Simple Example
 
-- **Fullstack Application**: Complete setup with templates, static files, and database.
-- **REST API**: Optimized for backend services (JSON only).
-- **Microservice**: Minimal setup for specialized services.
-- **Serverless Function**: Lightweight event handler.
+Here's a basic "Hello, World!" example:
 
-### 2. Development
+```rust
+use oxidite::prelude::*;
+use serde_json::json;
+
+async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
+    Ok(OxiditeResponse::json(json!({ "message": "Hello, Oxidite!" })))
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut router = Router::new();
+    router.get("/", hello);
+
+    let server = Server::new(router);
+    println!("🚀 Server running on http://127.0.0.1:3000");
+    server.listen("127.0.0.1:3000".parse()?).await
+}
+```
+
+### 3. Development
 
 Navigate to your project and start the development server.
 
@@ -70,72 +86,31 @@ cd my-app
 oxidite dev
 ```
 
-The server will start on `http://127.0.0.1:8080`. The `dev` command watches your files and automatically restarts the server when you make changes.
-
-### 3. Project Structure
-
-A typical Fullstack project looks like this:
-
-```
-my-app/
-├── src/
-│   ├── controllers/   # Request handlers
-│   ├── models/        # Database structs
-│   ├── routes/        # Route definitions
-│   ├── services/      # Business logic
-│   ├── middleware/    # Custom middleware
-│   └── main.rs        # Entry point
-├── templates/         # HTML templates
-├── public/            # Static assets (css, js, images)
-├── config.toml        # Configuration
-└── Cargo.toml         # Dependencies
-```
-
-### 4. Building APIs
-
-Generate a new controller and model using the CLI:
-
-```bash
-oxidite make model User
-oxidite make controller Users
-```
-
-This creates `src/models/user.rs` and `src/controllers/users.rs` with boilerplate CRUD operations.
-
-### 5. Serving Static Files
+### 4. Serving Static Files
 
 In a Fullstack project, static files in `public/` are served from the root URL by default.
 
-- `public/css/style.css` -> `http://localhost:8080/css/style.css`
-
-You can configure this in `src/main.rs`:
-
 ```rust
+use oxidite_template::serve_static;
+
 // Serve static files from "public" directory (fallback route)
 // Register this LAST to avoid blocking other routes
 router.get("/*", serve_static);
 ```
 
-### 6. Templates
+### 5. Templates
 
-Oxidite uses a powerful template engine. Create views in `templates/`:
-
-```html
-<!-- templates/index.html -->
-{% extends "base.html" %}
-
-{% block content %}
-    <h1>Hello, {{ name }}!</h1>
-{% endblock %}
-```
-
-Render them in your controller:
+Render templates in your handlers:
 
 ```rust
-async fn index(req: Request) -> Result<Response> {
+use oxidite_template::{TemplateEngine, Context};
+
+async fn index() -> Result<OxiditeResponse> {
+    let engine = TemplateEngine::new("templates");
     let mut context = Context::new();
     context.insert("name", "Oxidite");
-    Ok(Response::html(engine.render("index.html", &context)?))
+    let html = engine.render("index.html", &context)?;
+    Ok(OxiditeResponse::html(html))
 }
 ```
 
@@ -161,6 +136,10 @@ Oxidite is composed of modular crates:
 | `oxidite-template` | Template engine |
 | `oxidite-realtime` | WebSockets & SSE |
 | ...and more | |
+
+## 💬 Community & Support
+
+Have questions or want to connect with other Oxidite developers? Join our community on [GitHub Discussions](https://github.com/Kyle6012/rust-oxidite/discussions).
 
 ## 🤝 Contributing
 

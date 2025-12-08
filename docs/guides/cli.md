@@ -5,7 +5,7 @@ The Oxidite CLI helps you scaffold projects, generate code, and manage your appl
 ## Installation
 
 ```bash
-cargo install oxidite-cli
+cargo install --path oxidite-cli
 ```
 
 ## Commands
@@ -17,9 +17,9 @@ cargo install oxidite-cli
 oxidite new myapp
 
 # With specific type
-oxidite new myapp --type api
-oxidite new myapp --type fullstack
-oxidite new myapp --type microservice
+oxidite new myapp --project-type api
+oxidite new myapp --project-type fullstack
+oxidite new myapp --project-type microservice
 ```
 
 ### Code Generation
@@ -65,16 +65,16 @@ oxidite seed run
 
 ```bash
 # Start workers
-oxidite queue:work --workers 4
+oxidite queue work --workers 4
 
 # View statistics
-oxidite queue:list
+oxidite queue list
 
 # View dead letter queue
-oxidite queue:dlq
+oxidite queue dlq
 
 # Clear pending jobs
-oxidite queue:clear
+oxidite queue clear
 ```
 
 ### Health Check
@@ -124,19 +124,17 @@ myapp/
 Oxidite projects use `config.toml`:
 
 ```toml
-[app]
-name = "myapp"
-url = "http://localhost:3000"
+[server]
+host = "127.0.0.1"
+port = 8080
 
 [database]
 url = "postgresql://localhost/myapp"
 
 [cache]
-driver = "redis"
 url = "redis://127.0.0.1"
 
 [queue]
-driver = "redis"
 url = "redis://127.0.0.1"
 ```
 
