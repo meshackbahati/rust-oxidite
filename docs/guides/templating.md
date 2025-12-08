@@ -13,29 +13,33 @@ oxidite = { version = "1.0", features = ["templates"] }
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::template::*;
+use oxidite_template::{TemplateEngine, Context};
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    templates: Arc<TemplateEngine>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let templates = TemplateEngine::new("templates");
+    let templates = Arc::new(TemplateEngine::new("templates"));
+    let state = AppState { templates };
     
     let mut app = Router::new();
     
-    app.get("/", {
-        let templates = templates.clone();
-        move |_req| {
-            let templates = templates.clone();
-            async move {
-                let html = templates.render("index.html", context! {
-                    title: "Home",
-                    message: "Welcome!"
-                }).await?;
-                
-                Ok(Response::html(html))
-            }
-        }
+    app.get("/", |State(state): State<AppState>| async move {
+        let mut context = Context::new();
+        context.insert("title", "Home");
+        context.insert("message", "Welcome!");
+
+        let html = state.templates.render("index.html", &context)?;
+
+        Ok(OxiditeResponse::html(html))
     });
     
+    let app = app.with_state(state);
+
     Server::new(app).listen("127.0.0.1:3000".parse()?).await
 }
 ```
@@ -102,70 +106,23 @@ async fn main() -> Result<()> {
 ## Rendering
 
 ```rust
-use oxidite::template::*;
-
-async fn home() -> Result<Response> {
-    let html = templates.render("home.html", context! {
-        user: current_user,
-        posts: recent_posts
-    }).await?;
-    
-    Ok(Response::html(html))
-}
-```
-
-## Filters
-
-Use built-in filters:
-
-```html
-{{ "hello world" | capitalize }}
-{{ 123.456 | round(2) }}
-{{ date | format_date("%Y-%m-%d") }}
-```
-
-## Complete Example
-
-```rust
 use oxidite::prelude::*;
-use oxidite::template::*;
+use oxidite_template::Context;
+use serde::Serialize;
 
 #[derive(Serialize)]
-struct Post {
-    title: String,
-    content: String,
-    author: String,
-}
+struct User { name: String }
 
-async fn blog_index(State(db): State<Database>) -> Result<Response> {
-    let posts = Post::all(&db).await?;
+#[derive(Serialize)]
+struct Post { title: String }
+
+async fn home(State(state): State<AppState>) -> Result<OxiditeResponse> {
+    let mut context = Context::new();
+    context.insert("user", &User { name: "Alice".to_string() });
+    context.insert("posts", &vec![Post { title: "First Post".to_string() }]);
     
-    let html = templates.render("blog/index.html", context! {
-        title: "Blog",
-        posts: posts
-    }).await?;
+    let html = state.templates.render("home.html", &context)?;
     
-    Ok(Response::html(html))
+    Ok(OxiditeResponse::html(html))
 }
 ```
-
-`templates/blog/index.html`:
-```html
-{% extends "layout.html" %}
-
-{% block title %}Blog{% endblock %}
-
-{% block content %}
-<h1>Blog Posts</h1>
-
-{% for post in posts %}
-<article>
-    <h2>{{ post.title }}</h2>
-    <p>By {{ post.author }}</p>
-    <div>{{ post.content }}</div>
-</article>
-{% endfor %}
-{% endblock %}
-```
-
-Complete documentation at [docs.rs/oxidite](https://docs.rs/oxidite)

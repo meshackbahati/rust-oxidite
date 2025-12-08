@@ -13,17 +13,27 @@ oxidite = { version = "1.0", features = ["auth", "database"] }
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::auth::api_key::*;
+use oxidite_auth::ApiKeyMiddleware;
+use oxidite_db::Database;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc<Database>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = Arc::new(Database::connect(&std::env::var("DATABASE_URL")?).await?);
+    let state = AppState { db };
     
     let mut app = Router::new();
     
     // Protected route
     app.get("/api/data", get_data)
-        .middleware(ApiKeyMiddleware::new(db.clone()));
+        .layer(ApiKeyMiddleware);
+
+    let app = app.with_state(state);
     
     Server::new(app).listen("127.0.0.1:3000".parse()?).await
 }
@@ -32,25 +42,20 @@ async fn main() -> Result<()> {
 ## Generate API Keys
 
 ```rust
-use oxidite::auth::api_key::*;
+use oxidite_auth::ApiKey;
 
 async fn create_api_key(user_id: i64, db: &Database) -> Result<String> {
-    let api_key = ApiKey::generate(user_id)?;
-    api_key.save(db).await?;
+    let (api_key_model, plain_key) = ApiKey::generate(user_id);
+    api_key_model.save(db).await?;
     
     // Return the plain key to user (only shown once)
-    Ok(api_key.key)
+    Ok(plain_key)
 }
 ```
 
 ## Validate API Keys
 
-```rust
-// In middleware or handler
-async fn validate_key(key: &str, db: &Database) -> Result<ApiKey> {
-    ApiKey::validate(key, db).await
-}
-```
+The `ApiKeyMiddleware` handles validation automatically. It expects the API key in the `Authorization: Bearer <key>` header.
 
 ## Using API Keys
 
@@ -65,30 +70,28 @@ curl -H "Authorization: Bearer your-api-key" \
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::auth::api_key::*;
+use oxidite_auth::{ApiKey, ApiKeyAuth};
+use serde::Serialize;
 
 #[derive(Serialize)]
 struct ApiKeyResponse {
     key: String,
-    user_id: i64,
 }
 
 async fn create_key(
-    State(db): State<Database>,
+    State(db): State<Arc<Database>>,
     Json(req): Json<CreateKeyRequest>,
-) -> Result<Json<ApiKeyResponse>> {
-    let api_key = ApiKey::generate(req.user_id)?;
-    api_key.save(&db).await?;
+) -> Result<OxiditeResponse> {
+    let (api_key_model, plain_key) = ApiKey::generate(req.user_id);
+    api_key_model.save(&db).await?;
     
-    Ok(Json(ApiKeyResponse {
-        key: api_key.key,
-        user_id: api_key.user_id,
-    }))
+    Ok(OxiditeResponse::json(json!(ApiKeyResponse { key: plain_key })))
 }
 
-async fn protected_route(api_key: ApiKey) -> Result<Json<Data>> {
-    // api_key.user_id available
-    Ok(Json(Data { message: "Success!".into() }))
+async fn protected_route(auth: ApiKeyAuth) -> Result<OxiditeResponse> {
+    // The user_id is available via the ApiKeyAuth extractor
+    let user_id = auth.user_id;
+    Ok(OxiditeResponse::json(json!({ "message": "Success!", "user_id": user_id })))
 }
 ```
 
@@ -104,6 +107,6 @@ async fn protected_route(api_key: ApiKey) -> Result<Json<Data>> {
 
 ```rust
 async fn revoke_key(key_id: i64, db: &Database) -> Result<()> {
-    ApiKey::delete(db, key_id).await
+    ApiKey::delete(key_id, db).await
 }
 ```

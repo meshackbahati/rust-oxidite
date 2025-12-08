@@ -13,25 +13,28 @@ oxidite = { version = "1.0", features = ["realtime"] }
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::realtime::*;
+use oxidite_realtime::WebSocketManager;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    ws_manager: Arc<WebSocketManager>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let ws_manager = WebSocketManager::new();
+    let ws_manager = Arc::new(WebSocketManager::new());
+    let state = AppState { ws_manager };
     
     let mut app = Router::new();
     
     // WebSocket endpoint
-    app.get("/ws", {
-        let manager = ws_manager.clone();
-        move |req| {
-            let manager = manager.clone();
-            async move {
-                manager.handle(req).await
-            }
-        }
+    app.get("/ws", |State(state): State<AppState>, req: OxiditeRequest| async {
+        state.ws_manager.handle_upgrade(req).await
     });
     
+    let app = app.with_state(state);
+
     Server::new(app).listen("127.0.0.1:3000".parse()?).await
 }
 ```
@@ -40,38 +43,39 @@ async fn main() -> Result<()> {
 
 ```rust
 // Broadcast to all clients
-ws_manager.broadcast("Hello everyone!").await;
+state.ws_manager.broadcast("Hello everyone!").await;
 
 // Broadcast to room
-ws_manager.broadcast_to_room("room1", "Room message").await;
+state.ws_manager.broadcast_to("room1", "Room message").await;
 ```
 
 ## Direct Messaging
 
 ```rust
 // Send to specific client
-ws_manager.send_to(&client_id, "Direct message").await;
+state.ws_manager.send_to(client_id, "Direct message").await;
 ```
 
 ## Room Management
 
 ```rust
 // Join room
-ws_manager.join(&client_id, "chat-room").await;
+state.ws_manager.join(client_id, "chat-room").await;
 
 // Leave room
-ws_manager.leave(&client_id, "chat-room").await;
+state.ws_manager.leave(client_id, "chat-room").await;
 
 // List clients in room
-let clients = ws_manager.room_clients("chat-room").await;
+let clients = state.ws_manager.clients_in_room("chat-room").await;
 ```
 
 ## Complete Chat Example
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::realtime::*;
+use oxidite_realtime::WebSocketManager;
 use serde::{Serialize, Deserialize};
+use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 struct ChatMessage {
@@ -80,35 +84,31 @@ struct ChatMessage {
     room: String,
 }
 
+#[derive(Clone)]
+struct AppState {
+    ws_manager: Arc<WebSocketManager>,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let ws_manager = Arc::new(WebSocketManager::new());
+    let state = AppState { ws_manager };
     
     let mut app = Router::new();
     
     // WebSocket connection
-    app.get("/ws", {
-        let manager = ws_manager.clone();
-        move |req| {
-            let manager = manager.clone();
-            async move {
-                manager.handle(req).await
-            }
-        }
+    app.get("/ws", |State(state): State<AppState>, req: OxiditeRequest| async {
+        state.ws_manager.handle_upgrade(req).await
     });
     
     // Send message to room
-    app.post("/chat/send", {
-        let manager = ws_manager.clone();
-        move |Json(msg): Json<ChatMessage>| {
-            let manager = manager.clone();
-            async move {
-                manager.broadcast_to_room(&msg.room, &msg).await;
-                Ok(Json(json!({ "status": "sent " })))
-            }
-        }
+    app.post("/chat/send", |State(state): State<AppState>, Json(msg): Json<ChatMessage>| async move {
+        state.ws_manager.broadcast_to(&msg.room, &serde_json::to_string(&msg)?).await;
+        Ok(Json(json!({ "status": "sent" })))
     });
     
+    let app = app.with_state(state);
+
     Server::new(app).listen("127.0.0.1:3000".parse()?).await
 }
 ```
@@ -131,49 +131,12 @@ ws.onmessage = (event) => {
     console.log('Received:', data);
 };
 
-// Send message
-function sendMessage(message) {
-    ws.send(JSON.stringify({
-        type: 'message',
-        content: message
-    }));
+// Send message via HTTP POST to /chat/send
+async function sendMessage(room, user, message) {
+    await fetch('/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room, user, message })
+    });
 }
 ```
-
-## Advanced Features
-
-### Presence Tracking
-
-```rust
-// Track online users
-ws_manager.on_connect(|client_id| {
-    println!("User {} connected", client_id);
-});
-
-ws_manager.on_disconnect(|client_id| {
-    println!("User {} disconnected", client_id);
-});
-```
-
-### Message Persistence
-
-```rust
-use oxidite::queue::*;
-
-// Save messages to database
-#[derive(Serialize, Deserialize)]
-struct SaveMessageJob {
-    message: ChatMessage,
-}
-
-#[async_trait]
-impl Job for SaveMessageJob {
-    async fn perform(&self) -> JobResult {
-        // Save to database
-        Message::create(&db, &self.message).await?;
-        Ok(())
-    }
-}
-```
-
-Complete examples at [docs.rs/oxidite](https://docs.rs/oxidite)

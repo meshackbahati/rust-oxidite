@@ -2,40 +2,42 @@
 
 Build complete fullstack applications with server-side rendering, authentication, and database integration.
 
-## Installation
+## Project Setup
 
-```toml
-[dependencies]
-oxidite = { version = "1.0", features = ["full"] }
-# or specify features:
-oxidite = { version = "1.0", features = ["database", "auth", "templates", "queue", "cache"] }
+The best way to start a fullstack project is with the `oxidite-cli`:
+
+```bash
+oxidite new my-blog --project-type fullstack
+cd my-blog
 ```
+
+This will generate a project with a complete structure, including directories for templates, static files, and database models.
 
 ## Complete Example: Blog Application
 
-### Project Setup
-
-```bash
-cargo new blog
-cd blog
-cargo add oxidite
-cargo add tokio --features full
-cargo add serde --features derive
-```
-
-### Main Application
+### Main Application (`src/main.rs`)
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::template::*;
+use oxidite_db::Database;
+use oxidite_template::TemplateEngine;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc<Database>,
+    templates: Arc<TemplateEngine>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Database
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = Arc::new(Database::connect(&std::env::var("DATABASE_URL")?).await?);
     
     // Template engine
-    let templates = TemplateEngine::new("templates");
+    let templates = Arc::new(TemplateEngine::new("templates"));
+
+    let state = AppState { db, templates };
     
     // Routes
     let mut app = Router::new();
@@ -44,104 +46,79 @@ async fn main() -> Result<()> {
     app.get("/", home);
     app.get("/posts/:id", show_post);
     
-    // Auth routes
-    app.get("/login", login_form);
-    app.post("/login", login);
+    // ... more routes
     
-    // Protected routes
-    app.get("/posts/new", new_post_form).middleware(AuthMiddleware);
-    app.post("/posts", create_post).middleware(AuthMiddleware);
-    
-    // Middleware
+    // Middleware and state
     let app = ServiceBuilder::new()
         .layer(LoggerLayer)
         .layer(CorsLayer::permissive())
+        .state(state)
         .service(app);
     
     Server::new(app).listen("127.0.0.1:3000".parse()?).await
 }
 ```
 
-### Models
+### Models (`src/models/post.rs`)
 
 ```rust
-use oxidite::db::*;
+use oxidite_db::Model;
+use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Utc};
 
-#[derive(Model, Serialize, Deserialize)]
-#[table_name = "users"]
-struct User {
-    id: i64,
-    name: String,
-    email: String,
-    password_hash: String,
-}
-
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, Serialize, Deserialize, Default)]
 #[table_name = "posts"]
-struct Post {
-    id: i64,
-    user_id: i64,
-    title: String,
-    content: String,
-    published: bool,
-    created_at: DateTime<Utc>,
+pub struct Post {
+    pub id: i64,
+    pub user_id: i64,
+    pub title: String,
+    pub content: String,
+    pub published: bool,
+    pub created_at: DateTime<Utc>,
 }
 ```
 
-### Controllers
+### Controllers (`src/controllers/post_controller.rs`)
 
 ```rust
-async fn home(State(db): State<Database>) -> Result<Response> {
-    let posts = Post::where_eq(&db, "published", true)
+use crate::AppState;
+use oxidite::prelude::*;
+use crate::models::post::Post;
+use std::collections::HashMap;
+
+pub async fn home(State(state): State<AppState>) -> Result<OxiditeResponse> {
+    let posts = Post::query()
+        .where_("published", "=", true)
         .order_by("created_at", "DESC")
-        .get()
+        .get_all(&*state.db)
         .await?;
     
-    let html = templates.render("home.html", context! {
-        posts: posts
-    }).await?;
+    let mut context = oxidite_template::Context::new();
+    context.insert("posts", &posts);
+
+    let html = state.templates.render("home.html", &context)?;
     
-    Ok(Response::html(html))
+    Ok(OxiditeResponse::html(html))
 }
 
-async fn show_post(
+pub async fn show_post(
     Path(params): Path<HashMap<String, String>>,
-    State(db): State<Database>,
-) -> Result<Response> {
-    let id = params.get("id").unwrap().parse()?;
-    let post = Post::find(&db, id).await?;
-    let author = User::find(&db, post.user_id).await?;
+    State(state): State<AppState>,
+) -> Result<OxiditeResponse> {
+    let id: i64 = params.get("id").unwrap().parse()?;
+    let post = Post::find(id, &*state.db).await?;
     
-    let html = templates.render("post.html", context! {
-        post: post,
-        author: author
-    }).await?;
-    
-    Ok(Response::html(html))
-}
+    let mut context = oxidite_template::Context::new();
+    context.insert("post", &post);
 
-async fn create_post(
-    auth: Auth,
-    Json(data): Json<CreatePostRequest>,
-    State(db): State<Database>,
-) -> Result<Response> {
-    let post = Post {
-        user_id: auth.user.id,
-        title: data.title,
-        content: data.content,
-        published: false,
-        ..Default::default()
-    };
+    let html = state.templates.render("post.html", &context)?;
     
-    post.save(&db).await?;
-    
-    Ok(Response::redirect("/posts"))
+    Ok(OxiditeResponse::html(html))
 }
 ```
 
-### Templates
+### Templates (`templates/home.html`)
 
-`templates/home.html`:
 ```html
 <!DOCTYPE html>
 <html>
@@ -158,52 +135,6 @@ async fn create_post(
     {% endfor %}
 </body>
 </html>
-```
-
-### Background Jobs
-
-```rust
-use oxidite::queue::*;
-
-#[derive(Serialize, Deserialize)]
-struct SendWelcomeEmail {
-    user_id: i64,
-}
-
-#[async_trait]
-impl Job for SendWelcomeEmail {
-    async fn perform(&self) -> JobResult {
-        let user = User::find(&db, self.user_id).await?;
-        send_email(&user.email, "Welcome!", "Thanks for joining!").await?;
-        Ok(())
-    }
-}
-
-// Enqueue after user registration
-queue.enqueue(JobWrapper::new(&SendWelcomeEmail {
-    user_id: new_user.id
-})?).await?;
-```
-
-### File Uploads
-
-```rust
-use oxidite::storage::*;
-
-async fn upload_avatar(
-    auth: Auth,
-    multipart: Multipart,
-    State(storage): State<Storage>,
-) -> Result<Response> {
-    let file = multipart.file("avatar").await?;
-    
-    let path = storage.put(
-        &format!("avatars/{}.jpg", auth.user.id),
-        file.data
-    ).await?;
-    
-    Ok(Json(json!({ "url": path })))
-}
 ```
 
 ## Best Practices
