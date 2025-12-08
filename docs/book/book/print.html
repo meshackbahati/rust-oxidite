@@ -1,0 +1,1696 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Oxidite Documentation</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-4645dae1.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-410677cd.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Oxidite Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/Kyle6012/rust-oxidite" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>Welcome to the official documentation for the Oxidite web framework.</p>
+<p>This documentation is designed to help you get started with Oxidite, learn its core concepts, and explore its rich feature set.</p>
+<h2 id="community--support"><a class="header" href="#community--support">Community &amp; Support</a></h2>
+<p>Have questions or want to connect with other Oxidite developers? Join our community on <a href="https://github.com/Kyle6012/rust-oxidite/discussions">GitHub Discussions</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="getting-started-with-oxidite"><a class="header" href="#getting-started-with-oxidite">Getting Started with Oxidite</a></h1>
+<p>This guide will help you build your first web application with Oxidite.</p>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<h3 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h3>
+<ul>
+<li>Rust 1.70 or higher</li>
+<li>Cargo package manager</li>
+</ul>
+<h3 id="create-a-new-project-with-the-cli"><a class="header" href="#create-a-new-project-with-the-cli">Create a New Project with the CLI</a></h3>
+<p>The easiest way to get started is by using the <code>oxidite-cli</code>.</p>
+<pre><code class="language-bash">cargo install --path oxidite-cli
+oxidite new my-app
+</code></pre>
+<p>This will create a new Oxidite project with a default structure.</p>
+<h2 id="your-first-route"><a class="header" href="#your-first-route">Your First Route</a></h2>
+<p>Navigate to your new project and open <code>src/main.rs</code>. It will look something like this:</p>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+
+mod routes;
+mod controllers;
+mod models;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let mut router = Router::new();
+
+    // Register routes
+    routes::register(&amp;mut router);
+
+    let server = Server::new(router);
+    println!("🚀 API Server running on http://127.0.0.1:8080");
+    server.listen("127.0.0.1:8080".parse()?).await?;
+
+    Ok(())
+}</code></pre>
+<p>The routes are defined in <code>src/routes/mod.rs</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use serde_json::json;
+
+pub fn register(router: &amp;mut Router) {
+    router.get("/api/health", health);
+}
+
+async fn health(_req: OxiditeRequest) -&gt; Result&lt;OxiditeResponse&gt; {
+    Ok(OxiditeResponse::json(json!({"status": "ok"})))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="run-your-app"><a class="header" href="#run-your-app">Run Your App</a></h3>
+<pre><code class="language-bash">cargo run
+</code></pre>
+<p>Visit <code>http://localhost:8080/api/health</code> in your browser!</p>
+<h2 id="json-api-example"><a class="header" href="#json-api-example">JSON API Example</a></h2>
+<p>Let’s create a simple JSON API for managing users.</p>
+<p>First, generate a model and controller:</p>
+<pre><code class="language-bash">oxidite make model User
+oxidite make controller UserController
+</code></pre>
+<p>Now, let’s define the <code>User</code> model in <code>src/models/user.rs</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct User {
+    pub id: i64,
+    pub name: String,
+    pub email: String,
+}
+<span class="boring">}</span></code></pre>
+<p>Next, let’s add the routes in <code>src/routes/mod.rs</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::controllers::user_controller::{list_users, get_user, create_user};
+
+pub fn register(router: &amp;mut Router) {
+    router.get("/api/users", list_users);
+    router.get("/api/users/:id", get_user);
+    router.post("/api/users", create_user);
+}
+<span class="boring">}</span></code></pre>
+<p>Finally, implement the controller functions in <code>src/controllers/user_controller.rs</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use crate::models::user::User;
+use serde_json::json;
+
+pub async fn list_users(_req: OxiditeRequest) -&gt; Result&lt;OxiditeResponse&gt; {
+    let users = vec![
+        User { id: 1, name: "Alice".into(), email: "alice@example.com".into() },
+        User { id: 2, name: "Bob".into(), email: "bob@example.com".into() },
+    ];
+    Ok(OxiditeResponse::json(json!(users)))
+}
+
+pub async fn get_user(req: OxiditeRequest) -&gt; Result&lt;OxiditeResponse&gt; {
+    let id: i64 = req.param("id")?;
+    let user = User {
+        id,
+        name: "Alice".into(),
+        email: "alice@example.com".into(),
+    };
+    Ok(OxiditeResponse::json(json!(user)))
+}
+
+#[derive(Deserialize)]
+struct CreateUserRequest {
+    name: String,
+    email: String,
+}
+
+pub async fn create_user(mut req: OxiditeRequest) -&gt; Result&lt;OxiditeResponse&gt; {
+    let data: CreateUserRequest = req.body_json().await?;
+    let user = User {
+        id: 3,
+        name: data.name,
+        email: data.email,
+    };
+    Ok(OxiditeResponse::json(json!(user)))
+}
+<span class="boring">}</span></code></pre>
+<h2 id="using-middleware"><a class="header" href="#using-middleware">Using Middleware</a></h2>
+<p>Add CORS and logging in <code>src/main.rs</code>:</p>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let mut app = Router::new();
+    // ... register routes
+
+    // Add middleware
+    let app = ServiceBuilder::new()
+        .layer(LoggerLayer)
+        .layer(CorsLayer::permissive())
+        .service(app);
+
+    Server::new(app)
+        .listen("127.0.0.1:3000".parse()?)
+        .await
+}</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<ul>
+<li><a href="#database--orm-guide">Database Guide</a> - Learn about the ORM</li>
+<li><a href="#authentication-guide">Authentication Guide</a> - Add user authentication</li>
+<li><a href="#background-jobs-guide">Background Jobs</a> - Process async tasks</li>
+<li><a href="testing.html">Testing Guide</a> - Test your application</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cli-tool-guide"><a class="header" href="#cli-tool-guide">CLI Tool Guide</a></h1>
+<p>The Oxidite CLI helps you scaffold projects, generate code, and manage your application.</p>
+<h2 id="installation-1"><a class="header" href="#installation-1">Installation</a></h2>
+<pre><code class="language-bash">cargo install --path oxidite-cli
+</code></pre>
+<h2 id="commands"><a class="header" href="#commands">Commands</a></h2>
+<h3 id="create-new-project"><a class="header" href="#create-new-project">Create New Project</a></h3>
+<pre><code class="language-bash"># Basic project
+oxidite new myapp
+
+# With specific type
+oxidite new myapp --project-type api
+oxidite new myapp --project-type fullstack
+oxidite new myapp --project-type microservice
+</code></pre>
+<h3 id="code-generation"><a class="header" href="#code-generation">Code Generation</a></h3>
+<pre><code class="language-bash"># Generate model
+oxidite make model User
+
+# Generate controller
+oxidite make controller UserController
+
+# Generate middleware
+oxidite make middleware AuthMiddleware
+</code></pre>
+<h3 id="database-migrations"><a class="header" href="#database-migrations">Database Migrations</a></h3>
+<pre><code class="language-bash"># Create migration
+oxidite migrate create create_users_table
+
+# Run migrations
+oxidite migrate run
+
+# Rollback last migration
+oxidite migrate revert
+
+# Check status
+oxidite migrate status
+</code></pre>
+<h3 id="database-seeders"><a class="header" href="#database-seeders">Database Seeders</a></h3>
+<pre><code class="language-bash"># Create seeder
+oxidite seed create UserSeeder
+
+# Run seeders
+oxidite seed run
+</code></pre>
+<h3 id="queue-management"><a class="header" href="#queue-management">Queue Management</a></h3>
+<pre><code class="language-bash"># Start workers
+oxidite queue work --workers 4
+
+# View statistics
+oxidite queue list
+
+# View dead letter queue
+oxidite queue dlq
+
+# Clear pending jobs
+oxidite queue clear
+</code></pre>
+<h3 id="health-check"><a class="header" href="#health-check">Health Check</a></h3>
+<pre><code class="language-bash"># System diagnostics
+oxidite doctor
+</code></pre>
+<h3 id="build"><a class="header" href="#build">Build</a></h3>
+<pre><code class="language-bash"># Development build
+oxidite build
+
+# Production build
+oxidite build --release
+</code></pre>
+<h3 id="development-server"><a class="header" href="#development-server">Development Server</a></h3>
+<pre><code class="language-bash"># Start with hot reload
+oxidite dev
+</code></pre>
+<h2 id="project-structure"><a class="header" href="#project-structure">Project Structure</a></h2>
+<p>After <code>oxidite new myapp</code>, you get:</p>
+<pre><code>myapp/
+├── Cargo.toml
+├── src/
+│   ├── main.rs
+│   ├── models/
+│   ├── controllers/
+│   └── middleware/
+├── migrations/
+├── seeders/
+├── templates/
+└── config.toml
+</code></pre>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>Oxidite projects use <code>config.toml</code>:</p>
+<pre><code class="language-toml">[server]
+host = "127.0.0.1"
+port = 8080
+
+[database]
+url = "postgresql://localhost/myapp"
+
+[cache]
+url = "redis://127.0.0.1"
+
+[queue]
+url = "redis://127.0.0.1"
+</code></pre>
+<h2 id="tips"><a class="header" href="#tips">Tips</a></h2>
+<ul>
+<li>Use <code>oxidite doctor</code> to debug issues</li>
+<li>Run <code>oxidite migrate status</code> before deploying</li>
+<li>Use <code>oxidite dev</code> for automatic reloading during development</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="fullstack-web-development-with-oxidite"><a class="header" href="#fullstack-web-development-with-oxidite">Fullstack Web Development with Oxidite</a></h1>
+<p>Build complete fullstack applications with server-side rendering, authentication, and database integration.</p>
+<h2 id="project-setup"><a class="header" href="#project-setup">Project Setup</a></h2>
+<p>The best way to start a fullstack project is with the <code>oxidite-cli</code>:</p>
+<pre><code class="language-bash">oxidite new my-blog --project-type fullstack
+cd my-blog
+</code></pre>
+<p>This will generate a project with a complete structure, including directories for templates, static files, and database models.</p>
+<h2 id="complete-example-blog-application"><a class="header" href="#complete-example-blog-application">Complete Example: Blog Application</a></h2>
+<h3 id="main-application-srcmainrs"><a class="header" href="#main-application-srcmainrs">Main Application (<code>src/main.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_db::Database;
+use oxidite_template::TemplateEngine;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc&lt;Database&gt;,
+    templates: Arc&lt;TemplateEngine&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    // Database
+    let db = Arc::new(Database::connect(&amp;std::env::var("DATABASE_URL")?).await?);
+
+    // Template engine
+    let templates = Arc::new(TemplateEngine::new("templates"));
+
+    let state = AppState { db, templates };
+
+    // Routes
+    let mut app = Router::new();
+
+    // Public routes
+    app.get("/", home);
+    app.get("/posts/:id", show_post);
+
+    // ... more routes
+
+    // Middleware and state
+    let app = ServiceBuilder::new()
+        .layer(LoggerLayer)
+        .layer(CorsLayer::permissive())
+        .state(state)
+        .service(app);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h3 id="models-srcmodelspostrs"><a class="header" href="#models-srcmodelspostrs">Models (<code>src/models/post.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_db::Model;
+use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Utc};
+
+#[derive(Model, Serialize, Deserialize, Default)]
+#[table_name = "posts"]
+pub struct Post {
+    pub id: i64,
+    pub user_id: i64,
+    pub title: String,
+    pub content: String,
+    pub published: bool,
+    pub created_at: DateTime&lt;Utc&gt;,
+}
+<span class="boring">}</span></code></pre>
+<h3 id="controllers-srccontrollerspost_controllerrs"><a class="header" href="#controllers-srccontrollerspost_controllerrs">Controllers (<code>src/controllers/post_controller.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use crate::AppState;
+use oxidite::prelude::*;
+use crate::models::post::Post;
+use std::collections::HashMap;
+
+pub async fn home(State(state): State&lt;AppState&gt;) -&gt; Result&lt;OxiditeResponse&gt; {
+    let posts = Post::query()
+        .where_("published", "=", true)
+        .order_by("created_at", "DESC")
+        .get_all(&amp;*state.db)
+        .await?;
+
+    let mut context = oxidite_template::Context::new();
+    context.insert("posts", &amp;posts);
+
+    let html = state.templates.render("home.html", &amp;context)?;
+
+    Ok(OxiditeResponse::html(html))
+}
+
+pub async fn show_post(
+    Path(params): Path&lt;HashMap&lt;String, String&gt;&gt;,
+    State(state): State&lt;AppState&gt;,
+) -&gt; Result&lt;OxiditeResponse&gt; {
+    let id: i64 = params.get("id").unwrap().parse()?;
+    let post = Post::find(id, &amp;*state.db).await?;
+
+    let mut context = oxidite_template::Context::new();
+    context.insert("post", &amp;post);
+
+    let html = state.templates.render("post.html", &amp;context)?;
+
+    Ok(OxiditeResponse::html(html))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="templates-templateshomehtml"><a class="header" href="#templates-templateshomehtml">Templates (<code>templates/home.html</code>)</a></h3>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;My Blog&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Latest Posts&lt;/h1&gt;
+    {% for post in posts %}
+    &lt;article&gt;
+        &lt;h2&gt;&lt;a href="/posts/{{ post.id }}"&gt;{{ post.title }}&lt;/a&gt;&lt;/h2&gt;
+        &lt;p&gt;{{ post.created_at }}&lt;/p&gt;
+    &lt;/article&gt;
+    {% endfor %}
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
+<ol>
+<li><strong>Separate concerns</strong>: Models, Controllers, Views</li>
+<li><strong>Use middleware</strong>: Auth, CORS, logging</li>
+<li><strong>Background jobs</strong>: For slow operations</li>
+<li><strong>Caching</strong>: For frequently accessed data</li>
+<li><strong>Validation</strong>: Validate all input</li>
+<li><strong>Security</strong>: Use CSRF protection, sanitize HTML</li>
+</ol>
+<h2 id="deploy"><a class="header" href="#deploy">Deploy</a></h2>
+<p>See the <a href="deployment.html">Deployment Guide</a> for production deployment.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="database--orm-guide"><a class="header" href="#database--orm-guide">Database &amp; ORM Guide</a></h1>
+<p>Complete guide to using the Oxidite ORM for database operations.</p>
+<h2 id="installation-2"><a class="header" href="#installation-2">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["database"] }
+</code></pre>
+<h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
+<h3 id="database-connection"><a class="header" href="#database-connection">Database Connection</a></h3>
+<p>Create <code>.env</code> file:</p>
+<pre><code class="language-env">DATABASE_URL=postgresql://user:password@localhost/mydb
+</code></pre>
+<p>Connect in your app (<code>src/main.rs</code>):</p>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_db::Database;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc&lt;Database&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    // Load config
+    dotenv::dotenv().ok();
+
+    // Connect to database
+    let db = Arc::new(Database::connect(&amp;std::env::var("DATABASE_URL")?).await?);
+
+    let state = AppState { db };
+
+    // ... your app setup
+    let app = Router::new().with_state(state);
+    // ...
+    Ok(())
+}</code></pre>
+<h2 id="defining-models"><a class="header" href="#defining-models">Defining Models</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_db::Model;
+use serde::{Serialize, Deserialize};
+use chrono::{DateTime, Utc};
+
+#[derive(Model, Serialize, Deserialize, Clone, Default)]
+#[table_name = "users"]
+pub struct User {
+    pub id: i64,
+    pub name: String,
+    pub email: String,
+    pub password_hash: String,
+    pub created_at: DateTime&lt;Utc&gt;,
+    pub updated_at: DateTime&lt;Utc&gt;,
+}
+<span class="boring">}</span></code></pre>
+<h2 id="crud-operations"><a class="header" href="#crud-operations">CRUD Operations</a></h2>
+<h3 id="create"><a class="header" href="#create">Create</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut user = User {
+    name: "Alice".to_string(),
+    email: "alice@example.com".to_string(),
+    password_hash: hash_password("password")?,
+    ..Default::default()
+};
+
+user.save(&amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="read"><a class="header" href="#read">Read</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Find by ID
+let user = User::find(1, &amp;db).await?;
+
+// Find all
+let users = User::all(&amp;db).await?;
+
+// Where clause
+let user = User::query()
+    .where_("email", "=", "alice@example.com")
+    .first(&amp;db)
+    .await?;
+
+// Multiple conditions
+let users = User::query()
+    .where_("active", "=", true)
+    .where_("created_at", "&gt;", yesterday)
+    .limit(10)
+    .get_all(&amp;db)
+    .await?;
+<span class="boring">}</span></code></pre>
+<h3 id="update"><a class="header" href="#update">Update</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let mut user = User::find(1, &amp;db).await?;
+user.name = "Alice Smith".to_string();
+user.save(&amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="delete"><a class="header" href="#delete">Delete</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let user = User::find(1, &amp;db).await?;
+user.delete(&amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="relationships"><a class="header" href="#relationships">Relationships</a></h2>
+<h3 id="has-many"><a class="header" href="#has-many">Has Many</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Model)]
+#[table_name = "posts"]
+pub struct Post {
+    pub id: i64,
+    pub user_id: i64,
+    pub title: String,
+    pub content: String,
+}
+
+// Load user's posts
+let user = User::find(1, &amp;db).await?;
+let posts = user.has_many::&lt;Post&gt;("user_id", &amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="belongs-to"><a class="header" href="#belongs-to">Belongs To</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Load post's author
+let post = Post::find(1, &amp;db).await?;
+let user = post.belongs_to::&lt;User&gt;("user_id", &amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h2 id="migrations"><a class="header" href="#migrations">Migrations</a></h2>
+<h3 id="create-migration"><a class="header" href="#create-migration">Create Migration</a></h3>
+<p>Using CLI:</p>
+<pre><code class="language-bash">oxidite migrate create create_users_table
+</code></pre>
+<p>This will create a new SQL file in the <code>migrations</code> directory.</p>
+<h3 id="run-migrations"><a class="header" href="#run-migrations">Run Migrations</a></h3>
+<pre><code class="language-bash">oxidite migrate run
+</code></pre>
+<p>Or programmatically:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_db::Migration;
+
+Migration::run_all(&amp;db).await?;
+<span class="boring">}</span></code></pre>
+<h3 id="rollback"><a class="header" href="#rollback">Rollback</a></h3>
+<pre><code class="language-bash">oxidite migrate revert
+</code></pre>
+<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>let tx = db.begin().await?;
+
+// Perform operations
+user.save(&amp;tx).await?;
+post.save(&amp;tx).await?;
+
+// Commit
+tx.commit().await?;
+
+// Or rollback on error
+tx.rollback().await?;
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="authentication-guide"><a class="header" href="#authentication-guide">Authentication Guide</a></h1>
+<p>Complete guide to implementing authentication in Oxidite applications.</p>
+<h2 id="installation-3"><a class="header" href="#installation-3">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["auth", "database"] }
+</code></pre>
+<h2 id="quick-start"><a class="header" href="#quick-start">Quick Start</a></h2>
+<p>This example demonstrates how to set up a simple login and a protected profile route.</p>
+<h3 id="main-application-srcmainrs-1"><a class="header" href="#main-application-srcmainrs-1">Main Application (<code>src/main.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_auth::AuthMiddleware;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let mut app = Router::new();
+
+    app.post("/login", login);
+    app.get("/profile", profile).layer(AuthMiddleware);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h3 id="login-handler-srccontrollersauth_controllerrs"><a class="header" href="#login-handler-srccontrollersauth_controllerrs">Login Handler (<code>src/controllers/auth_controller.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use oxidite_auth::{Auth, create_jwt, LoginRequest, TokenResponse};
+use crate::models::user::User; // Your user model
+use serde_json::json;
+
+pub async fn login(Json(creds): Json&lt;LoginRequest&gt;) -&gt; Result&lt;OxiditeResponse&gt; {
+    // Verify credentials
+    let user = User::find_by_email(&amp;creds.email).await?;
+
+    if !oxidite_auth::verify_password(&amp;creds.password, &amp;user.password_hash)? {
+        return Err(Error::Unauthorized("Invalid credentials".to_string()));
+    }
+
+    // Create JWT
+    let token = create_jwt(user.id, "your-secret-key")?;
+
+    Ok(OxiditeResponse::json(json!(TokenResponse { token })))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="protected-route-srccontrollersuser_controllerrs"><a class="header" href="#protected-route-srccontrollersuser_controllerrs">Protected Route (<code>src/controllers/user_controller.rs</code>)</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use oxidite_auth::Auth;
+use crate::models::user::User;
+use serde_json::json;
+
+pub async fn profile(auth: Auth) -&gt; Result&lt;OxiditeResponse&gt; {
+    // The user is available via the Auth extractor
+    let user = User::find(auth.user_id, &amp;db).await?;
+    Ok(OxiditeResponse::json(json!(user)))
+}
+<span class="boring">}</span></code></pre>
+<h2 id="password-hashing"><a class="header" href="#password-hashing">Password Hashing</a></h2>
+<p>Oxidite uses Argon2 for password hashing.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_auth::hash_password;
+
+// Hash password
+let hash = hash_password("password123")?;
+
+// Verification is handled by the login logic.
+<span class="boring">}</span></code></pre>
+<h2 id="jwt-authentication"><a class="header" href="#jwt-authentication">JWT Authentication</a></h2>
+<p>The <code>AuthMiddleware</code> handles JWT verification automatically. You just need to provide a secret key in your configuration.</p>
+<h2 id="rbac-roles--permissions"><a class="header" href="#rbac-roles--permissions">RBAC (Roles &amp; Permissions)</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_auth::RequirePermission;
+
+// Middleware for a route that requires a specific permission
+app.delete("/users/:id", delete_user)
+    .layer(RequirePermission::new("users.delete"));
+<span class="boring">}</span></code></pre>
+<p>To assign roles and permissions, you’ll typically interact with the database models provided by <code>oxidite-auth</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="authorization-guide"><a class="header" href="#authorization-guide">Authorization Guide</a></h1>
+<p>Role-based access control (RBAC) and permission management in Oxidite.</p>
+<h2 id="installation-4"><a class="header" href="#installation-4">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["auth", "database"] }
+</code></pre>
+<h2 id="quick-start-1"><a class="header" href="#quick-start-1">Quick Start</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use oxidite_auth::{RequirePermission, RequireRole};
+
+// Protect routes with permissions
+app.delete("/users/:id", delete_user)
+    .layer(RequirePermission::new("users.delete"));
+
+app.get("/admin", admin_panel)
+    .layer(RequireRole::new("admin"));
+<span class="boring">}</span></code></pre>
+<h2 id="roles-and-permissions"><a class="header" href="#roles-and-permissions">Roles and Permissions</a></h2>
+<p>The <code>oxidite-auth</code> crate provides database models for <code>Role</code> and <code>Permission</code>. You can manage these in your application logic.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Example: Creating a role and assigning it to a user
+// (This is a simplified example, your actual implementation may vary)
+
+// Create role
+let admin_role = Role::create("admin", &amp;db).await?;
+
+// Create permission
+let create_users_perm = Permission::create("users.create", &amp;db).await?;
+
+// Add permission to role
+admin_role.add_permission(&amp;create_users_perm, &amp;db).await?;
+
+// Assign role to user
+user.assign_role(&amp;admin_role, &amp;db).await?;
+
+// Check permission
+if user.has_permission("users.create", &amp;db).await? {
+    // Allow action
+}
+
+// Check role
+if user.has_role("admin", &amp;db).await? {
+    // Allow access
+}
+<span class="boring">}</span></code></pre>
+<h2 id="middleware"><a class="header" href="#middleware">Middleware</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_auth::{RequirePermission, RequireRole, RequireAnyPermission};
+
+// Require specific permission
+app.post("/posts", create_post)
+    .layer(RequirePermission::new("posts.create"));
+
+// Require specific role
+app.get("/admin/dashboard", dashboard)
+    .layer(RequireRole::new("admin"));
+
+// Require any of multiple permissions
+app.put("/posts/:id", update_post)
+    .layer(RequireAnyPermission::new(vec![
+        "posts.update.own".to_string(),
+        "posts.update.all".to_string()
+    ]));
+<span class="boring">}</span></code></pre>
+<h2 id="in-handlers"><a class="header" href="#in-handlers">In Handlers</a></h2>
+<p>You can also perform authorization checks within your handlers.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_auth::Auth;
+
+async fn delete_user(
+    auth: Auth,
+    Path(id): Path&lt;i64&gt;,
+    State(db): State&lt;Arc&lt;Database&gt;&gt;,
+) -&gt; Result&lt;OxiditeResponse&gt; {
+    let user = User::find(auth.user_id, &amp;db).await?;
+
+    if !user.has_permission("users.delete", &amp;db).await? {
+        return Err(Error::Forbidden("You do not have permission to delete users.".to_string()));
+    }
+
+    User::delete(id, &amp;db).await?;
+
+    Ok(OxiditeResponse::json(json!({ "status": "ok" })))
+}
+<span class="boring">}</span></code></pre>
+<h2 id="dynamic-permissions"><a class="header" href="#dynamic-permissions">Dynamic Permissions</a></h2>
+<p>For more complex scenarios, you can implement custom logic in your handlers.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Check at runtime
+async fn can_edit_post(user: &amp;User, post: &amp;Post, db: &amp;Database) -&gt; Result&lt;bool&gt; {
+    Ok(user.has_permission("posts.update.all", db).await? ||
+    (user.has_permission("posts.update.own", db).await? &amp;&amp; post.user_id == user.id))
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="real-time--websocket-guide"><a class="header" href="#real-time--websocket-guide">Real-time &amp; WebSocket Guide</a></h1>
+<p>Build real-time applications with WebSockets in Oxidite.</p>
+<h2 id="installation-5"><a class="header" href="#installation-5">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["realtime"] }
+</code></pre>
+<h2 id="quick-start-2"><a class="header" href="#quick-start-2">Quick Start</a></h2>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_realtime::WebSocketManager;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    ws_manager: Arc&lt;WebSocketManager&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let ws_manager = Arc::new(WebSocketManager::new());
+    let state = AppState { ws_manager };
+
+    let mut app = Router::new();
+
+    // WebSocket endpoint
+    app.get("/ws", |State(state): State&lt;AppState&gt;, req: OxiditeRequest| async {
+        state.ws_manager.handle_upgrade(req).await
+    });
+
+    let app = app.with_state(state);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h2 id="broadcasting"><a class="header" href="#broadcasting">Broadcasting</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Broadcast to all clients
+state.ws_manager.broadcast("Hello everyone!").await;
+
+// Broadcast to room
+state.ws_manager.broadcast_to("room1", "Room message").await;
+<span class="boring">}</span></code></pre>
+<h2 id="direct-messaging"><a class="header" href="#direct-messaging">Direct Messaging</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Send to specific client
+state.ws_manager.send_to(client_id, "Direct message").await;
+<span class="boring">}</span></code></pre>
+<h2 id="room-management"><a class="header" href="#room-management">Room Management</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Join room
+state.ws_manager.join(client_id, "chat-room").await;
+
+// Leave room
+state.ws_manager.leave(client_id, "chat-room").await;
+
+// List clients in room
+let clients = state.ws_manager.clients_in_room("chat-room").await;
+<span class="boring">}</span></code></pre>
+<h2 id="complete-chat-example"><a class="header" href="#complete-chat-example">Complete Chat Example</a></h2>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_realtime::WebSocketManager;
+use serde::{Serialize, Deserialize};
+use std::sync::Arc;
+
+#[derive(Serialize, Deserialize)]
+struct ChatMessage {
+    user: String,
+    message: String,
+    room: String,
+}
+
+#[derive(Clone)]
+struct AppState {
+    ws_manager: Arc&lt;WebSocketManager&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let ws_manager = Arc::new(WebSocketManager::new());
+    let state = AppState { ws_manager };
+
+    let mut app = Router::new();
+
+    // WebSocket connection
+    app.get("/ws", |State(state): State&lt;AppState&gt;, req: OxiditeRequest| async {
+        state.ws_manager.handle_upgrade(req).await
+    });
+
+    // Send message to room
+    app.post("/chat/send", |State(state): State&lt;AppState&gt;, Json(msg): Json&lt;ChatMessage&gt;| async move {
+        state.ws_manager.broadcast_to(&amp;msg.room, &amp;serde_json::to_string(&amp;msg)?).await;
+        Ok(Json(json!({ "status": "sent" })))
+    });
+
+    let app = app.with_state(state);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h2 id="client-javascript"><a class="header" href="#client-javascript">Client (JavaScript)</a></h2>
+<pre><code class="language-javascript">const ws = new WebSocket('ws://localhost:3000/ws');
+
+ws.onopen = () =&gt; {
+    console.log('Connected');
+    ws.send(JSON.stringify({
+        type: 'join',
+        room: 'general'
+    }));
+};
+
+ws.onmessage = (event) =&gt; {
+    const data = JSON.parse(event.data);
+    console.log('Received:', data);
+};
+
+// Send message via HTTP POST to /chat/send
+async function sendMessage(room, user, message) {
+    await fetch('/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room, user, message })
+    });
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="templating-guide"><a class="header" href="#templating-guide">Templating Guide</a></h1>
+<p>Server-side rendering with the Oxidite template engine.</p>
+<h2 id="installation-6"><a class="header" href="#installation-6">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["templates"] }
+</code></pre>
+<h2 id="quick-start-3"><a class="header" href="#quick-start-3">Quick Start</a></h2>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_template::{TemplateEngine, Context};
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    templates: Arc&lt;TemplateEngine&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let templates = Arc::new(TemplateEngine::new("templates"));
+    let state = AppState { templates };
+
+    let mut app = Router::new();
+
+    app.get("/", |State(state): State&lt;AppState&gt;| async move {
+        let mut context = Context::new();
+        context.insert("title", "Home");
+        context.insert("message", "Welcome!");
+
+        let html = state.templates.render("index.html", &amp;context)?;
+
+        Ok(OxiditeResponse::html(html))
+    });
+
+    let app = app.with_state(state);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h2 id="template-syntax"><a class="header" href="#template-syntax">Template Syntax</a></h2>
+<p><code>templates/index.html</code>:</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{{ title }}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;{{ message }}&lt;/h1&gt;
+
+    {% if user %}
+        &lt;p&gt;Hello, {{ user.name }}!&lt;/p&gt;
+    {% else %}
+        &lt;p&gt;Please log in&lt;/p&gt;
+    {% endif %}
+
+    &lt;ul&gt;
+    {% for item in items %}
+        &lt;li&gt;{{ item.name }}&lt;/li&gt;
+    {% endfor %}
+    &lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2 id="template-inheritance"><a class="header" href="#template-inheritance">Template Inheritance</a></h2>
+<p><code>templates/layout.html</code>:</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{% block title %}My App{% endblock %}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;nav&gt;Navigation&lt;/nav&gt;
+
+    &lt;main&gt;
+        {% block content %}{% endblock %}
+    &lt;/main&gt;
+
+    &lt;footer&gt;Footer&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><code>templates/home.html</code>:</p>
+<pre><code class="language-html">{% extends "layout.html" %}
+
+{% block title %}Home - My App{% endblock %}
+
+{% block content %}
+    &lt;h1&gt;Welcome Home!&lt;/h1&gt;
+{% endblock %}
+</code></pre>
+<h2 id="rendering"><a class="header" href="#rendering">Rendering</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use oxidite_template::Context;
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct User { name: String }
+
+#[derive(Serialize)]
+struct Post { title: String }
+
+async fn home(State(state): State&lt;AppState&gt;) -&gt; Result&lt;OxiditeResponse&gt; {
+    let mut context = Context::new();
+    context.insert("user", &amp;User { name: "Alice".to_string() });
+    context.insert("posts", &amp;vec![Post { title: "First Post".to_string() }]);
+
+    let html = state.templates.render("home.html", &amp;context)?;
+
+    Ok(OxiditeResponse::html(html))
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="background-jobs-guide"><a class="header" href="#background-jobs-guide">Background Jobs Guide</a></h1>
+<p>Learn how to process background jobs, schedule cron tasks, and handle async operations with Oxidite.</p>
+<h2 id="installation-7"><a class="header" href="#installation-7">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["queue"] }
+</code></pre>
+<h2 id="quick-start-4"><a class="header" href="#quick-start-4">Quick Start</a></h2>
+<h3 id="define-a-job"><a class="header" href="#define-a-job">Define a Job</a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_queue::{Job, JobResult};
+use async_trait::async_trait;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct SendEmailJob {
+    to: String,
+    subject: String,
+    body: String,
+}
+
+#[async_trait]
+impl Job for SendEmailJob {
+    async fn handle(&amp;self) -&gt; JobResult {
+        // Your job logic
+        println!("Sending email to: {}", self.to);
+
+        // Simulate email sending
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+        Ok(())
+    }
+}
+<span class="boring">}</span></code></pre>
+<h3 id="enqueue-jobs"><a class="header" href="#enqueue-jobs">Enqueue Jobs</a></h3>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_queue::{Queue, Job};
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    // Create queue (Memory or Redis)
+    let queue = Queue::new_redis("redis://127.0.0.1").await?;
+
+    // Enqueue a job
+    let job = SendEmailJob {
+        to: "user@example.com".to_string(),
+        subject: "Welcome!".to_string(),
+        body: "Thanks for signing up!".to_string(),
+    };
+
+    queue.dispatch(job).await?;
+
+    Ok(())
+}</code></pre>
+<h3 id="start-workers"><a class="header" href="#start-workers">Start Workers</a></h3>
+<p>You can start workers using the CLI:</p>
+<pre><code class="language-bash">oxidite queue work
+</code></pre>
+<p>Or programmatically:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::sync::Arc;
+use oxidite_queue::Worker;
+
+// Start worker
+let worker = Worker::new(Arc::new(queue))
+    .concurrency(4);  // 4 concurrent workers
+
+worker.run().await;
+<span class="boring">}</span></code></pre>
+<h2 id="cron-jobs"><a class="header" href="#cron-jobs">Cron Jobs</a></h2>
+<p>Scheduling cron jobs is not yet implemented in the <code>oxidite-queue</code> crate, but it is on the roadmap.</p>
+<h2 id="retry-logic"><a class="header" href="#retry-logic">Retry Logic</a></h2>
+<p>Jobs automatically retry on failure with exponential backoff. You can configure this when dispatching a job.</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use std::time::Duration;
+
+queue.dispatch(job)
+    .with_max_retries(5)
+    .with_backoff(Duration::from_secs(60))
+    .await?;
+<span class="boring">}</span></code></pre>
+<h2 id="dead-letter-queue"><a class="header" href="#dead-letter-queue">Dead Letter Queue</a></h2>
+<p>Jobs that fail after all retries go to the Dead Letter Queue. You can manage these using the CLI.</p>
+<pre><code class="language-bash"># List failed jobs
+oxidite queue dlq
+
+# Retry a specific job from DLQ
+oxidite queue retry &lt;job_id&gt;
+</code></pre>
+<h2 id="cli-commands"><a class="header" href="#cli-commands">CLI Commands</a></h2>
+<p>Manage jobs with the CLI:</p>
+<pre><code class="language-bash"># Start worker
+oxidite queue work --workers 4
+
+# View statistics
+oxidite queue list
+
+# View dead letter queue
+oxidite queue dlq
+
+# Clear pending jobs
+oxidite queue clear
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="api-keys-guide"><a class="header" href="#api-keys-guide">API Keys Guide</a></h1>
+<p>Learn how to implement API key authentication in Oxidite.</p>
+<h2 id="installation-8"><a class="header" href="#installation-8">Installation</a></h2>
+<pre><code class="language-toml">[dependencies]
+oxidite = { version = "1.0", features = ["auth", "database"] }
+</code></pre>
+<h2 id="setup-1"><a class="header" href="#setup-1">Setup</a></h2>
+<pre class="playground"><code class="language-rust">use oxidite::prelude::*;
+use oxidite_auth::ApiKeyMiddleware;
+use oxidite_db::Database;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc&lt;Database&gt;,
+}
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let db = Arc::new(Database::connect(&amp;std::env::var("DATABASE_URL")?).await?);
+    let state = AppState { db };
+
+    let mut app = Router::new();
+
+    // Protected route
+    app.get("/api/data", get_data)
+        .layer(ApiKeyMiddleware);
+
+    let app = app.with_state(state);
+
+    Server::new(app).listen("127.0.0.1:3000".parse()?).await
+}</code></pre>
+<h2 id="generate-api-keys"><a class="header" href="#generate-api-keys">Generate API Keys</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite_auth::ApiKey;
+
+async fn create_api_key(user_id: i64, db: &amp;Database) -&gt; Result&lt;String&gt; {
+    let (api_key_model, plain_key) = ApiKey::generate(user_id);
+    api_key_model.save(db).await?;
+
+    // Return the plain key to user (only shown once)
+    Ok(plain_key)
+}
+<span class="boring">}</span></code></pre>
+<h2 id="validate-api-keys"><a class="header" href="#validate-api-keys">Validate API Keys</a></h2>
+<p>The <code>ApiKeyMiddleware</code> handles validation automatically. It expects the API key in the <code>Authorization: Bearer &lt;key&gt;</code> header.</p>
+<h2 id="using-api-keys"><a class="header" href="#using-api-keys">Using API Keys</a></h2>
+<p>Clients send the API key in the <code>Authorization</code> header:</p>
+<pre><code class="language-bash">curl -H "Authorization: Bearer your-api-key" \
+     http://localhost:3000/api/data
+</code></pre>
+<h2 id="complete-example"><a class="header" href="#complete-example">Complete Example</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use oxidite::prelude::*;
+use oxidite_auth::{ApiKey, ApiKeyAuth};
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct ApiKeyResponse {
+    key: String,
+}
+
+async fn create_key(
+    State(db): State&lt;Arc&lt;Database&gt;&gt;,
+    Json(req): Json&lt;CreateKeyRequest&gt;,
+) -&gt; Result&lt;OxiditeResponse&gt; {
+    let (api_key_model, plain_key) = ApiKey::generate(req.user_id);
+    api_key_model.save(&amp;db).await?;
+
+    Ok(OxiditeResponse::json(json!(ApiKeyResponse { key: plain_key })))
+}
+
+async fn protected_route(auth: ApiKeyAuth) -&gt; Result&lt;OxiditeResponse&gt; {
+    // The user_id is available via the ApiKeyAuth extractor
+    let user_id = auth.user_id;
+    Ok(OxiditeResponse::json(json!({ "message": "Success!", "user_id": user_id })))
+}
+<span class="boring">}</span></code></pre>
+<h2 id="best-practices-1"><a class="header" href="#best-practices-1">Best Practices</a></h2>
+<ol>
+<li>Never log API keys</li>
+<li>Hash keys before storing</li>
+<li>Allow key rotation</li>
+<li>Set expiration dates</li>
+<li>Rate limit by API key</li>
+</ol>
+<h2 id="revoke-keys"><a class="header" href="#revoke-keys">Revoke Keys</a></h2>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn revoke_key(key_id: i64, db: &amp;Database) -&gt; Result&lt;()&gt; {
+    ApiKey::delete(key_id, db).await
+}
+<span class="boring">}</span></code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="oxidite-architecture-overview"><a class="header" href="#oxidite-architecture-overview">Oxidite Architecture Overview</a></h1>
+<p>This document provides a comprehensive overview of Oxidite’s architecture, design principles, and internal workings.</p>
+<hr>
+<h2 id="-design-principles"><a class="header" href="#-design-principles">🎯 Design Principles</a></h2>
+<h3 id="1-performance-first"><a class="header" href="#1-performance-first">1. <strong>Performance First</strong></a></h3>
+<ul>
+<li>Zero-cost abstractions leveraging Rust’s type system</li>
+<li>Async I/O with Tokio for maximum throughput</li>
+<li>Efficient memory management without garbage collection</li>
+</ul>
+<h3 id="2-security-by-default"><a class="header" href="#2-security-by-default">2. <strong>Security by Default</strong></a></h3>
+<ul>
+<li>Secure defaults for all configurations</li>
+<li>Memory safety guaranteed by Rust</li>
+<li>Protection against OWASP Top 10 vulnerabilities</li>
+<li>Constant-time cryptographic operations</li>
+</ul>
+<h3 id="3-developer-ergonomics"><a class="header" href="#3-developer-ergonomics">3. <strong>Developer Ergonomics</strong></a></h3>
+<ul>
+<li>Type-safe APIs that prevent runtime errors</li>
+<li>Comprehensive error messages</li>
+<li>Automatic documentation generation</li>
+<li>Familiar patterns from popular frameworks</li>
+</ul>
+<h3 id="4-modularity"><a class="header" href="#4-modularity">4. <strong>Modularity</strong></a></h3>
+<ul>
+<li>Composable crates that can be used independently</li>
+<li>Clean separation of concerns</li>
+<li>Plugin architecture for extensibility</li>
+</ul>
+<hr>
+<h2 id="-system-architecture"><a class="header" href="#-system-architecture">🏗️ System Architecture</a></h2>
+<pre><code class="language-mermaid">graph TD
+    A[HTTP Request] --&gt; B[oxidite-core]
+    B --&gt; C[Middleware Stack]
+    C --&gt; D[Router]
+    D --&gt; E[Handler]
+    E --&gt; F[oxidite-db]
+    E --&gt; G[oxidite-cache]
+    E --&gt; H[oxidite-queue]
+    F --&gt; I[SQL/NoSQL]
+    G --&gt; J[Redis/Memory]
+    H --&gt; K[Job Queue]
+    E --&gt; L[Response]
+    L --&gt; C
+    C --&gt; M[HTTP Response]
+</code></pre>
+<hr>
+<h2 id="-crate-dependency-graph"><a class="header" href="#-crate-dependency-graph">📦 Crate Dependency Graph</a></h2>
+<pre><code class="language-mermaid">graph LR
+    CLI[oxidite-cli] --&gt; Core[oxidite-core]
+    CLI --&gt; Router[oxidite-router]
+    CLI --&gt; DB[oxidite-db]
+    CLI --&gt; Migrate[oxidite-migrate]
+
+    Router --&gt; Core
+    Middleware[oxidite-middleware] --&gt; Core
+    Auth[oxidite-auth] --&gt; Core
+    Auth --&gt; DB
+    DB --&gt; Core
+    Queue[oxidite-queue] --&gt; Core
+    Cache[oxidite-cache] --&gt; Core
+    Realtime[oxidite-realtime] --&gt; Core
+    Admin[oxidite-admin] --&gt; Core
+    Admin --&gt; Auth
+    Admin --&gt; DB
+</code></pre>
+<hr>
+<h2 id="-request-lifecycle"><a class="header" href="#-request-lifecycle">🔄 Request Lifecycle</a></h2>
+<h3 id="1-connection-accepted"><a class="header" href="#1-connection-accepted">1. <strong>Connection Accepted</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>TcpListener::bind(addr).await
+    -&gt; Accept connection
+    -&gt; Spawn task
+<span class="boring">}</span></code></pre>
+<h3 id="2-http-parsing"><a class="header" href="#2-http-parsing">2. <strong>HTTP Parsing</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>Hyper parses HTTP request
+    -&gt; Creates Request&lt;Body&gt;
+    -&gt; Passes to service
+<span class="boring">}</span></code></pre>
+<h3 id="3-middleware-processing-pre"><a class="header" href="#3-middleware-processing-pre">3. <strong>Middleware Processing (Pre)</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>ServiceBuilder::new()
+    .layer(LoggerLayer)      // Log request
+    .layer(CorsLayer)        // Check CORS
+    .layer(AuthLayer)        // Authenticate
+    .layer(RateLimitLayer)   // Rate limit
+    .service(router)
+<span class="boring">}</span></code></pre>
+<h3 id="4-routing"><a class="header" href="#4-routing">4. <strong>Routing</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>Router matches path &amp; method
+    -&gt; Extracts path params
+    -&gt; Extracts query params
+    -&gt; Extracts body
+    -&gt; Calls handler
+<span class="boring">}</span></code></pre>
+<h3 id="5-handler-execution"><a class="header" href="#5-handler-execution">5. <strong>Handler Execution</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>async fn handler(Path(id): Path&lt;i64&gt;) -&gt; Result&lt;Json&lt;User&gt;&gt; {
+    let user = User::find(id).await?;
+    Ok(Json(user))
+}
+<span class="boring">}</span></code></pre>
+<h3 id="6-middleware-processing-post"><a class="header" href="#6-middleware-processing-post">6. <strong>Middleware Processing (Post)</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>Response flows back through middleware
+    -&gt; Compression
+    -&gt; Security headers
+    -&gt; Logging
+<span class="boring">}</span></code></pre>
+<h3 id="7-response-sent"><a class="header" href="#7-response-sent">7. <strong>Response Sent</strong></a></h3>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>Hyper serializes response
+    -&gt; Sends over TCP
+    -&gt; Connection closed or kept alive
+<span class="boring">}</span></code></pre>
+<hr>
+<h2 id="-core-components"><a class="header" href="#-core-components">🎨 Core Components</a></h2>
+<h3 id="oxidite-core-implemented"><a class="header" href="#oxidite-core-implemented">oxidite-core (Implemented)</a></h3>
+<p><strong>Purpose</strong>: HTTP server foundation, request/response handling, and routing.</p>
+<p><strong>Key Types</strong>:</p>
+<ul>
+<li><code>Server</code>: The main HTTP server.</li>
+<li><code>Router</code>: The routing engine.</li>
+<li><code>OxiditeRequest</code>: A type alias for <code>http::Request</code>.</li>
+<li><code>OxiditeResponse</code>: A type alias for <code>http::Response</code>.</li>
+<li><code>Path&lt;T&gt;</code>, <code>Query&lt;T&gt;</code>, <code>Json&lt;T&gt;</code>: Extractors for typed parameters and bodies.</li>
+<li><code>Error</code>: The framework’s primary error type.</li>
+<li><code>Result&lt;T&gt;</code>: A convenient <code>Result</code> type alias.</li>
+</ul>
+<p><strong>Responsibilities</strong>:</p>
+<ul>
+<li>TCP connection management and HTTP protocol handling (via Hyper).</li>
+<li>Service integration (via Tower).</li>
+<li>Path matching, HTTP method routing, and parameter extraction.</li>
+<li>Error propagation.</li>
+</ul>
+<hr>
+<h3 id="oxidite-middleware-implemented"><a class="header" href="#oxidite-middleware-implemented">oxidite-middleware (Implemented)</a></h3>
+<p><strong>Purpose</strong>: Cross-cutting concerns via Tower layers</p>
+<p><strong>Key Middleware</strong>:</p>
+<ul>
+<li><code>Logger</code>: Request/response logging</li>
+<li><code>Cors</code>: CORS policy enforcement</li>
+<li><code>Compression</code>: gzip/brotli response compression</li>
+<li><code>RateLimit</code>: Token bucket rate limiting</li>
+<li><code>Timeout</code>: Request timeout handling</li>
+<li><code>SecurityHeaders</code>: CSP, HSTS, X-Frame-Options, etc.</li>
+</ul>
+<p><strong>Architecture</strong>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;S&gt; Service&lt;Request&gt; for Middleware&lt;S&gt; {
+    type Response = Response;
+    type Error = Error;
+    type Future = Future;
+
+    fn call(&amp;mut self, req: Request) -&gt; Self::Future {
+        // Pre-processing
+        let fut = self.inner.call(req);
+        // Post-processing
+    }
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h3 id="oxidite-db-in-progress"><a class="header" href="#oxidite-db-in-progress">oxidite-db (In Progress)</a></h3>
+<p><strong>Purpose</strong>: Database abstraction and ORM</p>
+<p><strong>Key Types</strong>:</p>
+<ul>
+<li><code>Database</code>: A connection pool to the database.</li>
+<li><code>Model</code>: A trait for database models.</li>
+<li><code>QueryBuilder</code>: For constructing type-safe SQL queries.</li>
+</ul>
+<p><strong>Supported Databases</strong>:</p>
+<ul>
+<li>PostgreSQL (via <code>tokio-postgres</code>)</li>
+<li>MySQL (via <code>mysql_async</code>)</li>
+<li>SQLite (via <code>rusqlite</code> + async wrapper)</li>
+</ul>
+<p><strong>Architecture</strong>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Database: Send + Sync {
+    async fn execute(&amp;self, query: &amp;str) -&gt; Result&lt;u64&gt;;
+    async fn query&lt;T&gt;(&amp;self, query: &amp;str) -&gt; Result&lt;Vec&lt;T&gt;&gt;;
+}
+
+pub trait Model: Sized {
+    fn table_name() -&gt; &amp;'static str;
+    async fn find(id: i64, db: &amp;Database) -&gt; Result&lt;Self&gt;;
+    async fn save(&amp;mut self, db: &amp;Database) -&gt; Result&lt;()&gt;;
+    async fn delete(&amp;self, db: &amp;Database) -&gt; Result&lt;()&gt;;
+}
+<span class="boring">}</span></code></pre>
+<hr>
+<h3 id="oxidite-auth-in-progress"><a class="header" href="#oxidite-auth-in-progress">oxidite-auth (In Progress)</a></h3>
+<p><strong>Purpose</strong>: Authentication and authorization</p>
+<p><strong>Strategies</strong>:</p>
+<ol>
+<li><strong>JWT</strong>: Stateless token authentication</li>
+<li><strong>API Key</strong>: Simple API authentication</li>
+</ol>
+<p><strong>RBAC/PBAC</strong>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait Authorizable {
+    async fn has_role(&amp;self, role: &amp;str, db: &amp;Database) -&gt; Result&lt;bool&gt;;
+    async fn has_permission(&amp;self, permission: &amp;str, db: &amp;Database) -&gt; Result&lt;bool&gt;;
+}
+
+// Middleware usage
+.layer(AuthMiddleware)
+.layer(RequireRole::new("admin"))
+.layer(RequirePermission::new("users:delete"))
+<span class="boring">}</span></code></pre>
+<hr>
+<h3 id="oxidite-queue-in-progress"><a class="header" href="#oxidite-queue-in-progress">oxidite-queue (In Progress)</a></h3>
+<p><strong>Purpose</strong>: Background job processing</p>
+<p><strong>Architecture</strong>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[async_trait]
+pub trait Job: Serialize + DeserializeOwned + Send + Sync {
+    async fn handle(&amp;self) -&gt; Result&lt;()&gt;;
+}
+
+// Enqueue
+queue.dispatch(SendEmailJob { to: "user@example.com" }).await?;
+
+// Worker
+Worker::new(queue)
+    .concurrency(4)
+    .run()
+    .await;
+<span class="boring">}</span></code></pre>
+<p><strong>Backends</strong>:</p>
+<ul>
+<li>In-memory (development)</li>
+<li>Redis (production)</li>
+</ul>
+<hr>
+<h3 id="oxidite-cli-in-progress"><a class="header" href="#oxidite-cli-in-progress">oxidite-cli (In Progress)</a></h3>
+<p><strong>Purpose</strong>: Command-line interface</p>
+<p><strong>Commands</strong>:</p>
+<ul>
+<li><code>new</code>: Project scaffolding</li>
+<li><code>dev</code>: Development server with hot reload</li>
+<li><code>build</code>: Production build</li>
+<li><code>migrate</code>: Database migrations</li>
+<li><code>make:*</code>: Code generation</li>
+<li><code>queue:work</code>: Start queue workers</li>
+</ul>
+<hr>
+<h2 id="-security-architecture"><a class="header" href="#-security-architecture">🔐 Security Architecture</a></h2>
+<h3 id="memory-safety"><a class="header" href="#memory-safety">Memory Safety</a></h3>
+<ul>
+<li>No buffer overflows (Rust prevents)</li>
+<li>No use-after-free (ownership system)</li>
+<li>No data races (borrow checker)</li>
+</ul>
+<h3 id="cryptography"><a class="header" href="#cryptography">Cryptography</a></h3>
+<ul>
+<li>Argon2id for password hashing</li>
+<li>Constant-time comparisons</li>
+<li>Secure random number generation</li>
+<li>TLS 1.3 for transport security</li>
+</ul>
+<h3 id="input-validation"><a class="header" href="#input-validation">Input Validation</a></h3>
+<ul>
+<li>Type-safe parameter extraction</li>
+<li>Automatic deserialization validation</li>
+<li>SQL injection prevention (prepared statements)</li>
+<li>XSS prevention (auto-escaping templates)</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>

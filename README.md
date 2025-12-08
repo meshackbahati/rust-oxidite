@@ -137,6 +137,10 @@ Oxidite is composed of modular crates:
 | `oxidite-realtime` | WebSockets & SSE |
 | ...and more | |
 
+## 💬 Community & Support
+
+Have questions or want to connect with other Oxidite developers? Join our community on [GitHub Discussions](https://github.com/Kyle6012/rust-oxidite/discussions).
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
