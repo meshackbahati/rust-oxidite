@@ -1,7 +1,7 @@
 use std::process::{Command, Child};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use notify::{Watcher, RecursiveMode, Result as NotifyResult, Event};
+use notify::{Watcher, RecursiveMode, Event};
 use colored::*;
 use std::path::Path;
 
