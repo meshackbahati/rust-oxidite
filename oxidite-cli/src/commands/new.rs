@@ -228,7 +228,7 @@ url = "redis://localhost"
 
 fn create_main_rs(path: &Path, p_type: ProjectType) -> std::io::Result<()> {
     let content = match p_type {
-        ProjectType::Fullstack => r#"use oxidite_core::{Router, Server, Request, Response};
+        ProjectType::Fullstack => r#"use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse};
 use oxidite_config::Config;
 use oxidite_template::serve_static;
 
@@ -238,7 +238,7 @@ mod models;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::from_file("config.toml")?;
+    let config = Config::load()?;
     let addr = format!("{}:{}", config.get("server.host")?, config.get("server.port")?);
 
     let mut router = Router::new();
@@ -250,14 +250,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Static files (fallback)
     router.get("/*", serve_static);
 
-    let server = Server::new(addr.parse()?, router);
+    let server = Server::new(router);
     println!("🚀 Server running on http://{}", addr);
-    server.run().await?;
+    server.listen(addr.parse()?).await?;
 
     Ok(())
 }
 "#,
-        ProjectType::Api => r#"use oxidite_core::{Router, Server, Request, Response};
+        ProjectType::Api => r#"use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse};
 use oxidite_config::Config;
 
 mod routes;
@@ -266,7 +266,7 @@ mod models;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::from_file("config.toml")?;
+    let config = Config::load()?;
     let addr = format!("{}:{}", config.get("server.host")?, config.get("server.port")?);
 
     let mut router = Router::new();
@@ -274,9 +274,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Register routes
     routes::register(&mut router);
 
-    let server = Server::new(addr.parse()?, router);
+    let server = Server::new(router);
     println!("🚀 API Server running on http://{}", addr);
-    server.run().await?;
+    server.listen(addr.parse()?).await?;
 
     Ok(())
 }
@@ -289,23 +289,23 @@ mod services;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::from_file("config.toml")?;
+    let config = Config::load()?;
     let addr = format!("{}:{}", config.get("server.host")?, config.get("server.port")?);
 
     let mut router = Router::new();
     routes::register(&mut router);
 
-    let server = Server::new(addr.parse()?, router);
+    let server = Server::new(router);
     println!("🚀 Microservice running on http://{}", addr);
-    server.run().await?;
+    server.listen(addr.parse()?).await?;
 
     Ok(())
 }
 "#,
-        ProjectType::Serverless => r#"use oxidite_core::{Request, Response};
+        ProjectType::Serverless => r#"use oxidite_core::{OxiditeRequest, OxiditeResponse};
 
-pub async fn handler(req: Request) -> Result<Response, oxidite_core::Error> {
-    Ok(Response::json(serde_json::json!({
+pub async fn handler(req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+    Ok(OxiditeResponse::json(serde_json::json!({
         "message": "Hello from Serverless Function!"
     })))
 }
@@ -318,9 +318,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut router = Router::new();
     router.get("/", handler);
     
-    let server = Server::new("127.0.0.1:8080".parse()?, router);
+    let server = Server::new(router);
     println!("🚀 Function running locally on http://127.0.0.1:8080");
-    server.run().await?;
+    server.listen("127.0.0.1:8080".parse()?).await?;
     
     Ok(())
 }
@@ -339,24 +339,24 @@ fn create_boilerplate(path: &Path, p_type: ProjectType) -> std::io::Result<()> {
     
     // Create routes/mod.rs
     let routes_content = match p_type {
-        ProjectType::Fullstack => r#"use oxidite_core::{Router, Request, Response};
+        ProjectType::Fullstack => r#"use oxidite_core::{Router, OxiditeRequest, OxiditeResponse};
 
 pub fn register(router: &mut Router) {
     router.get("/", index);
 }
 
-async fn index(_req: Request) -> Result<Response, oxidite_core::Error> {
-    Ok(Response::html("<h1>Welcome to Oxidite Fullstack!</h1>"))
+async fn index(_req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+    Ok(OxiditeResponse::html("<h1>Welcome to Oxidite Fullstack!</h1>"))
 }
 "#,
-        ProjectType::Api => r#"use oxidite_core::{Router, Request, Response};
+        ProjectType::Api => r#"use oxidite_core::{Router, OxiditeRequest, OxiditeResponse};
 
 pub fn register(router: &mut Router) {
     router.get("/api/health", health);
 }
 
-async fn health(_req: Request) -> Result<Response, oxidite_core::Error> {
-    Ok(Response::json(serde_json::json!({"status": "ok"})))
+async fn health(_req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+    Ok(OxiditeResponse::json(serde_json::json!({"status": "ok"})))
 }
 "#,
         _ => r#"use oxidite_core::Router;

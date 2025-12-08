@@ -25,3 +25,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **CLI**: Fixed workspace issues in generated projects.
+- **CLI**: Updated project scaffolding to use correct types and dependencies, resolving compilation errors in new projects.
