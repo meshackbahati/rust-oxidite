@@ -14,7 +14,7 @@ oxidite = { version = "1.0", features = ["queue"] }
 ### Define a Job
 
 ```rust
-use oxidite::queue::*;
+use oxidite_queue::{Job, JobResult};
 use async_trait::async_trait;
 use serde::{Serialize, Deserialize};
 
@@ -27,7 +27,7 @@ struct SendEmailJob {
 
 #[async_trait]
 impl Job for SendEmailJob {
-    async fn perform(&self) -> JobResult {
+    async fn handle(&self) -> JobResult {
         // Your job logic
         println!("Sending email to: {}", self.to);
         
@@ -36,14 +36,6 @@ impl Job for SendEmailJob {
         
         Ok(())
     }
-    
-    fn max_retries(&self) -> u32 {
-        3  // Retry up to 3 times on failure
-    }
-    
-    fn name(&self) -> String {
-        "send_email".to_string()
-    }
 }
 ```
 
@@ -51,22 +43,21 @@ impl Job for SendEmailJob {
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::queue::*;
+use oxidite_queue::{Queue, Job};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Create queue (Memory or Redis)
-    let queue = Queue::memory();
-    // let queue = Queue::redis("redis://127.0.0.1")?;
+    let queue = Queue::new_redis("redis://127.0.0.1").await?;
     
     // Enqueue a job
-    let job = JobWrapper::new(&SendEmailJob {
+    let job = SendEmailJob {
         to: "user@example.com".to_string(),
         subject: "Welcome!".to_string(),
         body: "Thanks for signing up!".to_string(),
-    })?;
+    };
     
-    queue.enqueue(job).await?;
+    queue.dispatch(job).await?;
     
     Ok(())
 }
@@ -74,185 +65,50 @@ async fn main() -> Result<()> {
 
 ### Start Workers
 
+You can start workers using the CLI:
+```bash
+oxidite queue work
+```
+
+Or programmatically:
 ```rust
 use std::sync::Arc;
+use oxidite_queue::Worker;
 
 // Start worker
 let worker = Worker::new(Arc::new(queue))
-    .worker_count(4);  // 4 concurrent workers
+    .concurrency(4);  // 4 concurrent workers
 
-worker.start().await;
+worker.run().await;
 ```
 
 ## Cron Jobs
 
-Schedule recurring jobs with cron expressions:
-
-```rust
-#[derive(Serialize, Deserialize)]
-struct DailyReportJob;
-
-#[async_trait]
-impl Job for DailyReportJob {
-    async fn perform(&self) -> JobResult {
-        println!("Generating daily report...");
-        // Generate and send report
-        Ok(())
-    }
-}
-
-// Schedule to run daily at 9 AM
-let job = JobWrapper::new(&DailyReportJob)?
-    .with_cron("0 0 9 * * *".to_string());
-
-queue.enqueue(job).await?;
-```
-
-### Cron Expression Format
-
-```
-┌───────────── second (0-59)
-│ ┌───────────── minute (0-59)
-│ │ ┌───────────── hour (0-23)
-│ │ │ ┌───────────── day of month (1-31)
-│ │ │ │ ┌───────────── month (1-12)
-│ │ │ │ │ ┌───────────── day of week (0-6)
-│ │ │ │ │ │
-│ │ │ │ │ │
-* * * * * *
-```
-
-Examples:
-- `0 0 9 * * *` - Daily at 9:00 AM
-- `0 */15 * * * *` - Every 15 minutes
-- `0 0 0 * * 0` - Weekly on Sunday at midnight
-- `0 0 12 1 * *` - Monthly on the 1st at noon
+Scheduling cron jobs is not yet implemented in the `oxidite-queue` crate, but it is on the roadmap.
 
 ## Retry Logic
 
-Jobs automatically retry on failure with exponential backoff:
+Jobs automatically retry on failure with exponential backoff. You can configure this when dispatching a job.
 
 ```rust
-impl Job for MyJob {
-    async fn perform(&self) -> JobResult {
-        // If this fails, job will retry
-        risky_operation().await?;
-        Ok(())
-    }
-    
-    fn max_retries(&self) -> u32 {
-        5  // Retry up to 5 times
-    }
-    
-    fn backoff_duration(&self) -> Duration {
-        Duration::from_secs(60)  // Base backoff: 60s, 120s, 240s, etc.
-    }
-}
+use std::time::Duration;
+
+queue.dispatch(job)
+    .with_max_retries(5)
+    .with_backoff(Duration::from_secs(60))
+    .await?;
 ```
 
 ## Dead Letter Queue
 
-Jobs that fail after all retries go to the Dead Letter Queue:
+Jobs that fail after all retries go to the Dead Letter Queue. You can manage these using the CLI.
 
-```rust
-// List failed jobs
-let failed_jobs = queue.list_dead_letter().await?;
+```bash
+# List failed jobs
+oxidite queue dlq
 
-for job in failed_jobs {
-    println!("Failed job: {} - Error: {:?}", job.id, job.error);
-}
-
-// Retry a specific job from DLQ
-queue.retry_from_dead_letter(&job_id).await?;
-```
-
-## Job Statistics
-
-Monitor queue health:
-
-```rust
-let  stats = queue.get_stats().await;
-
-println!("Total enqueued: {}", stats.total_enqueued);
-println!("Total processed: {}", stats.total_processed);
-println!("Total failed: {}", stats.total_failed);
-println!("Pending: {}", stats.pending_count);
-println!("Running: {}", stats.running_count);
-println!("Dead letter: {}", stats.dead_letter_count);
-```
-
-## Complete Example
-
-```rust
-use oxidite::prelude::*;
-use oxidite::queue::*;
-use std::sync::Arc;
-
-#[derive(Serialize, Deserialize)]
-struct ProcessImageJob {
-    image_url: String,
-    user_id: i64,
-}
-
-#[async_trait]
-impl Job for ProcessImageJob {
-    async fn perform(&self) -> JobResult {
-        // Download image
-        let image = download_image(&self.image_url).await?;
-        
-        // Process image
-        let thumbnail = create_thumbnail(&image)?;
-        
-        // Save to storage
-        save_to_storage(&thumbnail, self.user_id).await?;
-        
-        Ok(())
-    }
-    
-    fn max_retries(&self) -> u32 {
-        3
-    }
-}
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    // Setup queue
-    let queue = Arc::new(Queue::redis("redis://127.0.0.1")?);
-    
-    // Start workers
-    tokio::spawn({
-        let queue = queue.clone();
-        async move {
-            Worker::new(queue)
-                .worker_count(4)
-                .start()
-                .await;
-        }
-    });
-    
-    // Your web app
-    let mut app = Router::new();
-    
-    app.post("/upload", {
-        let queue = queue.clone();
-        move |Json(data): Json<UploadRequest>| {
-            let queue = queue.clone();
-            async move {
-                // Enqueue background job
-                let job = JobWrapper::new(&ProcessImageJob {
-                    image_url: data.url,
-                    user_id: data.user_id,
-                })?;
-                
-                queue.enqueue(job).await?;
-                
-                Ok(Json(json!({ "status": "processing" })))
-            }
-        }
-    });
-    
-    Server::new(app).listen("127.0.0.1:3000".parse()?).await
-}
+# Retry a specific job from DLQ
+oxidite queue retry <job_id>
 ```
 
 ## CLI Commands
@@ -261,14 +117,14 @@ Manage jobs with the CLI:
 
 ```bash
 # Start worker
-oxidite queue:work --workers 4
+oxidite queue work --workers 4
 
 # View statistics
-oxidite queue:list
+oxidite queue list
 
 # View dead letter queue
-oxidite queue:dlq
+oxidite queue dlq
 
 # Clear pending jobs
-oxidite queue:clear
+oxidite queue clear
 ```

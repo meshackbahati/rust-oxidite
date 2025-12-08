@@ -112,8 +112,8 @@ Router matches path & method
 
 ### 5. **Handler Execution**
 ```rust
-async fn handler(params: Path<UserId>) -> Result<Json<User>> {
-    let user = User::find(params.id).await?;
+async fn handler(Path(id): Path<i64>) -> Result<Json<User>> {
+    let user = User::find(id).await?;
     Ok(Json(user))
 }
 ```
@@ -142,13 +142,13 @@ Hyper serializes response
 **Purpose**: HTTP server foundation, request/response handling, and routing.
 
 **Key Types**:
-- `Server<S>`: Generic HTTP server accepting any Tower service.
-- `Router`: Main routing struct implementing `Service`.
-- `OxiditeRequest`: Alias for `Request<Incoming>`.
-- `OxiditeResponse`: Alias for `Response<BoxBody>`.
+- `Server`: The main HTTP server.
+- `Router`: The routing engine.
+- `OxiditeRequest`: A type alias for `http::Request`.
+- `OxiditeResponse`: A type alias for `http::Response`.
 - `Path<T>`, `Query<T>`, `Json<T>`: Extractors for typed parameters and bodies.
-- `Error`: Common error type.
-- `Result<T>`: Common result type.
+- `Error`: The framework's primary error type.
+- `Result<T>`: A convenient `Result` type alias.
 
 **Responsibilities**:
 - TCP connection management and HTTP protocol handling (via Hyper).
@@ -192,17 +192,14 @@ impl<S> Service<Request> for Middleware<S> {
 **Purpose**: Database abstraction and ORM
 
 **Key Types**:
-- `Connection`: Database connection trait
-- `QueryBuilder`: Type-safe query construction
-- `Model`: Trait for database models
-- `Transaction`: Transaction handling
+- `Database`: A connection pool to the database.
+- `Model`: A trait for database models.
+- `QueryBuilder`: For constructing type-safe SQL queries.
 
 **Supported Databases**:
 - PostgreSQL (via `tokio-postgres`)
 - MySQL (via `mysql_async`)
 - SQLite (via `rusqlite` + async wrapper)
-- MongoDB (via `mongodb`)
-- Redis (via `redis-rs`)
 
 **Architecture**:
 ```rust
@@ -213,31 +210,9 @@ pub trait Database: Send + Sync {
 
 pub trait Model: Sized {
     fn table_name() -> &'static str;
-    async fn find(id: impl Into<Id>) -> Result<Self>;
-    async fn create(self) -> Result<Self>;
-    async fn update(&self) -> Result<()>;
-    async fn delete(&self) -> Result<()>;
-}
-```
-
----
-
-### oxidite-migrate (Planned)
-
-**Purpose**: Database schema migrations
-
-**Key Concepts**:
-- **Up migrations**: Apply schema changes
-- **Down migrations**: Rollback schema changes
-- **Auto-diffing**: Generate migrations from model changes
-- **History tracking**: Track applied migrations
-
-**Migration Format**:
-```rust
-pub struct Migration {
-    pub version: String,
-    pub up: Box<dyn Fn(&Connection) -> BoxFuture<Result<()>>>,
-    pub down: Box<dyn Fn(&Connection) -> BoxFuture<Result<()>>>,
+    async fn find(id: i64, db: &Database) -> Result<Self>;
+    async fn save(&mut self, db: &Database) -> Result<()>;
+    async fn delete(&self, db: &Database) -> Result<()>;
 }
 ```
 
@@ -248,21 +223,18 @@ pub struct Migration {
 **Purpose**: Authentication and authorization
 
 **Strategies**:
-1. **Session**: Cookie-based sessions
-2. **JWT**: Stateless token authentication
-3. **Paseto**: Modern token alternative
-4. **OAuth2**: Third-party authentication
-5. **API Key**: Simple API authentication
+1. **JWT**: Stateless token authentication
+2. **API Key**: Simple API authentication
 
 **RBAC/PBAC**:
 ```rust
 pub trait Authorizable {
-    fn has_role(&self, role: &str) -> bool;
-    fn can(&self, permission: &str) -> bool;
+    async fn has_role(&self, role: &str, db: &Database) -> Result<bool>;
+    async fn has_permission(&self, permission: &str, db: &Database) -> Result<bool>;
 }
 
 // Middleware usage
-.layer(RequireAuth::new())
+.layer(AuthMiddleware)
 .layer(RequireRole::new("admin"))
 .layer(RequirePermission::new("users:delete"))
 ```
@@ -275,73 +247,24 @@ pub trait Authorizable {
 
 **Architecture**:
 ```rust
+#[async_trait]
 pub trait Job: Serialize + DeserializeOwned + Send + Sync {
-    async fn perform(&self) -> Result<()>;
-    fn max_retries(&self) -> u32 { 3 }
-    fn backoff(&self) -> Duration { Duration::from_secs(60) }
+    async fn handle(&self) -> Result<()>;
 }
 
 // Enqueue
-SendEmailJob { to: "user@example.com" }
-    .delay(Duration::from_secs(300))
-    .enqueue()
-    .await?;
+queue.dispatch(SendEmailJob { to: "user@example.com" }).await?;
 
 // Worker
-Queue::new()
-    .worker_count(4)
-    .start()
+Worker::new(queue)
+    .concurrency(4)
+    .run()
     .await;
 ```
 
 **Backends**:
 - In-memory (development)
 - Redis (production)
-- PostgreSQL (production)
-
----
-
-### oxidite-cache (In Progress)
-
-**Purpose**: Multi-layer caching
-
-**Architecture**:
-```rust
-pub trait Cache: Send + Sync {
-    async fn get<T>(&self, key: &str) -> Result<Option<T>>;
-    async fn set<T>(&self, key: &str, value: &T, ttl: Duration) -> Result<()>;
-    async fn delete(&self, key: &str) -> Result<()>;
-    async fn flush(&self) -> Result<()>;
-}
-
-// Usage
-cache.remember("user:123", Duration::from_secs(300), || async {
-    User::find(123).await
-}).await?;
-```
-
----
-
-### oxidite-realtime (In Progress)
-
-**Purpose**: WebSockets and pub/sub
-
-**Architecture**:
-```rust
-// WebSocket handler
-router.ws("/ws", |socket: WebSocket| async move {
-    socket.join("room:lobby").await;
-    
-    while let Some(msg) = socket.recv().await {
-        socket.broadcast("room:lobby", msg).await;
-    }
-});
-
-// Broadcasting
-Broadcast::to_channel("notifications")
-    .send(json!({ "type": "new_message" }))
-    .await;
-```
 
 ---
 
@@ -356,18 +279,6 @@ Broadcast::to_channel("notifications")
 - `migrate`: Database migrations
 - `make:*`: Code generation
 - `queue:work`: Start queue workers
-- `test`: Run test suite
-
-**Implementation**:
-```rust
-#[derive(Parser)]
-enum Commands {
-    New { name: String },
-    Dev { port: u16 },
-    Migrate,
-    // ...
-}
-```
 
 ---
 
@@ -389,134 +300,3 @@ enum Commands {
 - Automatic deserialization validation
 - SQL injection prevention (prepared statements)
 - XSS prevention (auto-escaping templates)
-
-### CSRF Protection
-- Token generation and validation
-- SameSite cookie attribute
-- Double-submit cookie pattern
-
-### Rate Limiting
-- Token bucket algorithm
-- Per-IP and per-user limits
-- Distributed via Redis
-
----
-
-## ⚡ Performance Optimizations
-
-### Async I/O
-- Non-blocking I/O for all operations
-- Efficient task scheduling with Tokio
-- Connection pooling for databases
-
-### Zero-Copy
-- Body streaming without buffering
-- Efficient serialization with serde
-
-### Caching
-- Response caching middleware
-- Database query result caching
-- Static file caching
-
-### Connection Pooling
-- Database connection pools (bb8/deadpool)
-- Redis connection pools
-- HTTP/2 connection reuse
-
----
-
-## 🧪 Testing Strategy
-
-### Unit Tests
-- Test individual functions
-- Mock external dependencies
-- Fast execution
-
-### Integration Tests
-- Test full request/response cycle
-- Use test database
-- Reset state between tests
-
-### Load Tests
-- Benchmark throughput
-- Identify bottlenecks
-- Wrk/Bombardier integration
-
-### Fuzz Testing
-- Discover edge cases
-- cargo-fuzz integration
-- Continuous fuzzing
-
----
-
-## 📈 Monitoring & Observability
-
-### Logging
-- Structured JSON logging
-- Log levels (trace, debug, info, warn, error)
-- Request ID tracking
-
-### Metrics
-- Prometheus metrics
-- Request duration histograms
-- Database query metrics
-- Queue depth metrics
-
-### Tracing
-- Distributed tracing with OpenTelemetry
-- Span creation for each layer
-- Trace context propagation
-
----
-
-## 🚀 Deployment Architecture
-
-### Single Server
-```
-[Load Balancer]
-      |
-[Oxidite Server]
-      |
-   [Database]
-```
-
-### Horizontal Scaling
-```
-[Load Balancer]
-      |
-   [Oxidite Server 1] [Oxidite Server 2] [Oxidite Server N]
-      |                     |                     |
-      +---------------------+---------------------+
-                            |
-                    [Shared Database]
-                    [Shared Redis]
-```
-
-### Microservices
-```
-[API Gateway]
-      |
-      +-- [Auth Service]
-      +-- [User Service]
-      +-- [Order Service]
-      |
-[Service Mesh]
-      |
-[Shared Infrastructure]
-```
-
----
-
-## 🔮 Future Directions
-
-- GraphQL support
-- gRPC native support
-- Hot reloading in production
-- Built-in service discovery
-- Distributed tracing
-- Machine learning integration
-- Serverless deployment
-
----
-
-This architecture is designed to be **fast**, **secure**, **scalable**, and **maintainable**. Every design decision prioritizes these goals while maintaining developer ergonomics.

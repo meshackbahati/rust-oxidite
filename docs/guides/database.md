@@ -9,13 +9,6 @@ Complete guide to using the Oxidite ORM for database operations.
 oxidite = { version = "1.0", features = ["database"] }
 ```
 
-Or use the full framework:
-
-```toml
-[dependencies]
-oxidite = "1.0"  # Includes database features
-```
-
 ## Setup
 
 ### Database Connection
@@ -26,11 +19,17 @@ Create `.env` file:
 DATABASE_URL=postgresql://user:password@localhost/mydb
 ```
 
-Connect in your app:
+Connect in your app (`src/main.rs`):
 
 ```rust
 use oxidite::prelude::*;
-use oxidite::db::*;
+use oxidite_db::Database;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    db: Arc<Database>,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -38,9 +37,13 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     
     // Connect to database
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = Arc::new(Database::connect(&std::env::var("DATABASE_URL")?).await?);
+
+    let state = AppState { db };
     
-    // Your app code
+    // ... your app setup
+    let app = Router::new().with_state(state);
+    // ...
     Ok(())
 }
 ```
@@ -48,11 +51,11 @@ async fn main() -> Result<()> {
 ## Defining Models
 
 ```rust
-use oxidite::db::*;
+use oxidite_db::Model;
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
 
-#[derive(Model, Serialize, Deserialize, Clone)]
+#[derive(Model, Serialize, Deserialize, Clone, Default)]
 #[table_name = "users"]
 pub struct User {
     pub id: i64,
@@ -69,13 +72,11 @@ pub struct User {
 ### Create
 
 ```rust
-let user = User {
-    id: 0,  // Auto-generated
+let mut user = User {
     name: "Alice".to_string(),
     email: "alice@example.com".to_string(),
     password_hash: hash_password("password")?,
-    created_at: Utc::now(),
-    updated_at: Utc::now(),
+    ..Default::default()
 };
 
 user.save(&db).await?;
@@ -85,42 +86,39 @@ user.save(&db).await?;
 
 ```rust
 // Find by ID
-let user = User::find(&db, 1).await?;
+let user = User::find(1, &db).await?;
 
 // Find all
 let users = User::all(&db).await?;
 
 // Where clause
-let user = User::where_eq(&db, "email", "alice@example.com")
-    .first()
+let user = User::query()
+    .where_("email", "=", "alice@example.com")
+    .first(&db)
     .await?;
 
 // Multiple conditions
-let users = User::query(&db)
-    .where_eq("active", true)
-    .where_gt("created_at", yesterday)
+let users = User::query()
+    .where_("active", "=", true)
+    .where_("created_at", ">", yesterday)
     .limit(10)
-    .get()
+    .get_all(&db)
     .await?;
 ```
 
 ### Update
 
 ```rust
-let mut user = User::find(&db, 1).await?;
+let mut user = User::find(1, &db).await?;
 user.name = "Alice Smith".to_string();
-user.updated_at = Utc::now();
 user.save(&db).await?;
 ```
 
 ### Delete
 
 ```rust
-let user = User::find(&db, 1).await?;
+let user = User::find(1, &db).await?;
 user.delete(&db).await?;
-
-// Soft delete (if enabled)
-user.soft_delete(&db).await?;
 ```
 
 ## Relationships
@@ -138,31 +136,16 @@ pub struct Post {
 }
 
 // Load user's posts
-let user = User::find(&db, 1).await?;
-let posts = user.has_many::<Post>(&db, "user_id").await?;
+let user = User::find(1, &db).await?;
+let posts = user.has_many::<Post>("user_id", &db).await?;
 ```
 
 ### Belongs To
 
 ```rust
 // Load post's author
-let post = Post::find(&db, 1).await?;
-let user = post.belongs_to::<User>(&db, "user_id").await?;
-```
-
-### Has One
-
-```rust
-#[derive(Model)]
-#[table_name = "profiles"]
-pub struct Profile {
-    pub id: i64,
-    pub user_id: i64,
-    pub bio: String,
-}
-
-// Load user's profile
-let profile = user.has_one::<Profile>(&db, "user_id").await?;
+let post = Post::find(1, &db).await?;
+let user = post.belongs_to::<User>("user_id", &db).await?;
 ```
 
 ## Migrations
@@ -175,22 +158,7 @@ Using CLI:
 oxidite migrate create create_users_table
 ```
 
-Or manually create `migrations/TIMESTAMP_create_users.sql`:
-
-```sql
--- Up Migration
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Down Migration
-DROP TABLE users;
-```
+This will create a new SQL file in the `migrations` directory.
 
 ### Run Migrations
 
@@ -201,7 +169,7 @@ oxidite migrate run
 Or programmatically:
 
 ```rust
-use oxidite::db::Migration;
+use oxidite_db::Migration;
 
 Migration::run_all(&db).await?;
 ```
@@ -226,91 +194,4 @@ tx.commit().await?;
 
 // Or rollback on error
 tx.rollback().await?;
-```
-
-## Advanced Queries
-
-### Raw SQL
-
-```rust
-let results: Vec<User> = db.query_as("SELECT * FROM users WHERE active = $1")
-    .bind(true)
-    .fetch_all()
-    .await?;
-```
-
-### Pagination
-
-```rust
-let page = 1;
-let per_page = 20;
-
-let users = User::query(&db)
-    .offset((page - 1) * per_page)
-    .limit(per_page)
-    .get()
-    .await?;
-```
-
-### Aggregations
-
-```rust
-let count: i64 = db.query_scalar("SELECT COUNT(*) FROM users")
-    .fetch_one()
-    .await?;
-```
-
-## Best Practices
-
-1. **Use transactions** for related operations
-2. **Index frequently queried columns**
-3. **Validate data** before saving
-4. **Use soft deletes** for important data
-5. **Lazy load** relationships when needed
-
-## Example: Complete Model
-
-```rust
-use oxidite::db::*;
-
-#[derive(Model, Serialize, Deserialize)]
-#[table_name = "users"]
-pub struct User {
-    pub id: i64,
-    
-    #[validate(length(min = 3, max = 50))]
-    pub name: String,
-    
-    #[validate(email)]
-    pub email: String,
-    
-    pub password_hash: String,
-    
-    #[serde(skip)]
-    pub  deleted_at: Option<DateTime<Utc>>,
-    
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-impl User {
-    pub async fn create(db: &Database, name: String, email: String, password: String) -> Result<Self> {
-        let mut user = Self {
-            id: 0,
-            name,
-            email,
-            password_hash: hash_password(&password)?,
-            deleted_at: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
-        
-        user.save(db).await?;
-        Ok(user)
-    }
-    
-    pub async fn find_by_email(db: &Database, email: &str) -> Result<Option<Self>> {
-        User::where_eq(db, "email", email).first().await.ok()
-    }
-}
 ```
