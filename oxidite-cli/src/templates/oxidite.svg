@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Gradient Definitions -->
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Circle (optional) -->
+  <circle cx="50" cy="60" r="45" fill="url(#mainGradient)" opacity="0.1"/>
+
+  <!-- Atom/Molecule Icon representing Oxidation/Rust -->
+  <g transform="translate(50, 60)">
+    <!-- Central nucleus -->
+    <circle cx="0" cy="0" r="8" fill="url(#mainGradient)"/>
+
+    <!-- Electron orbits -->
+    <ellipse cx="0" cy="0" rx="30" ry="15" fill="none" stroke="url(#mainGradient)" stroke-width="2.5" opacity="0.8"/>
+    <ellipse cx="0" cy="0" rx="15" ry="30" fill="none" stroke="url(#mainGradient)" stroke-width="2.5" opacity="0.8"/>
+    <ellipse cx="0" cy="0" rx="25" ry="25" fill="none" stroke="url(#accentGradient)" stroke-width="2" opacity="0.6"/>
+
+    <!-- Electrons (orbiting particles) -->
+    <circle cx="30" cy="0" r="4" fill="#667eea">
+      <animate attributeName="cx" values="30;-30;30" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="30" r="4" fill="#764ba2">
+      <animate attributeName="cy" values="30;-30;30" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="-30" cy="0" r="4" fill="#f093fb">
+      <animate attributeName="cx" values="-30;30;-30" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="-30" r="4" fill="#f5576c">
+      <animate attributeName="cy" values="-30;30;-30" dur="3s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- OXIDITE Text -->
+  <text x="120" y="75" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="bold" fill="url(#mainGradient)">
+    OXIDITE
+  </text>
+
+  <!-- Subtitle -->
+  <text x="120" y="95" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#666">
+    Modern Rust Web Framework
+  </text>
+</svg>
