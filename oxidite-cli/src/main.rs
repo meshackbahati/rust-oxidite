@@ -106,7 +106,7 @@ enum QueueCommand {
 }
 
 async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(hyper::Response::new(Full::new(Bytes::from("Hello, Oxidite!"))))
+    Ok(OxiditeResponse::text("Hello, Oxidite!"))
 }
 
 #[tokio::main]
