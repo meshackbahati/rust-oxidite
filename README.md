@@ -1,4 +1,4 @@
-# Oxidite Web Framework
+# Oxidite v2 Web Framework
 
 <div align="center">
 
@@ -8,34 +8,34 @@ A modern, high-performance web framework for Rust, inspired by FastAPI, Express.
 
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub](https://img.shields.io/badge/github-Kyle6012%2Frust--oxidite-black)](https://github.com/Kyle6012/rust-oxidite)
+[![GitHub](https://img.shields.io/badge/github-meshackbahati%2Frust--oxidite-black)](https://github.com/meshackbahati/rust-oxidite)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](STATUS.md)
 
-Built with ❤️ by [Meshack Bahati Ouma](https://github.com/Kyle6012)
+Built with ❤️ by [Meshack Bahati Ouma](https://github.com/meshackbahati)
 
 </div>
 
 ---
 
-## 🚀 What is Oxidite?
+## What is Oxidite?
 
 Oxidite is a batteries-included web framework that combines Rust's performance with developer-friendly APIs. It provides a complete ecosystem for building scalable web applications, from REST APIs to fullstack server-side rendered apps.
 
-## ✨ Key Features
+## Key Features
 
-- **⚡ High Performance**: Built on `hyper` and `tokio` for blazing speed
-- **🗄️ Advanced ORM**: Complete database layer with relationships, soft deletes, validation
-- **🛠️ Powerful CLI**: Scaffolding, migrations, hot-reload dev server, code generators
-- **🔋 Batteries Included**: RBAC/PBAC, API Keys, Queues, Caching, Email, Storage
-- **🔐 Enterprise Security**: Password hashing, JWT, OAuth2, 2FA, rate limiting
-- **🎨 Template Engine**: Jinja2-style templates with inheritance and auto-escaping
-- **🔄 Real-time**: WebSockets and Redis pub/sub support
-- **📝 Type-Safe**: Strong typing for requests, responses, and database queries
-- **📊 Auto-Documentation**: OpenAPI/Swagger UI generation
+- **High Performance**: Built on `hyper` and `tokio` for blazing speed
+- **Advanced ORM**: Complete database layer with relationships, soft deletes, validation
+- **Powerful CLI**: Scaffolding, migrations, hot-reload dev server, code generators
+- **Batteries Included**: RBAC/PBAC, API Keys, Queues, Caching, Email, Storage, Plugins
+- **Enterprise Security**: Password hashing, JWT, OAuth2, 2FA, rate limiting
+- **Template Engine**: Jinja2-style templates with inheritance and auto-escaping
+- **Real-time**: WebSockets and Redis pub/sub support
+- **Type-Safe**: Strong typing for requests, responses, and database queries
+- **Auto-Documentation**: OpenAPI/Swagger UI generation
 
 > **Status**: See [STATUS.md](STATUS.md) for detailed feature completeness
 
-## 📦 Installation
+## Installation
 
 Install the Oxidite CLI tool to get started:
 
@@ -44,7 +44,7 @@ Install the Oxidite CLI tool to get started:
 cargo install --path oxidite-cli
 ```
 
-## 🛠️ Usage Guide
+## Usage Guide
 
 ### 1. Create a New Project
 
@@ -62,8 +62,8 @@ Here's a basic "Hello, World!" example:
 use oxidite::prelude::*;
 use serde_json::json;
 
-async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(OxiditeResponse::json(json!({ "message": "Hello, Oxidite!" })))
+async fn hello(_req: Request) -> Result<Response> {
+    Ok(Response::json(json!({ "message": "Hello, Oxidite!" })))
 }
 
 #[tokio::main]
@@ -105,25 +105,26 @@ Render templates in your handlers:
 ```rust
 use oxidite_template::{TemplateEngine, Context};
 
-async fn index() -> Result<OxiditeResponse> {
+async fn index() -> Result<Response> {
     let engine = TemplateEngine::new("templates");
     let mut context = Context::new();
     context.insert("name", "Oxidite");
     let html = engine.render("index.html", &context)?;
-    Ok(OxiditeResponse::html(html))
+    Ok(Response::html(html))
 }
 ```
 
-## 📖 Documentation
+## Documentation
 
-- [Getting Started](docs/guides/getting-started.md)
-- [CLI Reference](docs/guides/cli.md)
-- [Fullstack Guide](docs/guides/fullstack.md)
-- [Database Guide](docs/guides/database.md)
-- [Authentication](docs/guides/authentication.md)
-- [Realtime Features](docs/guides/realtime.md)
+- [Getting Started](docs/getting-started.md)
+- [Features](docs/features.md)
+- [API Reference](docs/api.md)
+- [CLI Reference](docs/cli.md)
+- [Database Guide](docs/database.md)
+- [Authentication](docs/authentication.md)
+- [Realtime Features](docs/realtime.md)
 
-## 🏗️ Architecture
+## Architecture
 
 Oxidite is composed of modular crates:
 
@@ -137,14 +138,14 @@ Oxidite is composed of modular crates:
 | `oxidite-realtime` | WebSockets & SSE |
 | ...and more | |
 
-## 💬 Community & Support
+## Community & Support
 
-Have questions or want to connect with other Oxidite developers? Join our community on [GitHub Discussions](https://github.com/Kyle6012/rust-oxidite/discussions).
+Have questions or want to connect with other Oxidite developers? Join our community on [GitHub Discussions](https://github.com/meshackbahati/rust-oxidite/discussions).
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.

@@ -44,8 +44,8 @@
 
 // Re-export core types
 pub use oxidite_core::*;
-pub use oxidite_middleware::*;
-pub use oxidite_config::*;
+pub use oxidite_middleware;
+pub use oxidite_config;
 
 #[cfg(feature = "database")]
 pub use oxidite_db as db;
@@ -82,11 +82,13 @@ pub mod prelude {
     pub use oxidite_core::{
         Router, Server, Handler,
         Error, Result,
-        extract::{Json, Path, Query, State, FromRequest},
+        Request, Response,
+        extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body},
     };
     
     pub use oxidite_middleware::{
         ServiceBuilder, LoggerLayer, CorsLayer, CompressionLayer,
+        CacheLayer, CacheMiddleware, CacheConfig, CacheLayerBuilder,
     };
     
     pub use oxidite_config::Config;
@@ -98,13 +100,19 @@ pub mod prelude {
     pub use oxidite_auth::{Permission, Role};
     
     #[cfg(feature = "queue")]
-    pub use oxidite_queue::{Queue, Job};
+    pub use oxidite_queue::{Queue, Job, PostgresBackend};
     
     #[cfg(feature = "cache")]
     pub use oxidite_cache::Cache;
     
     #[cfg(feature = "realtime")]
     pub use oxidite_realtime::WebSocketManager;
+    
+    #[cfg(feature = "graphql")]
+    pub use oxidite_graphql::{GraphQLHandler, GraphQLSchema};
+    
+    #[cfg(feature = "plugin")]
+    pub use oxidite_plugin::{PluginManager, Plugin, PluginInfo};
     
     pub use serde::{Serialize, Deserialize};
 }

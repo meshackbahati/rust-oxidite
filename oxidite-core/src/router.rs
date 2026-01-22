@@ -144,7 +144,7 @@ impl Router {
 
         // Log which path was not found
         eprintln!("🔍 Route not found: {} {}", method, path_for_error);
-        Err(Error::NotFound)
+        Err(Error::NotFound("Route not found".to_string()))
     }
 }
 

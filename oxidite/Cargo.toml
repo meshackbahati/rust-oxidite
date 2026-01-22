@@ -1,41 +1,45 @@
 [package]
 name = "oxidite"
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "A modern, batteries-included web framework for Rust inspired by Laravel and Rails"
+description = "A modern, batteries-included web framework for Rust inspired by Laravel and Rails - Oxidite v2"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 documentation = "https://docs.rs/oxidite"
-homepage = "https://github.com/Kyle6012/rust-oxidite"
+homepage = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["web", "framework", "http", "async", "fullstack"]
 categories = ["web-programming", "asynchronous"]
 readme = "README.md"
 
 [dependencies]
 # Core functionality - Always included
-oxidite-core = "0.1.0"
-oxidite-middleware = "0.1.0"
-oxidite-config = "0.1.0"
+oxidite-core = "2.0.0"
+oxidite-middleware = "2.0.0"
+oxidite-config = "2.0.0"
+tokio = { version = "1.48", features = ["full", "test-util"] }
 
 # Optional features
-oxidite-db = { version = "0.1.0", optional = true }
-oxidite-auth = { version = "0.1.0", optional = true }
-oxidite-security = { version = "0.1.0", optional = true }
-oxidite-queue = { version = "0.1.0", optional = true }
-oxidite-cache = { version = "0.1.0", optional = true }
-oxidite-realtime = { version = "0.1.0", optional = true }
-oxidite-template = { version = "0.1.0", optional = true }
-oxidite-mail = { version = "0.1.0", optional = true }
-oxidite-storage = { version = "0.1.0", optional = true }
-oxidite-macros = { version = "0.1.0", optional = true }
-oxidite-utils = { version = "0.1.0", optional = true }
+oxidite-db = { version = "2.0.0", optional = true }
+oxidite-auth = { version = "2.0.0", optional = true }
+oxidite-security = { version = "2.0.0", optional = true }
+oxidite-queue = { version = "2.0.0", optional = true }
+oxidite-cache = { version = "2.0.0", optional = true }
+oxidite-realtime = { version = "2.0.0", optional = true }
+oxidite-template = { version = "2.0.0", optional = true }
+oxidite-mail = { version = "2.0.0", optional = true }
+oxidite-storage = { version = "2.0.0", optional = true }
+oxidite-macros = { version = "2.0.0", optional = true }
+oxidite-utils = { version = "2.0.0", optional = true }
+oxidite-openapi = { version = "2.0.0", optional = true }
+oxidite-graphql = { version = "2.0.0", optional = true }
+oxidite-plugin = { version = "2.0.0", optional = true }
 serde = "1.0.228"
+serde_json = "1.0.149"
+chrono = { version = "0.4", features = ["serde"] }
 
-# Development dependencies
 [dev-dependencies]
-oxidite-testing = "0.1.0"
-tokio = { version = "1.48", features = ["full", "test-util"] }
+oxidite-testing = "2.0.0"
 
 [features]
 default = ["full"]
@@ -50,6 +54,8 @@ full = [
     "templates",
     "mail",
     "storage",
+    "graphql",
+    "plugin",
 ]
 
 # Individual feature groups
@@ -63,6 +69,8 @@ mail = ["dep:oxidite-mail"]
 storage = ["dep:oxidite-storage"]
 security = ["dep:oxidite-security"]
 utils = ["dep:oxidite-utils"]
+graphql = ["dep:oxidite-graphql"]
+plugin = ["dep:oxidite-plugin"]
 
 # Minimal setup (just HTTP server and routing)
 minimal = []

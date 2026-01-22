@@ -1,12 +1,14 @@
 [package]
 name = "oxidite-config"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "Configuration management for the Oxidite web framework"
+description = "Configuration management for the Oxidite v2 web framework"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
-keywords = ["config", "configuration", "settings", "yaml", "toml"]
+repository = "https://github.com/meshackbahati/rust-oxidite"
+homepage = "https://github.com/meshackbahati/rust-oxidite"
+documentation = "https://docs.rs/oxidite-config"
+keywords = ["config", "yaml", "toml", "web", "environment"]
 categories = ["config", "web-programming"]
 
 [dependencies]

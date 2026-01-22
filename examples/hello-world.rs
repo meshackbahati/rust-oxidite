@@ -1,11 +1,9 @@
 // Example: Simple Hello World with Oxidite
 
-use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse, Result};
-use http_body_util::Full;
-use bytes::Bytes;
+use oxidite::prelude::*;
 
-async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(hyper::Response::new(Full::new(Bytes::from("Hello, Oxidite!"))))
+async fn hello(_req: Request) -> Result<Response> {
+    Ok(Response::text("Hello, Oxidite!"))
 }
 
 #[tokio::main]

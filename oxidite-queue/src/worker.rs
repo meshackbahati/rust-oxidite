@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 use crate::queue::Queue;
-use crate::job::JobStatus;
+
 
 /// Worker for processing jobs
 pub struct Worker {
@@ -42,7 +42,7 @@ impl Worker {
             let handle = tokio::spawn(async move {
                 loop {
                     match queue.dequeue().await {
-                        Ok(Some(mut job)) => {
+                        Ok(Some(job)) => {
                             println!("Worker {}: Processing job {}", i, job.id);
                             
                             // In a real implementation, deserialize and execute the job

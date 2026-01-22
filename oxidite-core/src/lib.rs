@@ -10,9 +10,12 @@ pub mod versioning;
 pub mod cookie;
 
 pub use error::{Error, Result};
-pub use extract::{FromRequest, Json, Path, Query, State};
-pub use cookie::{Cookies, Form};
+pub use extract::{FromRequest, Json, Path, Query, State, Form, Cookies, Body};
+
+
 pub use router::{Handler, Router};
 pub use server::Server;
 pub use types::{OxiditeRequest, OxiditeResponse};
+pub use types::OxiditeResponse as Response;
+pub use types::OxiditeRequest as Request;
 pub use versioning::{ApiVersion, VersionedRouter};

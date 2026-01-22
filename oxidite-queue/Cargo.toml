@@ -1,11 +1,11 @@
 [package]
 name = "oxidite-queue"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Background job queue with cron scheduling, DLQ, and retry logic for Oxidite"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["queue", "jobs", "background", "async", "cron"]
 categories = ["asynchronous", "web-programming"]
 
@@ -19,3 +19,4 @@ tokio = { version = "1.48.0", features = ["full"] }
 uuid = { version = "1.19.0", features = ["v4"] }
 redis = { version = "0.27.6", features = ["tokio-comp"] }
 cron = "0.12"
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }

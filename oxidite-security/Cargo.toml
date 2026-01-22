@@ -1,11 +1,11 @@
 [package]
 name = "oxidite-security"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Security utilities for Oxidite (CSRF, XSS protection, encryption)"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["security", "csrf", "xss", "encryption", "web"]
 categories = ["web-programming", "cryptography"]
 

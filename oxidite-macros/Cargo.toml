@@ -1,11 +1,11 @@
 [package]
 name = "oxidite-macros"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "Procedural macros for the Oxidite web framework (Model derive, etc.)"
+description = "Procedural macros for the Oxidite v2 web framework (Model derive, etc.)"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["macros", "derive", "web", "framework", "orm"]
 categories = ["web-programming", "development-tools::procedural-macro-helpers"]
 

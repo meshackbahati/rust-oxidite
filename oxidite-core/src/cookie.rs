@@ -2,15 +2,15 @@ use crate::error::{Error, Result};
 use crate::extract::FromRequest;
 use crate::types::OxiditeRequest;
 
-/// Cookie extractor for typed cookie access
+/// cookie extractor for typed cookie access
 ///
-/// # Example
+/// # example
 /// ```ignore
 /// use oxidite_core::{Cookies, Response};
 ///
 /// async fn handler(cookies: Cookies) -> Result<Response> {
 ///     if let Some(value) = cookies.get("session_id") {
-///         // Use cookie value
+///         // use cookie value
 ///     }
 ///     Ok(Response::ok())
 /// }
@@ -20,7 +20,7 @@ pub struct Cookies {
 }
 
 impl Cookies {
-    /// Get cookie value by name
+    /// get cookie value by name
     pub fn get(&self, name: &str) -> Option<&str> {
         self.cookies
             .iter()
@@ -28,13 +28,74 @@ impl Cookies {
             .map(|(_, v)| v.as_str())
     }
     
-    /// Get all cookies
+    /// get all cookies
     pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
         self.cookies.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
+    
+    /// get mutable access to all cookies
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&str, &mut String)> {
+        self.cookies.iter_mut().map(|(k, v)| (k.as_str(), v))
+    }
+    
+    /// check if cookie exists
+    pub fn contains(&self, name: &str) -> bool {
+        self.cookies.iter().any(|(k, _)| k == name)
+    }
+    
+    /// get cookie value by name with url decoding
+    pub fn get_decoded(&self, name: &str) -> Option<String> {
+        self.get(name).map(|value| url_decode(value))
+    }
+    
+    /// get cookie value with validation against malicious content
+    pub fn get_safe(&self, name: &str) -> Option<String> {
+        self.get(name).map(|value| {
+            // basic validation to prevent script injection
+            let cleaned = value.replace('<', "&lt;").replace('>', "&gt;");
+            cleaned
+        })
+    }
 }
 
-/// FromRequest implementation for Cookies
+// helper function to decode url-encoded values
+fn url_decode(encoded: &str) -> String {
+    let mut result = String::new();
+    let mut chars = encoded.chars().peekable();
+    
+    while let Some(c) = chars.next() {
+        match c {
+            '%' => {
+                // try to decode percent-encoded value
+                let next_two: String = chars.by_ref().take(2).collect();
+                if next_two.len() == 2 {
+                    if let Ok(byte_val) = u8::from_str_radix(&next_two, 16) {
+                        if let Ok(decoded_char) = std::str::from_utf8(&[byte_val]) {
+                            result.push_str(decoded_char);
+                        } else {
+                            // if decoding fails, keep the original sequence
+                            result.push('%');
+                            result.push_str(&next_two);
+                        }
+                    } else {
+                        // if parsing hex fails, keep the original sequence
+                        result.push('%');
+                        result.push_str(&next_two);
+                    }
+                } else {
+                    // if not enough chars, keep the %
+                    result.push('%');
+                    result.push_str(&next_two);
+                }
+            },
+            '+' => result.push(' '), // commonly used for spaces
+            c => result.push(c),
+        }
+    }
+    result
+}
+
+/// fromrequest implementation for cookies
 impl FromRequest for Cookies {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         let cookie_header = req
@@ -44,10 +105,28 @@ impl FromRequest for Cookies {
             .unwrap_or("");
             
         let mut cookies = Vec::new();
+        
+        // parse cookies from header, handling multiple cookies properly
         for cookie_str in cookie_header.split(';') {
             let trimmed = cookie_str.trim();
-            if let Some((name, value)) = trimmed.split_once('=') {
-                cookies.push((name.to_string(), value.to_string()));
+            
+            // skip empty cookies
+            if trimmed.is_empty() {
+                continue;
+            }
+            
+            // handle cookies with attributes like 'Secure', 'HttpOnly', etc.
+            if let Some(pos) = trimmed.find('=') {
+                let name = trimmed[..pos].trim();
+                let value = trimmed[pos + 1..].trim();
+                
+                // basic validation to prevent injection
+                if !name.is_empty() {
+                    // validate cookie name follows standards (alphanumeric, underscore, hyphen)
+                    if name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') {
+                        cookies.push((name.to_string(), value.to_string()));
+                    }
+                }
             }
         }
         
@@ -55,9 +134,9 @@ impl FromRequest for Cookies {
     }
 }
 
-/// Form data extractor for application/x-www-form-urlencoded
+/// form data extractor for application/x-www-form-urlencoded
 ///
-/// # Example
+/// # example
 /// ```ignore
 /// use serde::Deserialize;
 ///
@@ -68,7 +147,7 @@ impl FromRequest for Cookies {
 /// }
 ///
 /// async fn login(form: Form<LoginForm>) -> Result<Response> {
-///     // Use form.0 to access data
+///     // use form.0 to access data
 ///     Ok(Response::ok())
 /// }
 /// ```

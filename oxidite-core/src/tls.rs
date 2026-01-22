@@ -15,6 +15,9 @@ use crate::error::{Error, Result};
 use crate::types::{OxiditeRequest, OxiditeResponse};
 use tower_service::Service;
 
+
+use crate::server::BodyAdapter;
+
 /// TLS configuration for HTTPS
 pub struct TlsConfig {
     pub cert_path: String,
@@ -37,25 +40,25 @@ impl TlsConfig {
         Ok(ServerConfig::builder()
             .with_no_client_auth()
             .with_single_cert(certs, key)
-            .map_err(|e| Error::Server(e.to_string()))?)
+            .map_err(|e| Error::InternalServerError(e.to_string()))?)
     }
 }
 
 fn load_certs(path: &str) -> Result<Vec<CertificateDer<'static>>> {
-    let file = File::open(path).map_err(|e| Error::Server(format!("Failed to open cert file: {}", e)))?;
+    let file = File::open(path).map_err(|e| Error::InternalServerError(format!("Failed to open cert file: {}", e)))?;
     let mut reader = BufReader::new(file);
     rustls_pemfile::certs(&mut reader)
-        .map(|res| res.map_err(|e| Error::Server(format!("Failed to parse cert: {}", e))))
+        .map(|res| res.map_err(|e| Error::InternalServerError(format!("Failed to parse cert: {}", e))))
         .collect::<Result<Vec<_>>>()
 }
 
 fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>> {
-    let file = File::open(path).map_err(|e| Error::Server(format!("Failed to open key file: {}", e)))?;
+    let file = File::open(path).map_err(|e| Error::InternalServerError(format!("Failed to open key file: {}", e)))?;
     let mut reader = BufReader::new(file);
 
     // Try to read the first private key
     loop {
-        match rustls_pemfile::read_one(&mut reader).map_err(|e| Error::Server(format!("Failed to parse key: {}", e)))? {
+        match rustls_pemfile::read_one(&mut reader).map_err(|e| Error::InternalServerError(format!("Failed to parse key: {}", e)))? {
             Some(rustls_pemfile::Item::Pkcs1Key(key)) => return Ok(key.into()),
             Some(rustls_pemfile::Item::Pkcs8Key(key)) => return Ok(key.into()),
             Some(rustls_pemfile::Item::Sec1Key(key)) => return Ok(key.into()),
@@ -64,7 +67,7 @@ fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>> {
         }
     }
 
-    Err(Error::Server("No supported private key found".to_string()))
+    Err(Error::InternalServerError("No supported private key found".to_string()))
 }
 
 /// HTTP protocol version
@@ -127,6 +130,7 @@ where
             let service = service.clone();
 
             tokio::task::spawn(async move {
+                let service = BodyAdapter::new(service);
                 let hyper_service = TowerToHyperService::new(service);
                 
                 if let Err(err) = http1::Builder::new()
@@ -156,6 +160,7 @@ where
                 match acceptor.accept(stream).await {
                     Ok(tls_stream) => {
                         let io = TokioIo::new(tls_stream);
+                        let service = BodyAdapter::new(service);
                         let hyper_service = TowerToHyperService::new(service);
                         
                         let result = match http_version {

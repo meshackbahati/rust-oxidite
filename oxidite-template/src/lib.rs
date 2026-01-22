@@ -12,6 +12,7 @@ pub use parser::{Parser, TemplateNode};
 pub use renderer::Renderer;
 pub use filters::Filters;
 pub use static_files::{StaticFiles, serve_static};
+use oxidite_core::types::OxiditeResponse;
 
 /// Template context for variable interpolation
 #[derive(Debug, Clone)]
@@ -91,6 +92,12 @@ impl TemplateEngine {
         renderer.render(template)
     }
     
+    /// Render a template as an HTML response
+    pub fn render_response(&self, name: &str, context: &Context) -> Result<OxiditeResponse> {
+        let html = self.render(name, context)?;
+        Ok(OxiditeResponse::html(html))
+    }
+    
     /// Load all templates from a directory (recursive)
     pub fn load_dir(&mut self, dir: impl AsRef<Path>) -> Result<usize> {
         let dir = dir.as_ref();
@@ -163,6 +170,12 @@ impl Template {
     pub fn render(&self, context: &Context) -> Result<String> {
         let mut renderer = Renderer::new(context, None);
         renderer.render(self)
+    }
+    
+    /// Render the template as an HTML response
+    pub fn render_response(&self, context: &Context) -> Result<OxiditeResponse> {
+        let html = self.render(context)?;
+        Ok(OxiditeResponse::html(html))
     }
 }
 

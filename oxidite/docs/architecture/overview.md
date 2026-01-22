@@ -68,9 +68,7 @@ graph LR
     Queue[oxidite-queue] --> Core
     Cache[oxidite-cache] --> Core
     Realtime[oxidite-realtime] --> Core
-    Admin[oxidite-admin] --> Core
-    Admin --> Auth
-    Admin --> DB
+
 ```
 
 ---
