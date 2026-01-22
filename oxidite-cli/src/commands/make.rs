@@ -186,3 +186,116 @@ impl<S> Layer<S> for {}Layer {{
     println!("✅ Middleware created: {}", filename);
     Ok(())
 }
+
+pub fn make_service(name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Create services directory if it doesn't exist
+    let services_dir = Path::new("src/services");
+    if !services_dir.exists() {
+        fs::create_dir_all(services_dir)?;
+    }
+    
+    let service_template = format!(r#"use std::sync::Arc;
+use oxidite_db::Connection;
+use serde::{{Deserialize, Serialize}};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {}Input {{
+    // Add your input fields here
+}}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {}Output {{
+    // Add your output fields here
+}}
+
+#[derive(Clone)]
+pub struct {}Service {{
+    // Add dependencies like database connection pool
+    // db: Arc<dyn Connection>,
+}}
+
+impl {}Service {{
+    pub fn new(/* db: Arc<dyn Connection> */) -> Self {{
+        Self {{
+            // db,
+        }}
+    }}
+    
+    pub async fn execute(&self, input: {}Input) -> Result<{}Output, Box<dyn std::error::Error>> {{
+        // TODO: Implement business logic
+        todo!()
+    }}
+}}
+"#, name, name, name, name, name, name);
+    
+    let filename = format!("src/services/{}.rs", name.to_lowercase());
+    fs::write(&filename, service_template)?;
+    
+    println!("✅ Service created: {}", filename);
+    Ok(())
+}
+
+pub fn make_validator(name: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Create validators directory if it doesn't exist
+    let validators_dir = Path::new("src/validators");
+    if !validators_dir.exists() {
+        fs::create_dir_all(validators_dir)?;
+    }
+    
+    let validator_template = format!(r#"use serde_json::Value;
+use std::collections::HashMap;
+
+pub struct {}Validator;
+
+impl {}Validator {{
+    pub fn validate(data: &Value) -> Result<(), ValidationError> {{
+        let mut errors = HashMap::new();
+        
+        // Add validation rules here
+        // Example:
+        // if let Some(field) = data.get("field_name") {{
+        //     if !Self::is_valid_field(field) {{
+        //         errors.insert("field_name".to_string(), "Field is invalid".to_string());
+        //     }}
+        // }}
+        
+        if !errors.is_empty() {{
+            return Err(ValidationError::new(errors));
+        }}
+        
+        Ok(())
+    }}
+    
+    // Add helper validation methods
+    // fn is_valid_field(value: &Value) -> bool {{
+    //     // Implement validation logic
+    //     true
+    // }}
+}}
+
+#[derive(Debug)]
+pub struct ValidationError {{
+    pub errors: HashMap<String, String>,
+}}
+
+impl ValidationError {{
+    pub fn new(errors: HashMap<String, String>) -> Self {{
+        Self {{ errors }}
+    }}
+}}
+
+impl std::fmt::Display for ValidationError {{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {{
+        write!(f, "Validation failed: {{:?}}", self.errors)
+    }}
+}}
+
+impl std::error::Error for ValidationError {{}}
+"#, name, name);
+    
+    let filename = format!("src/validators/{}.rs", name.to_lowercase());
+    fs::write(&filename, validator_template)?;
+    
+    println!("✅ Validator created: {}", filename);
+    Ok(())
+}

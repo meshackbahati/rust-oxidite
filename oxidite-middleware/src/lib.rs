@@ -10,6 +10,7 @@ pub mod csrf;
 pub mod rate_limit;
 pub mod timeout;
 pub mod server_header;
+pub mod cache;
 
 pub use logger::LoggerLayer;
 pub use request_id::{RequestIdLayer, RequestIdMiddleware};
@@ -18,6 +19,7 @@ pub use csrf::{CsrfLayer, CsrfConfig};
 pub use rate_limit::{RateLimiter, RateLimitConfig};
 pub use timeout::{TimeoutMiddleware, TimeoutError};
 pub use server_header::add_server_header;
+pub use cache::{CacheLayer, CacheMiddleware, CacheConfig, CacheLayerBuilder};
 
 // Re-export ServiceBuilder for convenience
 pub use tower::ServiceBuilder;

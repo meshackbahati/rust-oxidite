@@ -1,21 +1,21 @@
 [package]
 name = "oxidite-auth"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Authentication and authorization for Oxidite (RBAC, JWT, OAuth2, 2FA, API keys)"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["auth", "authentication", "authorization", "jwt", "oauth2"]
 categories = ["authentication", "web-programming"]
 
 [dependencies]
 argon2 = "0.5"
 async-trait = "0.1.89"
-oxidite-db = { path = "../oxidite-db", version = "0.1.0" }
+oxidite-db = { version = "2.0.0" }
 chrono = "0.4.42"
 jsonwebtoken = "9"
-oxidite-core = { path = "../oxidite-core", version = "0.1.0"}
+oxidite-core = { version = "2.0.0"}
 rand = "0.9.1"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"

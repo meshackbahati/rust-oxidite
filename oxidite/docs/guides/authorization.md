@@ -19,7 +19,7 @@ use oxidite::auth::rbac::*;
 app.delete("/users/:id", delete_user)
     .middleware(RequirePermission::new("users.delete"));
 
-app.get("/admin", admin_panel)
+app.get("/secure", secure_page)
     .middleware(RequireRole::new("admin"));
 ```
 
@@ -61,7 +61,7 @@ app.post("/posts", create_post)
     .middleware(RequirePermission::new("posts.create"));
 
 // Require specific role
-app.get("/admin/dashboard", dashboard)
+app.get("/analytics", analytics_page)
     .middleware(RequireRole::new("admin"));
 
 // Require any of multiple permissions

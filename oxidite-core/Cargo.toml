@@ -1,11 +1,11 @@
 [package]
 name = "oxidite-core"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "Core HTTP server and routing for the Oxidite web framework"
+description = "Core HTTP server and routing for the Oxidite v2 web framework"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["web", "framework", "http", "async", "server"]
 categories = ["web-programming", "asynchronous"]
 
@@ -29,3 +29,19 @@ tokio-rustls = "0.26"
 rustls = "0.23"
 rustls-pemfile = "2.1"
 cookie = "0.18"
+
+[dependencies.h3]
+version = "0.0.8"
+optional = true
+
+[dependencies.quinn]
+version = "0.11.6"
+optional = true
+
+[dependencies.h3-quinn]
+version = "0.0.10"
+optional = true
+
+[features]
+default = ["http3"]
+http3 = ["h3", "quinn", "h3-quinn"]

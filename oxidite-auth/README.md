@@ -2,92 +2,199 @@
 
 Authentication and authorization for Oxidite (RBAC, JWT, OAuth2, 2FA, API keys).
 
+<div align="center">
+
+[![Crates.io](https://img.shields.io/crates/v/oxidite-auth.svg)](https://crates.io/crates/oxidite-auth)
+[![Docs.rs](https://docs.rs/oxidite-auth/badge.svg)](https://docs.rs/oxidite-auth)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+
+</div>
+
+## Overview
+
+`oxidite-auth` provides a comprehensive authentication and authorization system for the Oxidite web framework. It includes JWT token management, secure password hashing, role-based access control, API key authentication, and two-factor authentication.
+
 ## Installation
+
+Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
 oxidite-auth = "0.1"
 ```
 
+## Features
+
+- **JWT token management** - Secure JSON Web Token generation and verification
+- **Password hashing** - Industry-standard Argon2 password hashing
+- **Role-Based Access Control (RBAC)** - Flexible role and permission system
+- **API key authentication** - Secure API key generation and validation
+- **Two-Factor Authentication (2FA)** - TOTP-based second factor authentication
+- **OAuth2 integration** - Support for popular OAuth2 providers
+- **Email verification** - Token-based email verification system
+- **Password reset** - Secure password reset functionality
+- **Rate limiting** - Account-based rate limiting to prevent abuse
+
 ## Usage
 
 ### JWT Authentication
 
+Secure user authentication with JSON Web Tokens:
+
 ```rust
-use oxidite_auth::*;
+use oxidite_auth::{JwtManager, create_token, verify_token, Claims};
 
-// Create JWT
-let token = create_jwt(&user, "your-secret-key")?;
+// Initialize JWT manager
+let jwt_manager = JwtManager::new("your-secret-key".to_string());
 
-// Verify JWT
-let claims = verify_jwt(&token, "your-secret-key")?;
+// Create a token for a user
+let claims = Claims {
+    sub: "user-id".to_string(),
+    exp: 1234567890, // Unix timestamp (will be set automatically in practice)
+    ..Default::default()
+};
+
+let token = create_token(&jwt_manager, claims)?;
+
+// Verify and extract claims from a token
+let verified_claims = verify_token(&jwt_manager, &token)?;
 ```
 
 ### Password Hashing
 
+Secure password storage using industry-standard Argon2:
+
 ```rust
-use oxidite_auth::password::*;
+use oxidite_auth::security::hasher::Hasher;
 
-// Hash password
-let hash = hash_password("password123")?;
+let hasher = Hasher::new();
 
-// Verify password
-let valid = verify_password("password123", &hash)?;
+// Hash a password
+let password_hash = hasher.hash("user-password")?;
+
+// Verify a password against its hash
+let is_valid = hasher.verify(&password_hash, "user-password")?;
+
+if is_valid {
+    println!("Password is valid!");
+} else {
+    println!("Invalid password!");
+}
 ```
 
-### RBAC (Role-Based Access Control)
+### Role-Based Access Control (RBAC)
+
+Manage roles and permissions for fine-grained access control:
 
 ```rust
-use oxidite_auth::rbac::*;
+use oxidite_auth::authorization::{Role, Permission};
 
-// Create role
-let admin = Role {
+// Create roles with permissions
+let admin_role = Role {
     name: "admin".to_string(),
-    permissions: vec!["users.create", "users.delete"],
+    permissions: vec![
+        Permission::new("users.create"),
+        Permission::new("users.read"),
+        Permission::new("users.update"),
+        Permission::new("users.delete"),
+    ],
 };
 
-// Check permission
-if user.has_permission("users.delete") {
-    // Allow action
+// Check if a user has a specific permission
+if admin_role.has_permission("users.delete") {
+    // Allow the delete operation
+    println!("User has permission to delete");
 }
 ```
 
 ### API Key Authentication
 
+Secure API access with API key management:
+
 ```rust
-use oxidite_auth::api_key::*;
+use oxidite_auth::api_key::{ApiKey, ApiKeyManager};
 
-// Generate API key
-let key = ApiKey::generate(user_id)?;
+let manager = ApiKeyManager::new();
 
-// Validate
-if ApiKey::validate(&key_string, &hash).await? {
-    // Valid key
+// Generate a new API key for a user
+let api_key = manager.generate_key("user-id")?;
+
+// Validate an API key
+let is_valid = manager.validate_key(&api_key.key).await?;
+
+if is_valid {
+    println!("API key is valid!");
+} else {
+    println!("Invalid API key!");
 }
 ```
 
-### 2FA (Two-Factor Authentication)
+### Two-Factor Authentication (2FA)
+
+Enhance security with TOTP-based two-factor authentication:
 
 ```rust
-use oxidite_auth::totp::*;
+use oxidite_auth::security::totp::{generate_secret, verify_code};
 
-// Generate secret
-let secret = generate_totp_secret();
+// Generate a secret for a user
+let secret = generate_secret();
 
-// Verify code  
-let valid = verify_totp(&secret, &user_code)?;
+// The user receives this secret and sets up their authenticator app
+println!("Secret: {}", secret);
+
+// Later, verify a code from the user's authenticator app
+let user_code = "123456"; // Code entered by user
+let is_valid = verify_code(&secret, user_code)?;
+
+if is_valid {
+    println!("2FA code is valid!");
+} else {
+    println!("Invalid 2FA code!");
+}
 ```
 
-## Features
+### OAuth2 Integration
 
-- JWT token generation/verification
-- Password hashing (Argon2)
-- RBAC with roles and permissions
-- API key authentication
-- Two-Factor Authentication (TOTP)
-- OAuth2 integration
-- Email verification tokens
-- Password reset tokens
+Integrate with popular OAuth2 providers:
+
+```rust
+use oxidite_auth::oauth2::{GoogleProvider, OAuth2Config};
+
+let config = OAuth2Config {
+    client_id: "your-client-id".to_string(),
+    client_secret: "your-client-secret".to_string(),
+    redirect_uri: "http://localhost:3000/auth/callback".to_string(),
+};
+
+let google_provider = GoogleProvider::new(config);
+
+// Generate authorization URL
+let auth_url = google_provider.authorize_url();
+
+// After user authorization, exchange code for token
+// let token = google_provider.exchange_code("authorization-code").await?;
+```
+
+### Authorization Middleware
+
+Protect routes with authentication and authorization checks:
+
+```rust
+use oxidite_core::{Request, Response, Middleware};
+use oxidite_auth::middleware::AuthMiddleware;
+
+// Use authentication middleware to protect routes
+// This would typically be integrated with Oxidite's middleware system
+```
+
+## Security Best Practices
+
+- Always use strong, randomly generated secrets for JWT signing
+- Implement proper rate limiting to prevent brute force attacks
+- Store sensitive data securely and encrypt at rest when possible
+- Regularly rotate secrets and API keys
+- Use HTTPS in production environments
+- Validate and sanitize all user inputs
 
 ## License
 

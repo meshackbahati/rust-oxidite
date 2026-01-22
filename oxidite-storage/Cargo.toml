@@ -1,11 +1,11 @@
 [package]
 name = "oxidite-storage"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "File storage for Oxidite with local and S3 backends"
 license = "MIT"
-repository = "https://github.com/Kyle6012/rust-oxidite"
+repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["storage", "file", "s3", "upload", "web"]
 categories = ["filesystem", "web-programming"]
 

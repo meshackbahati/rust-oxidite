@@ -1,9 +1,9 @@
 use oxidite_core::{OxiditeRequest, OxiditeResponse, Error, Result};
+
 use std::path::Path;
 use std::sync::Arc;
 use std::future::Future;
 use std::pin::Pin;
-use http::StatusCode;
 
 /// Configuration for static file serving
 #[derive(Clone)]
@@ -79,18 +79,11 @@ impl StaticFiles {
                     "text/plain"
                 };
                 
-                let mut response = OxiditeResponse::new(content.into());
-                response.headers_mut().insert(
-                    "content-type",
-                    content_type.parse().unwrap()
-                );
-                Ok(response)
+                Ok(OxiditeResponse::html(content))
             },
             Err(_) => {
                 // Return 404 Response instead of Error
-                let mut response = OxiditeResponse::new("404 Not Found".into());
-                *response.status_mut() = StatusCode::NOT_FOUND;
-                Ok(response)
+                Ok(OxiditeResponse::html("404 Not Found"))
             }
         }
     }

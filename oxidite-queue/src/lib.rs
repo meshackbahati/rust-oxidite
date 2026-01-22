@@ -7,6 +7,8 @@ pub use job::{Job, JobStatus, JobResult};
 pub use queue::{Queue, QueueBackend, MemoryBackend};
 pub mod redis;
 pub use crate::redis::RedisBackend;
+pub mod postgres;
+pub use crate::postgres::PostgresBackend;
 pub use worker::Worker;
 pub use stats::{QueueStats, StatsTracker};
 
