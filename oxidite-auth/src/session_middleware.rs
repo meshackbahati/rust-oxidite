@@ -4,8 +4,8 @@ use std::task::{Context, Poll};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use cookie::{Cookie, CookieJar, SameSite};
-use crate::session::{Session, SessionStore};
+use cookie::{Cookie, SameSite};
+use crate::session::SessionStore;
 
 const SESSION_COOKIE_NAME: &str = "oxidite_session";
 

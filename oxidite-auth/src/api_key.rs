@@ -18,7 +18,7 @@ pub struct ApiKey {
 impl ApiKey {
     /// Generate a new API key with prefix
     pub fn generate_key() -> String {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let random_bytes: Vec<u8> = (0..32).map(|_| rng.random()).collect();
         let key = base64::engine::general_purpose::URL_SAFE_NO_PAD
             .encode(&random_bytes);

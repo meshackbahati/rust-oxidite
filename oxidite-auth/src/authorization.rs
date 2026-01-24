@@ -32,7 +32,7 @@ impl RequireRole {
         );
         
         let rows = self.db.query(&query).await
-            .map_err(|_| Error::Server("Database error".to_string()))?;
+            .map_err(|_| Error::InternalServerError("Database error".to_string()))?;
         
         Ok(!rows.is_empty())
     }
@@ -68,7 +68,7 @@ impl RequirePermission {
         );
         
         let rows = self.db.query(&query).await
-            .map_err(|_| Error::Server("Database error".to_string()))?;
+            .map_err(|_| Error::InternalServerError("Database error".to_string()))?;
         
         Ok(!rows.is_empty())
     }

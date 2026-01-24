@@ -1,5 +1,6 @@
 use crate::error::{Error, Result};
 use crate::types::{OxiditeRequest, OxiditeResponse};
+use crate::extract::FromRequest;
 use hyper::Method;
 use std::collections::HashMap;
 use std::future::Future;
@@ -9,24 +10,114 @@ use std::task::{Context, Poll};
 use tower_service::Service;
 use regex::Regex;
 
-pub trait Handler: Send + Sync + 'static {
+/// Trait for type-erased handlers stored in the router
+pub trait Endpoint: Send + Sync + 'static {
     fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>>;
 }
 
-impl<F, Fut> Handler for F
+/// Trait for async functions that can be used as handlers
+pub trait Handler<Args>: Clone + Send + Sync + 'static {
+    fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>>;
+}
+
+// Wrapper to convert Handler<Args> into Endpoint
+struct HandlerService<H, Args> {
+    handler: H,
+    _marker: std::marker::PhantomData<Args>,
+}
+
+impl<H, Args> Endpoint for HandlerService<H, Args>
 where
-    F: Fn(OxiditeRequest) -> Fut + Send + Sync + 'static,
+    H: Handler<Args>,
+    Args: Send + Sync + 'static,
+{
+    fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+        self.handler.call(req)
+    }
+}
+
+// Implement Handler for Fn(OxiditeRequest) -> Fut
+impl<F, Fut> Handler<OxiditeRequest> for F
+where
+    F: Fn(OxiditeRequest) -> Fut + Clone + Send + Sync + 'static,
     Fut: Future<Output = Result<OxiditeResponse>> + Send + 'static,
 {
     fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
-        Box::pin(self(req))
+        let fut = self(req);
+        Box::pin(async move { fut.await })
+    }
+}
+
+// Implement Handler for Fn() -> Fut
+impl<F, Fut> Handler<()> for F
+where
+    F: Fn() -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Result<OxiditeResponse>> + Send + 'static,
+{
+    fn call(&self, _req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+        let fut = self();
+        Box::pin(async move { fut.await })
+    }
+}
+
+// Implement Handler for Fn(T1) -> Fut
+impl<F, Fut, T1> Handler<(T1,)> for F
+where
+    F: Fn(T1) -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Result<OxiditeResponse>> + Send + 'static,
+    T1: FromRequest + Send + 'static,
+{
+    fn call(&self, mut req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move {
+            let t1 = T1::from_request(&mut req).await?;
+            handler(t1).await
+        })
+    }
+}
+
+// Implement Handler for Fn(T1, T2) -> Fut
+impl<F, Fut, T1, T2> Handler<(T1, T2)> for F
+where
+    F: Fn(T1, T2) -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Result<OxiditeResponse>> + Send + 'static,
+    T1: FromRequest + Send + 'static,
+    T2: FromRequest + Send + 'static,
+{
+    fn call(&self, mut req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move {
+            let t1 = T1::from_request(&mut req).await?;
+            let t2 = T2::from_request(&mut req).await?;
+            handler(t1, t2).await
+        })
+    }
+}
+
+// Implement Handler for Fn(T1, T2, T3) -> Fut
+impl<F, Fut, T1, T2, T3> Handler<(T1, T2, T3)> for F
+where
+    F: Fn(T1, T2, T3) -> Fut + Clone + Send + Sync + 'static,
+    Fut: Future<Output = Result<OxiditeResponse>> + Send + 'static,
+    T1: FromRequest + Send + 'static,
+    T2: FromRequest + Send + 'static,
+    T3: FromRequest + Send + 'static,
+{
+    fn call(&self, mut req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move {
+            let t1 = T1::from_request(&mut req).await?;
+            let t2 = T2::from_request(&mut req).await?;
+            let t3 = T3::from_request(&mut req).await?;
+            handler(t1, t2, t3).await
+        })
     }
 }
 
 struct Route {
     pattern: Regex,
     param_names: Vec<String>,
-    handler: Arc<dyn Handler>,
+    handler: Arc<dyn Endpoint>,
 }
 
 #[derive(Clone)]
@@ -41,50 +132,61 @@ impl Router {
         }
     }
 
-    pub fn get<H>(&mut self, path: &str, handler: H)
+    pub fn get<H, Args>(&mut self, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         self.add_route(Method::GET, path, handler);
     }
     
-    pub fn post<H>(&mut self, path: &str, handler: H)
+    pub fn post<H, Args>(&mut self, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         self.add_route(Method::POST, path, handler);
     }
 
-    pub fn put<H>(&mut self, path: &str, handler: H)
+    pub fn put<H, Args>(&mut self, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         self.add_route(Method::PUT, path, handler);
     }
 
-    pub fn delete<H>(&mut self, path: &str, handler: H)
+    pub fn delete<H, Args>(&mut self, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         self.add_route(Method::DELETE, path, handler);
     }
 
-    pub fn patch<H>(&mut self, path: &str, handler: H)
+    pub fn patch<H, Args>(&mut self, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         self.add_route(Method::PATCH, path, handler);
     }
 
-    fn add_route<H>(&mut self, method: Method, path: &str, handler: H)
+    fn add_route<H, Args>(&mut self, method: Method, path: &str, handler: H)
     where
-        H: Handler,
+        H: Handler<Args>,
+        Args: Send + Sync + 'static,
     {
         let (pattern, param_names) = compile_path(path);
+        let endpoint = HandlerService {
+            handler,
+            _marker: std::marker::PhantomData,
+        };
+        
         let route = Arc::new(Route {
             pattern,
             param_names,
-            handler: Arc::new(handler),
+            handler: Arc::new(endpoint),
         });
         
         self.routes

@@ -160,7 +160,7 @@ impl<T: serde::de::DeserializeOwned> FromRequest for Form<T> {
 
         let body = req.body_mut();
         let bytes = body.collect().await
-            .map_err(|e| Error::Server(format!("Failed to read body: {}", e)))?
+            .map_err(|e| Error::InternalServerError(format!("Failed to read body: {}", e)))?
             .aggregate();
             
         let mut data = String::new();

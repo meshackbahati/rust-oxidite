@@ -14,8 +14,13 @@ oxidite-mail = "0.1"
 ```rust
 use oxidite_mail::*;
 
-let mailer = Mailer::new("smtp.gmail.com", 587)
-    .auth("user@gmail.com", "password");
+// Create transport
+let transport = SmtpTransport::new("smtp.gmail.com", 587).unwrap()
+    .credentials("user", "password")
+    .build();
+
+// Create mailer
+let mailer = Mailer::new(transport);
 
 mailer.send(
     Email::new()

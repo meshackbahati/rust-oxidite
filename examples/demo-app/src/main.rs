@@ -19,7 +19,7 @@ struct AppState {
 
 // Home page with HTML response
 async fn home(state: State<AppState>) -> Result<Response> {
-    let mut visit_count = state.visit_count.lock().unwrap();
+    let mut visit_count = state.0.visit_count.lock().unwrap();
     *visit_count += 1;
     let count = *visit_count;
     drop(visit_count); // Release the lock early
@@ -40,9 +40,9 @@ async fn home(state: State<AppState>) -> Result<Response> {
     ]);
 
     // Use the template engine's render_response method
-    let template_engine = state.template_engine.lock().unwrap();
+    let template_engine = state.0.template_engine.lock().unwrap();
     let response = template_engine.render_response("home.html", &context)
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }
@@ -99,7 +99,7 @@ async fn get_user_detail(Path(user_id): Path<u32>) -> Result<Response> {
 }
 
 // Form endpoint to demonstrate body parsing
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct UserFormData {
     name: String,
     email: String,
@@ -149,13 +149,13 @@ async fn handle_cookies(cookies: Cookies) -> Result<Response> {
 async fn error_example(Query(params): Query<serde_json::Value>) -> Result<Response> {
     if let Some(error_type) = params.get("type").and_then(|v| v.as_str()) {
         match error_type {
-            "not_found" => Err(Error::NotFound),
+            "not_found" => Err(Error::NotFound("Resource not found".to_string())),
             "bad_request" => Err(Error::BadRequest("Bad request example".to_string())),
             "unauthorized" => Err(Error::Unauthorized("Unauthorized access".to_string())),
             "forbidden" => Err(Error::Forbidden("Access forbidden".to_string())),
             "conflict" => Err(Error::Conflict("Resource conflict".to_string())),
             "validation" => Err(Error::Validation("Validation failed".to_string())),
-            "rate_limited" => Err(Error::RateLimited),
+            "rate_limited" => Err(Error::RateLimited("Rate limit exceeded".to_string())),
             "service_unavailable" => Err(Error::ServiceUnavailable("Service temporarily unavailable".to_string())),
             _ => Ok(Response::json(serde_json::json!({ "status": "unknown_error_type" })))
         }
@@ -295,7 +295,7 @@ async fn main() -> Result<()> {
     </div>
 </body>
 </html>
-    "#)?;
+    "#).map_err(|e| Error::InternalServerError(e.to_string()))?;
 
     let app_state = AppState {
         template_engine: Arc::new(Mutex::new(template_engine)),
@@ -307,7 +307,7 @@ async fn main() -> Result<()> {
     // Main routes
     router.get("/", {
         let state = app_state.clone();
-        move |_| home(State(state))
+        move |_: Request| home(State(state.clone()))
     });
     
     // API routes

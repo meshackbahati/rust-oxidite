@@ -155,7 +155,7 @@ impl AppConfig {
 #[tokio::main]
 async fn main() -> Result<()> {
     let config = AppConfig::from_env()
-        .map_err(|e| Error::Server(format!("Configuration error: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Configuration error: {}", e)))?;
     
     // Initialize logging
     init_logging(&config.logging).await?;
@@ -193,7 +193,7 @@ async fn init_logging(config: &LoggingConfig) -> Result<()> {
         .json();
     
     tracing::subscriber::set_global_default(subscriber)
-        .map_err(|e| Error::Server(format!("Logging setup error: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Logging setup error: {}", e)))?;
     
     Ok(())
 }
@@ -554,7 +554,7 @@ async fn static_file_handler(Path(file_path): Path<String>) -> Result<Response> 
     
     // Read file
     let contents = fs::read(&full_path).await
-        .map_err(|e| Error::Server(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to read file: {}", e)))?;
     
     // Set appropriate content type
     let content_type = get_content_type(&file_path);
@@ -682,7 +682,7 @@ fn error_type_name(error: &Error) -> &'static str {
         Error::Forbidden => "Forbidden",
         Error::TooManyRequests => "TooManyRequests",
         Error::InternalServerError => "InternalServerError",
-        Error::Server(_) => "Server",
+        Error::InternalServerError(_) => "Server",
         Error::Validation(_) => "Validation",
         Error::RateLimited => "RateLimited",
         _ => "Unknown",
@@ -1003,7 +1003,7 @@ async fn backup_handler(_req: Request) -> Result<Response> {
             "status": "success",
             "backup": backup_info
         }))),
-        Err(e) => Err(Error::Server(format!("Backup failed: {}", e))),
+        Err(e) => Err(Error::InternalServerError(format!("Backup failed: {}", e))),
     }
 }
 
@@ -1058,7 +1058,7 @@ async fn restore_handler(
             "status": "success",
             "message": "Restore completed successfully"
         }))),
-        Err(e) => Err(Error::Server(format!("Restore failed: {}", e))),
+        Err(e) => Err(Error::InternalServerError(format!("Restore failed: {}", e))),
     }
 }
 

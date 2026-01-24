@@ -1,0 +1,26 @@
+[workspace]
+resolver = "2"
+members = [
+    "oxidite",
+    "oxidite-core",
+    "oxidite-macros",
+    "oxidite-config",
+    "oxidite-middleware",
+    "oxidite-utils",
+    "oxidite-template",
+    "oxidite-db",
+    "oxidite-auth",
+    "oxidite-cache",
+    "oxidite-queue",
+    "oxidite-realtime",
+    "oxidite-mail",
+    "oxidite-storage",
+    "oxidite-security",
+    "oxidite-cli",
+    "oxidite-testing",
+    "oxidite-openapi",
+    "oxidite-graphql",
+    "oxidite-plugin",
+    "heirloom-waitlist",
+    "examples/*",
+]

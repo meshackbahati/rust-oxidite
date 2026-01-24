@@ -128,22 +128,22 @@ async fn main() -> Result<()> {
         }
         Commands::New { name, project_type } => {
             commands::create_project(&name, project_type)
-                .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
             Ok(())
         }
         Commands::Make { generator } => {
             match generator {
                 Generator::Model { name } => {
                     commands::make::make_model(&name)
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 Generator::Controller { name } => {
                     commands::make::make_controller(&name)
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 Generator::Middleware { name } => {
                     commands::make::make_middleware(&name)
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
             }
             Ok(())
@@ -152,22 +152,22 @@ async fn main() -> Result<()> {
             match migration {
                 MigrateCommand::Create { name } => {
                     commands::migrate::create_migration(&name)
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 MigrateCommand::Run => {
                     commands::migrate::run_migrations()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 MigrateCommand::Revert => {
                     commands::migrate::revert_migration()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 MigrateCommand::Status => {
                     commands::migrate::migration_status()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
             }
             Ok(())
@@ -177,11 +177,11 @@ async fn main() -> Result<()> {
                 SeedCommand::Run => {
                     commands::seed::run_seeders()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 SeedCommand::Create { name } => {
                     commands::seed::create_seeder(&name)
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
             }
             Ok(())
@@ -191,29 +191,29 @@ async fn main() -> Result<()> {
                 QueueCommand::Work { workers } => {
                     commands::queue::queue_work(workers)
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 QueueCommand::List => {
                     commands::queue::queue_list()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 QueueCommand::Dlq => {
                     commands::queue::queue_dlq()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
                 QueueCommand::Clear => {
                     commands::queue::queue_clear()
                         .await
-                        .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
             }
             Ok(())
         }
         Commands::Doctor => {
             commands::doctor::run_doctor()
-                .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
             Ok(())
         }
         Commands::Build { release } => {
@@ -225,17 +225,17 @@ async fn main() -> Result<()> {
                 println!("📦 Building in release mode");
             }
             let status = cmd.status()
-                .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
             if status.success() {
                 println!("✅ Build completed successfully");
             } else {
-                return Err(oxidite_core::Error::Server("Build failed".to_string()));
+                return Err(oxidite_core::Error::InternalServerError("Build failed".to_string()));
             }
             Ok(())
         }
         Commands::Dev => {
             commands::dev::start_dev_server()
-                .map_err(|e| oxidite_core::Error::Server(e.to_string()))?;
+                .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
             Ok(())
         }
     }

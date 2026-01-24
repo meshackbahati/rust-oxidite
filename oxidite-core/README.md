@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 `oxidite-core` provides several type-safe extractors for handling different kinds of requests:
 
 ```rust
-use oxidite_core::{Router, Server, Response, extract::*};
+use oxidite_core::{Router, Server, Response, Error, extract::*};
 use serde::{Serialize, Deserialize};
 
 #[derive(Deserialize, Serialize)]
@@ -69,7 +69,7 @@ struct User {
 }
 
 // JSON extractor
-async fn create_user(Json(user): Json<User>) -> Result<Response, OxiditeError> {
+async fn create_user(Json(user): Json<User>) -> Result<Response, Error> {
     Ok(Response::json(serde_json::json!({
         "message": "User created successfully",
         "user": user
@@ -77,7 +77,7 @@ async fn create_user(Json(user): Json<User>) -> Result<Response, OxiditeError> {
 }
 
 // Query parameters extractor
-async fn search_users(Query(params): Query<User>) -> Result<Response, OxiditeError> {
+async fn search_users(Query(params): Query<User>) -> Result<Response, Error> {
     Ok(Response::json(serde_json::json!(params)))
 }
 
@@ -87,7 +87,7 @@ struct UserId {
     id: u32,
 }
 
-async fn get_user(Path(params): Path<UserId>) -> Result<Response, OxiditeError> {
+async fn get_user(Path(params): Path<UserId>) -> Result<Response, Error> {
     Ok(Response::json(serde_json::json!({
         "id": params.id,
         "name": "Sample User"
@@ -95,7 +95,7 @@ async fn get_user(Path(params): Path<UserId>) -> Result<Response, OxiditeError> 
 }
 
 // Form data extractor
-async fn create_user_from_form(Form(user): Form<User>) -> Result<Response, OxiditeError> {
+async fn create_user_from_form(Form(user): Form<User>) -> Result<Response, Error> {
     Ok(Response::json(serde_json::json!({
         "message": "User created from form",
         "user": user
@@ -103,12 +103,12 @@ async fn create_user_from_form(Form(user): Form<User>) -> Result<Response, Oxidi
 }
 
 // Cookies extractor
-async fn get_cookies(Cookies(cookies): Cookies) -> Result<Response, OxiditeError> {
+async fn get_cookies(Cookies(cookies): Cookies) -> Result<Response, Error> {
     Ok(Response::json(serde_json::json!(cookies)))
 }
 
 // Raw body extractor
-async fn handle_raw_body(Body(body): Body) -> Result<Response, OxiditeError> {
+async fn handle_raw_body(Body(body): Body) -> Result<Response, Error> {
     Ok(Response::text(format!("Received {} characters", body.len())))
 }
 ```
@@ -163,13 +163,13 @@ let custom_response = Response::builder()
 The framework provides comprehensive error handling with appropriate HTTP status codes:
 
 ```rust
-use oxidite_core::OxiditeError;
+use oxidite_core::Error;
 
 // Various error types
-let not_found_error = OxiditeError::NotFound("Resource not found".to_string());
-let bad_request_error = OxiditeError::BadRequest("Invalid request".to_string());
-let forbidden_error = OxiditeError::Forbidden("Access denied".to_string());
-let conflict_error = OxiditeError::Conflict("Resource conflict".to_string());
+let not_found_error = Error::NotFound("Resource not found".to_string());
+let bad_request_error = Error::BadRequest("Invalid request".to_string());
+let forbidden_error = Error::Forbidden("Access denied".to_string());
+let conflict_error = Error::Conflict("Resource conflict".to_string());
 ```
 
 ## License

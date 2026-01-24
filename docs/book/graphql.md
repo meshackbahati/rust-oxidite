@@ -87,7 +87,7 @@ async fn graphql_handler(
         .body_mut()
         .collect()
         .await
-        .map_err(|e| Error::Server(e.to_string()))?
+        .map_err(|e| Error::InternalServerError(e.to_string()))?
         .to_bytes();
     
     let body_str = String::from_utf8_lossy(&body_bytes);
@@ -103,7 +103,7 @@ async fn graphql_handler(
     
     // Return response
     let json_response = serde_json::to_string(&response)
-        .map_err(|e| Error::Server(format!("Serialization error: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Serialization error: {}", e)))?;
     
     Ok(Response::json(serde_json::Value::from(response)))
 }
@@ -359,7 +359,7 @@ async fn handle_graphql_request(req: Request, schema: &Schema) -> Result<Respons
         .into_body()
         .collect()
         .await
-        .map_err(|e| Error::Server(e.to_string()))?
+        .map_err(|e| Error::InternalServerError(e.to_string()))?
         .to_bytes();
     
     let body_str = String::from_utf8_lossy(&body_bytes);

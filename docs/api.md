@@ -519,7 +519,7 @@ impl Job for EmailJob {
 }
 
 // Enqueue job
-let queue = Queue::new_memory();
+let queue = Queue::memory();
 let job = EmailJob {
     recipient: "user@example.com".to_string(),
     subject: "Welcome!".to_string(),

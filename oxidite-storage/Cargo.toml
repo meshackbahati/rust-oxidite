@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-storage"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "File storage for Oxidite with local and S3 backends"

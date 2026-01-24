@@ -142,8 +142,8 @@ Cargo.lock
 
 fn create_cargo_toml(path: &Path, name: &str, p_type: ProjectType) -> std::io::Result<()> {
     let mut dependencies = String::from(r#"
-oxidite-core = "0.1.0"
-oxidite-config = "0.1.0"
+oxidite-core = "2.0.1"
+oxidite-config = "2.0.1"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -152,23 +152,23 @@ serde_json = "1"
     match p_type {
         ProjectType::Fullstack => {
             dependencies.push_str(r#"
-oxidite-template = "0.1.0"
-oxidite-auth = "0.1.0"
-oxidite-db = "0.1.0"
-oxidite-middleware = "0.1.0"
+oxidite-template = "2.0.1"
+oxidite-auth = "2.0.1"
+oxidite-db = "2.0.1"
+oxidite-middleware = "2.0.1"
 "#);
         },
         ProjectType::Api => {
             dependencies.push_str(r#"
-oxidite-auth = "0.1.0"
-oxidite-db = "0.1.0"
-oxidite-middleware = "0.1.0"
+oxidite-auth = "2.0.1"
+oxidite-db = "2.0.1"
+oxidite-middleware = "2.0.1"
 "#);
         },
         ProjectType::Microservice => {
             dependencies.push_str(r#"
-oxidite-queue = "0.1.0"
-oxidite-middleware = "0.1.0"
+oxidite-queue = "2.0.1"
+oxidite-middleware = "2.0.1"
 "#);
         },
         ProjectType::Serverless => {

@@ -21,7 +21,7 @@ impl RequestExt for OxiditeRequest {
     async fn body_bytes(&mut self) -> Result<bytes::Bytes> {
         let body = self.body_mut();
         let collected = body.collect().await
-            .map_err(|e| Error::Server(format!("Failed to read body: {}", e)))?;
+            .map_err(|e| Error::InternalServerError(format!("Failed to read body: {}", e)))?;
         Ok(collected.to_bytes())
     }
 }

@@ -15,7 +15,7 @@ oxidite-storage = "0.1"
 use oxidite_storage::*;
 
 // Local storage
-let storage = LocalStorage::new("uploads");
+let storage = LocalStorage::new("uploads").unwrap();
 
 // Store file
 storage.put("file.txt", data).await?;

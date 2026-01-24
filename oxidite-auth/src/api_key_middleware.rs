@@ -1,4 +1,4 @@
-use oxidite_core::{OxiditeRequest, OxiditeResponse, Result as OxiditeResult, Error};
+use oxidite_core::{OxiditeRequest, Result as OxiditeResult, Error};
 use oxidite_db::Database;
 use std::sync::Arc;
 use crate::api_key::ApiKey;
@@ -20,7 +20,7 @@ impl ApiKeyMiddleware {
         
         // Verify the key
         let api_key = ApiKey::verify_key(&*self.db, &key).await
-            .map_err(|_| Error::Server("Database error".to_string()))?
+            .map_err(|_| Error::InternalServerError("Database error".to_string()))?
             .ok_or_else(|| Error::Unauthorized("Invalid or expired API key".to_string()))?;
         
         // Store user_id in request extensions

@@ -426,15 +426,15 @@ impl PasswordHasher {
     
     pub fn verify(password: &str, hashed: &str) -> Result<bool> {
         if !hashed.starts_with("sha256:") {
-            return Err(Error::Server("Unsupported hash format".to_string()));
+            return Err(Error::InternalServerError("Unsupported hash format".to_string()));
         }
         
         let parts: Vec<&str> = hashed.split(':').collect();
         if parts.len() != 3 {
-            return Err(Error::Server("Invalid hash format".to_string()));
+            return Err(Error::InternalServerError("Invalid hash format".to_string()));
         }
         
-        let salt = base64::decode(parts[1]).map_err(|_| Error::Server("Invalid salt".to_string()))?;
+        let salt = base64::decode(parts[1]).map_err(|_| Error::InternalServerError("Invalid salt".to_string()))?;
         
         let mut hasher = sha2::Sha256::new();
         hasher.update(password.as_bytes());

@@ -185,7 +185,7 @@ impl OptimizedDbPool {
         F: FnOnce(&dyn DatabaseConnection) -> Result<R>,
     {
         let _permit = self.semaphore.acquire().await
-            .map_err(|_| Error::Server("Connection pool error".to_string()))?;
+            .map_err(|_| Error::InternalServerError("Connection pool error".to_string()))?;
         
         // In a real implementation, lease a connection and execute the operation
         // This is a simplified example
@@ -195,7 +195,7 @@ impl OptimizedDbPool {
     
     fn get_connection(&self) -> Result<Arc<dyn DatabaseConnection>> {
         // In a real implementation, return an available connection
-        Err(Error::Server("Not implemented".to_string()))
+        Err(Error::InternalServerError("Not implemented".to_string()))
     }
 }
 
@@ -579,7 +579,7 @@ impl EfficientJsonHandler {
         
         // For large JSON payloads, process incrementally
         let body_bytes = hyper::body::to_bytes(req.into_body()).await
-            .map_err(|e| Error::Server(e.to_string()))?;
+            .map_err(|e| Error::InternalServerError(e.to_string()))?;
         
         // Parse JSON efficiently
         let parsed: serde_json::Value = serde_json::from_slice(&body_bytes)
@@ -711,7 +711,7 @@ impl RateLimitedProcessor {
         F: std::future::Future<Output = Result<R>>,
     {
         let _permit = self.semaphore.acquire().await
-            .map_err(|_| Error::Server("Semaphore error".to_string()))?;
+            .map_err(|_| Error::InternalServerError("Semaphore error".to_string()))?;
         
         operation.await
     }
@@ -730,7 +730,7 @@ impl RateLimitedProcessor {
             let semaphore = self.semaphore.clone();
             let future = async move {
                 let _permit = semaphore.acquire().await
-                    .map_err(|_| Error::Server("Semaphore error".to_string()))?;
+                    .map_err(|_| Error::InternalServerError("Semaphore error".to_string()))?;
                 
                 processor(item).await
             };
@@ -803,7 +803,7 @@ impl AsyncBestPractices {
             // CPU-intensive work that shouldn't block the async runtime
             perform_cpu_intensive_calculation()
         }).await
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
         
         // Process result
         let _processed = result;
@@ -939,16 +939,16 @@ async fn optimized_static_file_handler(Path(file_path): Path<String>) -> Result<
     
     // Open file
     let mut file = File::open(&full_path).await
-        .map_err(|e| Error::Server(format!("Failed to open file: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to open file: {}", e)))?;
     
     // Get file metadata
     let metadata = file.metadata().await
-        .map_err(|e| Error::Server(format!("Failed to get metadata: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to get metadata: {}", e)))?;
     
     // Read file content
     let mut contents = vec![0; metadata.len() as usize];
     file.read_exact(&mut contents).await
-        .map_err(|e| Error::Server(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to read file: {}", e)))?;
     
     // Set appropriate content type
     let content_type = get_content_type(&file_path);

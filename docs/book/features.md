@@ -249,7 +249,7 @@ async fn template_example(_req: Request) -> Result<Response> {
     
     // Render as response
     let response = template_engine.render_response("welcome", &context)
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }
@@ -285,7 +285,7 @@ impl Job for EmailJob {
 
 async fn queue_example() -> Result<()> {
     // Create a queue
-    let queue = Queue::new("default");
+    let queue = Queue::memory();
     
     // Enqueue a job
     let email_job = EmailJob {
