@@ -17,9 +17,11 @@
 
 pub mod request;
 pub mod response;
+pub mod server;
 
 pub use request::TestRequest;
 pub use response::TestResponse;
+pub use server::{TestServer, test_router};
 
 /// Re-export tokio::test for convenience
 pub use tokio::test;

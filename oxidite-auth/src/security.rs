@@ -1,5 +1,4 @@
-use rand::Rng;
-use oxidite_db::sqlx::Row;
+
 
 /// Email verification module
 pub mod email_verification {
@@ -8,8 +7,8 @@ pub mod email_verification {
 
     /// Generate email verification token
     pub fn generate_token() -> String {
-        let mut rng = rand::thread_rng();
-        let random_bytes: Vec<u8> = (0..32).map(|_| rng.gen::<u8>()).collect();
+        let mut rng = rand::rng();
+        let random_bytes: Vec<u8> = (0..32).map(|_| rng.random::<u8>()).collect();
         hex::encode(random_bytes)
     }
     
@@ -70,8 +69,8 @@ pub mod password_reset {
 
     /// Generate password reset token
     pub fn generate_token() -> String {
-        let mut rng = rand::thread_rng();
-        let random_bytes: Vec<u8> = (0..32).map(|_| rng.gen::<u8>()).collect();
+        let mut rng = rand::rng();
+        let random_bytes: Vec<u8> = (0..32).map(|_| rng.random::<u8>()).collect();
         hex::encode(random_bytes)
     }
     
@@ -153,7 +152,7 @@ pub mod two_factor {
     /// Generate 2FA secret for user
     pub fn generate_secret() -> String {
         use base64::Engine;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let random_bytes: Vec<u8> = (0..20).map(|_| rng.random::<u8>()).collect();
         base64::engine::general_purpose::STANDARD.encode(random_bytes)
     }

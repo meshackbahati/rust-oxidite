@@ -6,6 +6,7 @@ use hyper_util::service::TowerToHyperService;
 use crate::error::{Error, Result};
 use crate::types::{OxiditeRequest, OxiditeResponse};
 use tower_service::Service;
+use std::error::Error as StdError;
 
 use http_body_util::BodyExt;
 
@@ -84,11 +85,23 @@ where
                     .serve_connection(io, hyper_service)
                     .await
                 {
-                    // This `err` is a `hyper::Error`, not `crate::error::Error`.
-                    // The user's requested logging for `crate::error::Error` types
-                    // is now handled within the `hyper_compatible_service` wrapper.
-                    // This `eprintln` now only catches connection-level `hyper::Error`s.
-                    eprintln!("Error serving connection: {:?}", err);
+                    // Only log actual server errors, not client errors like 404
+                    // Check if this is a user service error that we can inspect
+                    if let Some(service_err) = err.source().and_then(|e| e.downcast_ref::<Error>()) {
+                        // Only log if it's a server error (5xx), not a client error (4xx)
+                        if service_err.is_server_error() {
+                            eprintln!("Server error: {}", service_err);
+                        }
+                        // Client errors (404, etc.) are silently handled - they're expected
+                    } else {
+                        // For non-service errors (connection issues, etc.), log them
+                        // but only if they're not common expected errors
+                        let err_msg = err.to_string();
+                        // Don't log if it's just a client disconnecting or similar
+                        if !err_msg.contains("NotFound") && !err_msg.contains("connection closed") {
+                            eprintln!("Connection error: {}", err);
+                        }
+                    }
                 }
             });
         }
@@ -122,7 +135,17 @@ where
                         .serve_connection(io, hyper_service)
                         .await
                     {
-                        eprintln!("HTTP/1.1 connection error: {:?}", err);
+                        // Only log server errors, not client errors
+                        if let Some(service_err) = err.source().and_then(|e| e.downcast_ref::<Error>()) {
+                            if service_err.is_server_error() {
+                                eprintln!("HTTP/1.1 server error: {}", service_err);
+                            }
+                        } else {
+                            let err_msg = err.to_string();
+                            if !err_msg.contains("NotFound") && !err_msg.contains("connection closed") {
+                                eprintln!("HTTP/1.1 connection error: {}", err);
+                            }
+                        }
                     }
                 });
             }

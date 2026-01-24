@@ -536,9 +536,9 @@ async fn error_handling_example() -> Result<()> {
         Ok(None) => {
             println!("User not found");
         }
-        Err(Error::Server(msg)) => {
+        Err(Error::InternalServerError(msg)) => {
             eprintln!("Database error: {}", msg);
-            return Err(Error::Server(msg));
+            return Err(Error::InternalServerError(msg));
         }
         Err(e) => {
             eprintln!("Unexpected error: {:?}", e);

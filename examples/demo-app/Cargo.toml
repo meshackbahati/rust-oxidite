@@ -6,8 +6,8 @@ authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Demo application showcasing Oxidite v2 features"
 
 [dependencies]
-oxidite = { path = "../../../oxidite", version = "2.0", features = ["full"] }
-oxidite-template = { path = "../../../oxidite-template", version = "2.0" }
+oxidite = { path = "../../oxidite", version = "2.0.1", features = ["full"] }
+oxidite-template = { path = "../../oxidite-template", version = "2.0.1" }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

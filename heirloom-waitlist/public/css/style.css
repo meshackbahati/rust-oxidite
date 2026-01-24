@@ -1,0 +1,543 @@
+/* Dystopian Cyberpunk Theme */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-dark: #0a0a0a;
+    --bg-darker: #050505;
+    --bg-card: #1a1a1a;
+    --neon-red: #ff0040;
+    --neon-cyan: #00ffff;
+    --neon-magenta: #ff00ff;
+    --text-primary: #e0e0e0;
+    --text-secondary: #888888;
+    --border-glow: rgba(255, 0, 64, 0.3);
+    --warning-red: #ff3333;
+}
+
+body {
+    font-family: 'Share Tech Mono', monospace;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-dark);
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.03) 2px,
+            rgba(255, 255, 255, 0.03) 4px
+        );
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Scan line effect */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+    animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(100%); }
+}
+
+/* Glitch effect keyframes */
+@keyframes glitch {
+    0% {
+        text-shadow: 0.05em 0 0 var(--neon-red), -0.05em -0.025em 0 var(--neon-cyan);
+    }
+    14% {
+        text-shadow: 0.05em 0 0 var(--neon-red), -0.05em -0.025em 0 var(--neon-cyan);
+    }
+    15% {
+        text-shadow: -0.05em -0.025em 0 var(--neon-red), 0.025em 0.025em 0 var(--neon-cyan);
+    }
+    49% {
+        text-shadow: -0.05em -0.025em 0 var(--neon-red), 0.025em 0.025em 0 var(--neon-cyan);
+    }
+    50% {
+        text-shadow: 0.025em 0.05em 0 var(--neon-red), 0.05em 0 0 var(--neon-cyan);
+    }
+    99% {
+        text-shadow: 0.025em 0.05em 0 var(--neon-red), 0.05em 0 0 var(--neon-cyan);
+    }
+    100% {
+        text-shadow: -0.025em 0 0 var(--neon-red), -0.025em -0.025em 0 var(--neon-cyan);
+    }
+}
+
+/* Header Styles */
+header {
+    background-color: rgba(10, 10, 10, 0.95);
+    box-shadow: 0 2px 20px rgba(255, 0, 64, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--neon-red);
+    backdrop-filter: blur(10px);
+}
+
+nav {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--neon-red);
+    display: flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red);
+}
+
+.logo img {
+    height: 40px;
+    margin-right: 10px;
+    filter: drop-shadow(0 0 5px var(--neon-red));
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+}
+
+nav ul li {
+    margin-left: 2rem;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    position: relative;
+    padding: 5px 10px;
+}
+
+nav ul li a::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    opacity: 0;
+    transition: all 0.3s;
+    color: var(--neon-cyan);
+}
+
+nav ul li a:hover::before {
+    opacity: 1;
+    left: -15px;
+}
+
+nav ul li a:hover {
+    color: var(--neon-cyan);
+    text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* Main Content */
+main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, rgba(255, 0, 64, 0.1) 0%, rgba(10, 10, 10, 0.95) 100%);
+    color: var(--text-primary);
+    border-radius: 0;
+    margin-bottom: 3rem;
+    box-shadow: 
+        0 0 30px rgba(255, 0, 64, 0.3),
+        inset 0 0 50px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--neon-red);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(255, 0, 64, 0.03) 10px,
+        rgba(255, 0, 64, 0.03) 20px
+    );
+    animation: heroPattern 20s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes heroPattern {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+}
+
+.hero h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    color: var(--neon-red);
+    text-shadow: 
+        0 0 10px var(--neon-red),
+        0 0 20px var(--neon-red),
+        0 0 30px var(--neon-red);
+    animation: glitch 3s infinite;
+    position: relative;
+    z-index: 1;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--text-secondary);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+.waitlist-form {
+    max-width: 500px;
+    margin: 2rem auto 0;
+    background: rgba(26, 26, 26, 0.8);
+    padding: 2rem;
+    border-radius: 0;
+    border: 1px solid var(--neon-red);
+    box-shadow: 
+        0 0 20px rgba(255, 0, 64, 0.3),
+        inset 0 0 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
+}
+
+.waitlist-form::before {
+    content: '[ SECURE ACCESS PROTOCOL ]';
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    background: var(--bg-dark);
+    padding: 0 10px;
+    color: var(--neon-red);
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+.waitlist-form form {
+    display: flex;
+}
+
+.waitlist-form input {
+    flex: 1;
+    padding: 1rem;
+    border: 1px solid var(--text-secondary);
+    border-radius: 0;
+    font-size: 1rem;
+    font-family: 'Share Tech Mono', monospace;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--neon-cyan);
+    transition: all 0.3s;
+}
+
+.waitlist-form input:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.waitlist-form input::placeholder {
+    color: var(--text-secondary);
+}
+
+.waitlist-form button {
+    padding: 1rem 2rem;
+    background: var(--neon-red);
+    color: var(--bg-dark);
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(255, 0, 64, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.waitlist-form button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.waitlist-form button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.waitlist-form button:hover {
+    background: var(--warning-red);
+    box-shadow: 
+        0 0 30px rgba(255, 0, 64, 0.8),
+        0 0 40px rgba(255, 0, 64, 0.6);
+    transform: translateY(-2px);
+}
+
+#message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0;
+    display: none;
+    font-family: 'Share Tech Mono', monospace;
+    border-left: 3px solid;
+}
+
+#message.success {
+    background-color: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
+    border-color: #00ff00;
+    display: block;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+}
+
+#message.error {
+    background-color: rgba(255, 0, 64, 0.1);
+    color: var(--neon-red);
+    border-color: var(--neon-red);
+    display: block;
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+/* Features Preview */
+.features-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 4rem 0;
+}
+
+.feature-card {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 0;
+    box-shadow: 
+        0 0 20px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(255, 0, 64, 0.05);
+    text-align: center;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 0, 64, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+    transition: left 0.5s;
+}
+
+.feature-card:hover::before {
+    left: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--neon-cyan);
+    box-shadow: 
+        0 10px 30px rgba(0, 255, 255, 0.3),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.feature-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--neon-red);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1.2rem;
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+/* Page Content */
+.page-content {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 0;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 0, 64, 0.3);
+}
+
+.page-content h1 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--neon-red);
+    margin-bottom: 2rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px var(--neon-red);
+}
+
+.page-content h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--neon-cyan);
+    margin: 1.5rem 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.page-content h3 {
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem 0;
+    text-transform: uppercase;
+}
+
+.feature-detail {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 0, 64, 0.2);
+}
+
+.faq-item {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background-color: rgba(26, 26, 26, 0.5);
+    border-radius: 0;
+    border-left: 3px solid var(--neon-red);
+    transition: all 0.3s;
+    position: relative;
+}
+
+.faq-item::before {
+    content: '>';
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--neon-cyan);
+    opacity: 0;
+    transition: all 0.3s;
+}
+
+.faq-item:hover::before {
+    opacity: 1;
+    left: -20px;
+}
+
+.faq-item:hover {
+    background-color: rgba(26, 26, 26, 0.8);
+    border-left-color: var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    transform: translateX(10px);
+}
+
+/* Footer */
+footer {
+    background-color: rgba(5, 5, 5, 0.95);
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 2rem;
+    margin-top: 3rem;
+    border-top: 2px solid var(--neon-red);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 2px;
+}
+
+footer p {
+    text-shadow: 0 0 5px rgba(255, 0, 64, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    nav ul {
+        margin-top: 1rem;
+    }
+    
+    nav ul li {
+        margin: 0 1rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .waitlist-form {
+        padding: 1.5rem;
+    }
+    
+    .waitlist-form form {
+        flex-direction: column;
+    }
+    
+    .waitlist-form input,
+    .waitlist-form button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}

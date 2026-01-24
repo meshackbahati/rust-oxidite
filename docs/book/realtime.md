@@ -492,7 +492,7 @@ impl AnalyticsService {
     
     pub fn track_event(&self, event: AnalyticsEvent) -> Result<()> {
         self.event_sender.send(event)
-            .map_err(|e| Error::Server(format!("Failed to track event: {}", e)))?;
+            .map_err(|e| Error::InternalServerError(format!("Failed to track event: {}", e)))?;
         Ok(())
     }
     
@@ -623,7 +623,7 @@ impl WebSocketPool {
     
     pub fn add_connection(&mut self, id: String, ws: WebSocket) -> Result<()> {
         if self.connections.len() >= self.config.websocket_max_connections {
-            return Err(Error::Server("Maximum connections reached".to_string()));
+            return Err(Error::InternalServerError("Maximum connections reached".to_string()));
         }
         
         self.connections.insert(id, ws);

@@ -108,7 +108,7 @@ async fn stream_large_data(_req: Request) -> Result<Response> {
         .status(http::StatusCode::OK)
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .body(body.boxed())
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }
@@ -481,7 +481,7 @@ use tokio::task;
 async fn good_handler(_req: Request) -> Result<Response> {
     let result = task::spawn_blocking(|| {
         std::process::Command::new("slow_command").output().unwrap()
-    }).await.map_err(|e| Error::Server(e.to_string()))?;
+    }).await.map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(Response::text(format!("{:?}", result)))
 }
@@ -493,7 +493,7 @@ async fn good_handler(_req: Request) -> Result<Response> {
 ```rust
 // BAD: Converting errors to strings loses context
 async fn bad_error_handling(_req: Request) -> Result<Response> {
-    let data = some_operation().await.map_err(|e| Error::Server(e.to_string()))?;
+    let data = some_operation().await.map_err(|e| Error::InternalServerError(e.to_string()))?;
     Ok(Response::json(data))
 }
 ```

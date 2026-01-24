@@ -90,7 +90,7 @@ async fn custom_response(_req: Request) -> Result<Response> {
         .header(CONTENT_TYPE, "application/json")
         .header(LOCATION, "/resources/123")
         .body(Full::new(Bytes::from(r#"{"id": 123, "status": "created"}"#)))
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }
@@ -184,7 +184,7 @@ async fn cached_response(_req: Request) -> Result<Response> {
         .header(CONTENT_TYPE, "application/json")
         .header(CACHE_CONTROL, "public, max-age=3600")
         .body(Full::new(Bytes::from(r#"{"data": "cached"}"#)))
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }
@@ -212,7 +212,7 @@ async fn streaming_response(_req: Request) -> Result<Response> {
         .status(http::StatusCode::OK)
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .body(body.boxed())
-        .map_err(|e| Error::Server(e.to_string()))?;
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)
 }

@@ -1,0 +1,464 @@
+warning: unused import: `std::collections::HashMap`
+ --> oxidite-plugin/src/lib.rs:5:5
+  |
+5 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::path::Path`
+ --> oxidite-plugin/src/lib.rs:6:5
+  |
+6 | use std::path::Path;
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::sync::Arc`
+ --> oxidite-plugin/src/lib.rs:7:5
+  |
+7 | use std::sync::Arc;
+  |     ^^^^^^^^^^^^^^
+
+warning: unused import: `async_trait::async_trait`
+ --> oxidite-plugin/src/lib.rs:8:5
+  |
+8 | use async_trait::async_trait;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Error` and `Router`
+  --> oxidite-plugin/src/lib.rs:10:20
+   |
+10 | use oxidite_core::{Router, Result, Error};
+   |                    ^^^^^^          ^^^^^
+
+warning: unused import: `oxidite_config::Config`
+  --> oxidite-plugin/src/lib.rs:11:5
+   |
+11 | use oxidite_config::Config;
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `OxiditeResponse`
+ --> oxidite-plugin/src/plugin.rs:3:20
+  |
+3 | use oxidite_core::{OxiditeResponse, Error, Result};
+  |                    ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::fs`
+ --> oxidite-plugin/src/loader.rs:2:5
+  |
+2 | use std::fs;
+  |     ^^^^^^^
+
+warning: unused import: `PluginInfo`
+ --> oxidite-plugin/src/loader.rs:4:21
+  |
+4 | use crate::{Plugin, PluginInfo, Result};
+  |                     ^^^^^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> oxidite-plugin/src/manager.rs:4:13
+  |
+4 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> oxidite-plugin/src/loader.rs:35:13
+   |
+35 |         let mut plugins = Vec::new();
+   |             ----^^^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `hook`
+  --> oxidite-plugin/src/plugin.rs:45:26
+   |
+45 |     async fn hook(&self, hook: PluginHook) -> HookResult {
+   |                          ^^^^ help: if this is intentional, prefix it with an underscore: `_hook`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `path`
+  --> oxidite-plugin/src/loader.rs:16:50
+   |
+16 |     pub fn load_from_file<P: AsRef<Path>>(&self, path: P) -> Result<Arc<dyn Plugin>> {
+   |                                                  ^^^^ help: if this is intentional, prefix it with an underscore: `_path`
+
+warning: variable does not need to be mutable
+  --> oxidite-plugin/src/loader.rs:26:13
+   |
+26 |         let mut plugins = Vec::new();
+   |             ----^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: unused variable: `path`
+  --> oxidite-plugin/src/loader.rs:25:50
+   |
+25 |     pub fn scan_directory<P: AsRef<Path>>(&self, path: P) -> Result<Vec<std::path::PathBuf>> {
+   |                                                  ^^^^ help: if this is intentional, prefix it with an underscore: `_path`
+
+warning: unused variable: `loader`
+  --> oxidite-plugin/src/manager.rs:27:13
+   |
+27 |         let loader = PluginLoader::new();
+   |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_loader`
+
+warning: fields `config` and `hooks` are never read
+  --> oxidite-plugin/src/manager.rs:12:5
+   |
+10 | pub struct PluginManager {
+   |            ------------- fields in this struct
+11 |     plugins: HashMap<String, Arc<dyn Plugin>>,
+12 |     config: PluginConfig,
+   |     ^^^^^^
+13 |     hooks: HashMap<String, Vec<Arc<dyn Plugin>>>,
+   |     ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::sync::Arc`
+  --> oxidite-graphql/src/lib.rs:14:5
+   |
+14 | use std::sync::Arc;
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `req`
+  --> oxidite-graphql/src/lib.rs:35:33
+   |
+35 |         router.get("/graphql", |req: oxidite_core::OxiditeRequest| async move {
+   |                                 ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `req`
+  --> oxidite-graphql/src/lib.rs:31:34
+   |
+31 |         router.post("/graphql", |req: oxidite_core::OxiditeRequest| async move {
+   |                                  ^^^ help: if this is intentional, prefix it with an underscore: `_req`
+
+warning: field `schema` is never read
+  --> oxidite-graphql/src/lib.rs:18:5
+   |
+17 | pub struct GraphQLHandler {
+   |            -------------- field in this struct
+18 |     schema: std::sync::Arc<RootNode<'static, schema::QueryRoot, schema::MutationRoot, juniper::EmptySubscription<Context>>>,
+   |     ^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oxidite-plugin` (lib) generated 17 warnings (run `cargo fix --lib -p oxidite-plugin` to apply 16 suggestions)
+warning: `oxidite-graphql` (lib) generated 4 warnings (run `cargo fix --lib -p oxidite-graphql` to apply 3 suggestions)
+warning: unused import: `AuthError`
+ --> oxidite-auth/src/jwt.rs:4:13
+  |
+4 | use crate::{AuthError, Result};
+  |             ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Cookie` and `SameSite`
+ --> oxidite-auth/src/session.rs:2:14
+  |
+2 | use cookie::{Cookie, SameSite};
+  |              ^^^^^^  ^^^^^^^^
+
+warning: unused import: `CookieJar`
+ --> oxidite-auth/src/session_middleware.rs:7:22
+  |
+7 | use cookie::{Cookie, CookieJar, SameSite};
+  |                      ^^^^^^^^^
+
+warning: unused import: `Session`
+ --> oxidite-auth/src/session_middleware.rs:8:22
+  |
+8 | use crate::session::{Session, SessionStore};
+  |                      ^^^^^^^
+
+warning: unused import: `OxiditeResponse`
+ --> oxidite-auth/src/api_key_middleware.rs:1:36
+  |
+1 | use oxidite_core::{OxiditeRequest, OxiditeResponse, Result as OxiditeResult, Error};
+  |                                    ^^^^^^^^^^^^^^^
+
+warning: unused import: `rand::Rng`
+ --> oxidite-auth/src/security.rs:1:5
+  |
+1 | use rand::Rng;
+  |     ^^^^^^^^^
+
+warning: unused import: `oxidite_db::sqlx::Row`
+ --> oxidite-auth/src/security.rs:2:5
+  |
+2 | use oxidite_db::sqlx::Row;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `user_id`
+  --> oxidite-auth/src/oauth2/provider.rs:74:62
+   |
+74 |     pub async fn authorize(&self, req: AuthorizationRequest, user_id: String) -> Result<String> {
+   |                                                              ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_user_id`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::path::PathBuf`
+ --> oxidite-storage/src/lib.rs:3:5
+  |
+3 | use std::path::PathBuf;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `async_trait::async_trait`
+ --> oxidite-mail/src/mailer.rs:2:5
+  |
+2 | use async_trait::async_trait;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `config` is never read
+  --> oxidite-mail/src/transport.rs:51:5
+   |
+50 | pub struct SmtpTransport {
+   |            ------------- field in this struct
+51 |     config: SmtpConfig,
+   |     ^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `filename` is never read
+ --> oxidite-mail/src/attachment.rs:6:16
+  |
+5 | pub struct Attachment {
+  |            ---------- field in this struct
+6 |     pub(crate) filename: String,
+  |                ^^^^^^^^
+  |
+  = note: `Attachment` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: unused import: `std::collections::HashMap`
+ --> oxidite-middleware/src/cache.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `Arc` and `RwLock`
+ --> oxidite-middleware/src/cache.rs:2:17
+  |
+2 | use std::sync::{Arc, RwLock};
+  |                 ^^^  ^^^^^^
+
+warning: unused import: `SystemTime`
+ --> oxidite-middleware/src/cache.rs:3:27
+  |
+3 | use std::time::{Duration, SystemTime};
+  |                           ^^^^^^^^^^
+
+warning: unused import: `Response`
+ --> oxidite-middleware/src/cache.rs:4:21
+  |
+4 | use http::{Request, Response, Method};
+  |                     ^^^^^^^^
+
+warning: unused import: `http_body_util::Full`
+ --> oxidite-middleware/src/cache.rs:5:5
+  |
+5 | use http_body_util::Full;
+  |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bytes::Bytes`
+ --> oxidite-middleware/src/cache.rs:6:5
+  |
+6 | use bytes::Bytes;
+  |     ^^^^^^^^^^^^
+
+warning: unused import: `std::future::Future`
+ --> oxidite-middleware/src/cache.rs:9:5
+  |
+9 | use std::future::Future;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::pin::Pin`
+  --> oxidite-middleware/src/cache.rs:10:5
+   |
+10 | use std::pin::Pin;
+   |     ^^^^^^^^^^^^^
+
+warning: field `config` is never read
+  --> oxidite-middleware/src/cache.rs:68:5
+   |
+66 | pub struct CacheMiddleware<S> {
+   |            --------------- field in this struct
+67 |     inner: S,
+68 |     config: CacheConfig,
+   |     ^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `should_cache_method` is never used
+  --> oxidite-middleware/src/cache.rs:72:8
+   |
+71 | impl<S> CacheMiddleware<S> {
+   | -------------------------- method in this implementation
+72 |     fn should_cache_method(&self, method: &Method) -> bool {
+   |        ^^^^^^^^^^^^^^^^^^^
+
+warning: `oxidite-auth` (lib) generated 8 warnings (run `cargo fix --lib -p oxidite-auth` to apply 8 suggestions)
+warning: `oxidite-storage` (lib) generated 1 warning (run `cargo fix --lib -p oxidite-storage` to apply 1 suggestion)
+warning: `oxidite-mail` (lib) generated 3 warnings (run `cargo fix --lib -p oxidite-mail` to apply 1 suggestion)
+warning: `oxidite-middleware` (lib) generated 10 warnings (run `cargo fix --lib -p oxidite-middleware` to apply 8 suggestions)
+warning: method `cleanup` is never used
+  --> oxidite-cache/src/lib.rs:88:14
+   |
+54 | impl MemoryCache {
+   | ---------------- method in this implementation
+...
+88 |     async fn cleanup(&self) {
+   |              ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `source` is never read
+   --> oxidite-template/src/lib.rs:157:5
+    |
+156 | pub struct Template {
+    |            -------- field in this struct
+157 |     source: String,
+    |     ^^^^^^
+    |
+    = note: `Template` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oxidite-cache` (lib) generated 1 warning
+warning: `oxidite-template` (lib) generated 1 warning
+    Checking demo-app v0.1.0 (/home/bealthguy/Public/rust-oxidite/examples/demo-app)
+error[E0609]: no field `visit_count` on type `oxidite::State<AppState>`
+  --> examples/demo-app/src/main.rs:22:33
+   |
+22 |     let mut visit_count = state.visit_count.lock().unwrap();
+   |                                 ^^^^^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+22 |     let mut visit_count = state.0.visit_count.lock().unwrap();
+   |                                 ++
+
+error[E0609]: no field `template_engine` on type `oxidite::State<AppState>`
+  --> examples/demo-app/src/main.rs:43:33
+   |
+43 |     let template_engine = state.template_engine.lock().unwrap();
+   |                                 ^^^^^^^^^^^^^^^ unknown field
+   |
+help: one of the expressions' fields has a field of the same name
+   |
+43 |     let template_engine = state.0.template_engine.lock().unwrap();
+   |                                 ++
+
+error[E0282]: type annotations needed
+  --> examples/demo-app/src/main.rs:45:19
+   |
+45 |         .map_err(|e| Error::InternalServerError(e.to_string()))?;
+   |                   ^                             - type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+45 |         .map_err(|e: /* Type */| Error::InternalServerError(e.to_string()))?;
+   |                    ++++++++++++
+
+error[E0277]: `UserFormData` doesn't implement `std::fmt::Debug`
+   --> examples/demo-app/src/main.rs:111:42
+    |
+111 |     println!("Received form data: {:?}", form_data);
+    |                                   ----   ^^^^^^^^^ `UserFormData` cannot be formatted using `{:?}` because it doesn't implement `std::fmt::Debug`
+    |                                   |
+    |                                   required by this formatting parameter
+    |
+    = help: the trait `std::fmt::Debug` is not implemented for `UserFormData`
+    = note: add `#[derive(Debug)]` to `UserFormData` or manually `impl std::fmt::Debug for UserFormData`
+    = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider annotating `UserFormData` with `#[derive(Debug)]`
+    |
+103 + #[derive(Debug)]
+104 | struct UserFormData {
+    |
+
+error[E0308]: mismatched types
+   --> examples/demo-app/src/main.rs:152:32
+    |
+152 |             "not_found" => Err(Error::NotFound),
+    |                            --- ^^^^^^^^^^^^^^^ expected `Error`, found enum constructor
+    |                            |
+    |                            arguments to this enum variant are incorrect
+    |
+    = note:          expected enum `oxidite::Error`
+            found enum constructor `fn(std::string::String) -> oxidite::Error {oxidite::Error::NotFound}`
+help: the type constructed contains `fn(std::string::String) -> oxidite::Error {oxidite::Error::NotFound}` due to the type of the argument passed
+   --> examples/demo-app/src/main.rs:152:28
+    |
+152 |             "not_found" => Err(Error::NotFound),
+    |                            ^^^^---------------^
+    |                                |
+    |                                this argument influences the type of `Err`
+note: tuple variant defined here
+   --> /usr/src/debug/rust/rustc-1.92.0-src/library/core/src/result.rs:566:5
+help: use parentheses to construct this tuple variant
+    |
+152 |             "not_found" => Err(Error::NotFound(/* std::string::String */)),
+    |                                               +++++++++++++++++++++++++++
+
+error[E0308]: mismatched types
+   --> examples/demo-app/src/main.rs:158:35
+    |
+158 |             "rate_limited" => Err(Error::RateLimited),
+    |                               --- ^^^^^^^^^^^^^^^^^^ expected `Error`, found enum constructor
+    |                               |
+    |                               arguments to this enum variant are incorrect
+    |
+    = note:          expected enum `oxidite::Error`
+            found enum constructor `fn(std::string::String) -> oxidite::Error {RateLimited}`
+help: the type constructed contains `fn(std::string::String) -> oxidite::Error {RateLimited}` due to the type of the argument passed
+   --> examples/demo-app/src/main.rs:158:31
+    |
+158 |             "rate_limited" => Err(Error::RateLimited),
+    |                               ^^^^------------------^
+    |                                   |
+    |                                   this argument influences the type of `Err`
+note: tuple variant defined here
+   --> /usr/src/debug/rust/rustc-1.92.0-src/library/core/src/result.rs:566:5
+help: use parentheses to construct this tuple variant
+    |
+158 |             "rate_limited" => Err(Error::RateLimited(/* std::string::String */)),
+    |                                                     +++++++++++++++++++++++++++
+
+error[E0277]: `?` couldn't convert the error to `oxidite::Error`
+   --> examples/demo-app/src/main.rs:298:8
+    |
+183 |       template_engine.add_template("home.html", r#"
+    |  _____________________-
+184 | | <!DOCTYPE html>
+185 | | <html>
+186 | | <head>
+...   |
+297 | | </html>
+298 | |     "#)?;
+    | |       -^ the trait `From<TemplateError>` is not implemented for `oxidite::Error`
+    | |_______|
+    |         this can't be annotated with `?` because it has type `Result<_, TemplateError>`
+    |
+    = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+    = help: the following other types implement trait `From<T>`:
+              `oxidite::Error` implements `From<Utf8Error>`
+              `oxidite::Error` implements `From<_::_serde::de::value::Error>`
+              `oxidite::Error` implements `From<http::error::Error>`
+              `oxidite::Error` implements `From<hyper::error::Error>`
+              `oxidite::Error` implements `From<serde_json::Error>`
+              `oxidite::Error` implements `From<std::io::Error>`
+
+Some errors have detailed explanations: E0277, E0282, E0308, E0609.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `demo-app` (bin "demo-app") due to 7 previous errors

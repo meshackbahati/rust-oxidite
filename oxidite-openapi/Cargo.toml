@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-openapi"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "OpenAPI/Swagger documentation generation for Oxidite"

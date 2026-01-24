@@ -5,6 +5,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 use crate::{AuthError, Result};
 use crate::oauth2::grants::AuthorizationCodeGrant;
+use base64::Engine;
 
 /// Authorization request
 #[derive(Debug, Clone, Deserialize)]
@@ -71,7 +72,7 @@ impl OAuth2Provider {
     }
 
     /// Handle authorization request
-    pub async fn authorize(&self, req: AuthorizationRequest, user_id: String) -> Result<String> {
+    pub async fn authorize(&self, req: AuthorizationRequest, _user_id: String) -> Result<String> {
         // Validate client
         let clients = self.clients.read().await;
         let client = clients.get(&req.client_id)
@@ -132,7 +133,17 @@ impl OAuth2Provider {
         // Validate PKCE if used
         if let Some(challenge) = grant.code_challenge {
             let verifier = req.code_verifier.ok_or(AuthError::InvalidToken)?;
-            // TODO: Verify PKCE challenge
+            
+            // Verify PKCE challenge using SHA256
+            use sha2::{Sha256, Digest};
+            let mut hasher = Sha256::new();
+            hasher.update(verifier.as_bytes());
+            let computed_challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD
+                .encode(hasher.finalize());
+            
+            if computed_challenge != challenge {
+                return Err(AuthError::InvalidToken);
+            }
         }
 
         // Generate access token

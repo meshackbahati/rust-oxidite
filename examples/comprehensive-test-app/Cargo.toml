@@ -1,0 +1,24 @@
+[package]
+name = "comprehensive-test-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+oxidite = { path = "../../oxidite", version = "2.0.1", features = ["full"] }
+oxidite-core = { path = "../../oxidite-core", version = "2.0.1" }
+oxidite-auth = { path = "../../oxidite-auth", version = "2.0.1" }
+oxidite-db = { path = "../../oxidite-db", version = "2.0.1" }
+oxidite-queue = { path = "../../oxidite-queue", version = "2.0.1" }
+oxidite-realtime = { path = "../../oxidite-realtime", version = "2.0.1" }
+oxidite-storage = { path = "../../oxidite-storage", version = "2.0.1" }
+oxidite-mail = { path = "../../oxidite-mail", version = "2.0.1" }
+oxidite-template = { path = "../../oxidite-template", version = "2.0.1" }
+oxidite-middleware = { path = "../../oxidite-middleware", version = "2.0.1" }
+oxidite-config = { path = "../../oxidite-config", version = "2.0.1" }
+oxidite-cache = { path = "../../oxidite-cache", version = "2.0.1" }
+
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"

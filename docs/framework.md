@@ -107,7 +107,7 @@ use oxidite::queue::{Queue, Job};
 
 async fn example_job_queue() -> Result<(), Box<dyn std::error::Error>> {
     // Create a queue
-    let queue = Queue::new_memory(); // or Queue::new_redis("redis://127.0.0.1:6379").await?;
+    let queue = Queue::memory(); // or Queue::new(Arc::new(RedisBackend::new("redis://...").await?));
     
     // Create a job
     let email_job = EmailJob {
@@ -145,7 +145,7 @@ impl Job for DailyReportJob {
 }
 
 async fn schedule_cron_jobs() -> Result<(), Box<dyn std::error::Error>> {
-    let queue = Queue::new_memory();
+    let queue = Queue::memory();
     
     // Schedule a job to run daily at midnight
     let schedule = Schedule::from_str("0 0 * * * *")?; // Every day at 00:00

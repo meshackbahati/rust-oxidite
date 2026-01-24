@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-queue"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Background job queue with cron scheduling, DLQ, and retry logic for Oxidite"

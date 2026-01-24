@@ -27,15 +27,17 @@ cargo add serde --features derive
 
 ```rust
 use oxidite::prelude::*;
+use oxidite::db::DbPool;
 use oxidite::template::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Database
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = DbPool::connect(&std::env::var("DATABASE_URL")?).await?;
     
     // Template engine
-    let templates = TemplateEngine::new("templates");
+    let mut templates = TemplateEngine::new();
+    templates.load_dir("templates")?;
     
     // Routes
     let mut app = Router::new();

@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     
     // Connect to database
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = DbPool::connect(&std::env::var("DATABASE_URL")?).await?;
     
     // Your app code
     Ok(())

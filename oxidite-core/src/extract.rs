@@ -54,10 +54,10 @@ pub struct Json<T>(pub T);
 
 /// Extractor trait - allows types to be extracted from requests
 pub trait FromRequest: Sized {
-    async fn from_request(req: &mut OxiditeRequest) -> Result<Self>;
+    fn from_request(req: &mut OxiditeRequest) -> impl std::future::Future<Output = Result<Self>> + Send;
 }
 
-impl<T: DeserializeOwned> FromRequest for Path<T> {
+impl<T: DeserializeOwned + Send> FromRequest for Path<T> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         // Path params are stored in request extensions after routing
         req.extensions()
@@ -71,7 +71,7 @@ impl<T: DeserializeOwned> FromRequest for Path<T> {
     }
 }
 
-impl<T: DeserializeOwned> FromRequest for Query<T> {
+impl<T: DeserializeOwned + Send> FromRequest for Query<T> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         let query = req.uri().query().unwrap_or("");
         serde_urlencoded::from_str(query)
@@ -80,7 +80,7 @@ impl<T: DeserializeOwned> FromRequest for Query<T> {
     }
 }
 
-impl<T: DeserializeOwned> FromRequest for Json<T> {
+impl<T: DeserializeOwned + Send> FromRequest for Json<T> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         use http_body_util::BodyExt;
         use bytes::Buf;
@@ -120,14 +120,12 @@ impl<T: serde::Serialize> Json<T> {
 pub struct State<T>(pub T);
 
 impl<T: Clone + Send + Sync + 'static> FromRequest for State<T> {
-    fn from_request(req: &mut OxiditeRequest) -> impl std::future::Future<Output = Result<Self>> {
-        async {
-            req.extensions()
-                .get::<T>()
-                .cloned()
-                .map(State)
-                .ok_or_else(|| Error::InternalServerError("Application state not found in request extensions".to_string()))
-        }
+    async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
+        req.extensions()
+            .get::<T>()
+            .cloned()
+            .map(State)
+            .ok_or_else(|| Error::InternalServerError("Application state not found in request extensions".to_string()))
     }
 }
 
@@ -147,7 +145,7 @@ impl<T: Clone + Send + Sync + 'static> FromRequest for State<T> {
 /// ```
 pub struct Form<T>(pub T);
 
-impl<T: DeserializeOwned> FromRequest for Form<T> {
+impl<T: DeserializeOwned + Send> FromRequest for Form<T> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         use http_body_util::BodyExt;
         use bytes::Buf;

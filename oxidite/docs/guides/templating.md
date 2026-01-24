@@ -17,7 +17,8 @@ use oxidite::template::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let templates = TemplateEngine::new("templates");
+    let mut templates = TemplateEngine::new();
+    templates.load_dir("templates")?;
     
     let mut app = Router::new();
     

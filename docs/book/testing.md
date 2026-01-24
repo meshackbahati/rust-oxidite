@@ -397,7 +397,7 @@ async fn contact_handler(
     email_service
         .send_email(&payload.email, &payload.subject, &payload.message)
         .await
-        .map_err(|e| Error::Server(e))?;
+        .map_err(|e| Error::InternalServerError(e))?;
 
     Ok(Response::json(serde_json::json!({
         "status": "sent",

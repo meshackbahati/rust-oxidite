@@ -44,7 +44,8 @@ Initialize the template engine and register templates:
 use oxidite_template::{TemplateEngine, Context};
 
 // Create a new template engine
-let mut engine = TemplateEngine::new("./templates");
+let mut engine = TemplateEngine::new();
+engine.load_dir("./templates")?;
 
 // Load all templates from the directory
 engine.load_templates().await?;

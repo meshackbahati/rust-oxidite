@@ -694,12 +694,16 @@ dependencies = [
 name = "oxidite-template"
 version = "2.0.0"
 dependencies = [
+ "bytes",
  "http",
+ "http-body-util",
+ "hyper",
  "oxidite-core",
  "regex",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "tokio",
 ]
 
 [[package]]

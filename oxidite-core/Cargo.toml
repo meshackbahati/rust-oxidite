@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-core"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Core HTTP server and routing for the Oxidite v2 web framework"

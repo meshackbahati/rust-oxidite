@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-security"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Security utilities for Oxidite (CSRF, XSS protection, encryption)"

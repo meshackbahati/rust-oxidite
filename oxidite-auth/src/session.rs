@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use cookie::{Cookie, SameSite};
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

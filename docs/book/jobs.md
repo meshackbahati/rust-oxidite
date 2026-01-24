@@ -80,9 +80,9 @@ async fn configure_queues() -> Result<()> {
     let redis_backend = RedisBackend::new("redis://127.0.0.1:6379").await?;
     
     // Create queues
-    let email_queue = Queue::new("emails", redis_backend.clone());
-    let image_queue = Queue::new("images", redis_backend.clone());
-    let default_queue = Queue::new("default", redis_backend);
+    let email_queue = Queue::new(redis_backend.clone());
+    let image_queue = Queue::new(redis_backend.clone());
+    let default_queue = Queue::new(redis_backend);
     
     // Store queues in application state
     // This would typically be done during app initialization
@@ -145,7 +145,7 @@ async fn enqueue_examples() -> Result<()> {
 
 async fn get_queue(_name: &str) -> Result<Queue> {
     // In a real app, this would return the configured queue
-    Ok(Queue::new("default"))
+    Ok(Queue::memory())
 }
 
 pub struct Queue {
@@ -383,12 +383,12 @@ async fn execute_with_retry(job: RobustJob, strategy: &RetryStrategy) -> Result<
             Ok(_) => return Ok(()),
             Err(JobError::PermanentFailure(_)) => {
                 eprintln!("Permanent failure, not retrying");
-                return Err(Error::Server("Permanent job failure".to_string()));
+                return Err(Error::InternalServerError("Permanent job failure".to_string()));
             }
             Err(JobError::TemporaryFailure(_)) | Err(JobError::ValidationError(_)) => {
                 if attempt >= strategy.max_attempts {
                     eprintln!("Max attempts reached, failing permanently");
-                    return Err(Error::Server("Job failed after max retries".to_string()));
+                    return Err(Error::InternalServerError("Job failed after max retries".to_string()));
                 }
                 
                 let delay = strategy.calculate_delay(attempt);
@@ -708,7 +708,7 @@ async fn send_email_handler(
     };
     
     let job_id = queue.enqueue(job).await
-        .map_err(|e| Error::Server(format!("Failed to queue email: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to queue email: {}", e)))?;
     
     Ok(Response::json(serde_json::json!({
         "status": "queued",
@@ -723,7 +723,7 @@ async fn check_job_status(
     State(queue): State<Queue>
 ) -> Result<Response> {
     let status = queue.get_job_status(&job_id).await
-        .map_err(|e| Error::Server(format!("Failed to get job status: {}", e)))?;
+        .map_err(|e| Error::InternalServerError(format!("Failed to get job status: {}", e)))?;
     
     Ok(Response::json(serde_json::json!({
         "job_id": job_id,

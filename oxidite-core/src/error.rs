@@ -4,8 +4,6 @@ use thiserror::Error;
 pub enum Error {
     #[error("Internal server error: {0}")]
     InternalServerError(String),
-    #[error("Server error: {0}")]
-    Server(String),
     #[error("Resource not found: {0}")]
     NotFound(String),
     #[error("Bad request: {0}")]
@@ -22,6 +20,8 @@ pub enum Error {
     RateLimited(String),
     #[error("Service temporarily unavailable: {0}")]
     ServiceUnavailable(String),
+    #[error("Method not allowed: {0}")]
+    MethodNotAllowed(String),
     #[error(transparent)]
     Hyper(#[from] hyper::Error),
     #[error(transparent)]
@@ -32,6 +32,8 @@ pub enum Error {
     SerdeUrlEncoded(#[from] serde_urlencoded::de::Error),
     #[error(transparent)]
     Http(#[from] http::Error),
+    #[error(transparent)]
+    Utf8(#[from] std::str::Utf8Error),
 }
 
 /// A specialized Result type for Oxidite applications
@@ -42,15 +44,29 @@ impl Error {
     pub fn status_code(&self) -> hyper::StatusCode {
         match self {
             Error::NotFound(_) => hyper::StatusCode::NOT_FOUND,
-            Error::BadRequest(_) => hyper::StatusCode::BAD_REQUEST,
+            Error::BadRequest(_) | Error::SerdeJson(_) | Error::SerdeUrlEncoded(_) | Error::Utf8(_) => hyper::StatusCode::BAD_REQUEST,
             Error::Unauthorized(_) => hyper::StatusCode::UNAUTHORIZED,
             Error::Forbidden(_) => hyper::StatusCode::FORBIDDEN,
             Error::Conflict(_) => hyper::StatusCode::CONFLICT,
             Error::Validation(_) => hyper::StatusCode::UNPROCESSABLE_ENTITY,
             Error::RateLimited(_) => hyper::StatusCode::TOO_MANY_REQUESTS,
             Error::ServiceUnavailable(_) => hyper::StatusCode::SERVICE_UNAVAILABLE,
-            Error::InternalServerError(_) | Error::Server(_) | Error::Hyper(_) | Error::Io(_) | Error::SerdeJson(_) | 
-            Error::SerdeUrlEncoded(_) | Error::Http(_) => hyper::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::MethodNotAllowed(_) => hyper::StatusCode::METHOD_NOT_ALLOWED,
+            Error::InternalServerError(_) | Error::Hyper(_) | Error::Io(_) | Error::Http(_) => hyper::StatusCode::INTERNAL_SERVER_ERROR,
         }
+    }
+
+    /// Check if this is a client error (4xx status code)
+    /// These errors are expected and should be logged at debug/trace level
+    pub fn is_client_error(&self) -> bool {
+        let status = self.status_code();
+        status.is_client_error()
+    }
+
+    /// Check if this is a server error (5xx status code)
+    /// These errors are unexpected and should be logged at error level
+    pub fn is_server_error(&self) -> bool {
+        let status = self.status_code();
+        status.is_server_error()
     }
 }

@@ -693,7 +693,7 @@ impl PluginRegistry {
         let name = plugin.name().to_string();
         
         if self.plugins.contains_key(&name) {
-            return Err(Error::Server(format!("Plugin '{}' already registered", name)));
+            return Err(Error::InternalServerError(format!("Plugin '{}' already registered", name)));
         }
         
         self.plugins.insert(name, plugin);
@@ -836,7 +836,7 @@ impl PluginDependencySorter {
             }
             
             if !progress && !remaining.is_empty() {
-                return Err(Error::Server("Circular dependency detected in plugins".to_string()));
+                return Err(Error::InternalServerError("Circular dependency detected in plugins".to_string()));
             }
         }
         
@@ -928,11 +928,11 @@ impl PluginLoader {
     pub fn validate_manifest(&self, manifest: &PluginManifest) -> Result<()> {
         // Validate plugin manifest
         if manifest.name.is_empty() {
-            return Err(Error::Server("Plugin name is required".to_string()));
+            return Err(Error::InternalServerError("Plugin name is required".to_string()));
         }
         
         if manifest.version.is_empty() {
-            return Err(Error::Server("Plugin version is required".to_string()));
+            return Err(Error::InternalServerError("Plugin version is required".to_string()));
         }
         
         Ok(())

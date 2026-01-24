@@ -13,11 +13,12 @@ oxidite = { version = "1.0", features = ["auth", "database"] }
 
 ```rust
 use oxidite::prelude::*;
+use oxidite::db::DbPool;
 use oxidite::auth::api_key::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let db = Database::connect(&std::env::var("DATABASE_URL")?).await?;
+    let db = DbPool::connect(&std::env::var("DATABASE_URL")?).await?;
     
     let mut app = Router::new();
     

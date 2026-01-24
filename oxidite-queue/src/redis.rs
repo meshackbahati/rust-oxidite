@@ -67,9 +67,28 @@ impl QueueBackend for RedisBackend {
         Ok(())
     }
 
-    async fn fail(&self, _job_id: &str, _error: String) -> Result<()> {
-        // Similarly, we might want to move to a failed queue.
-        // TODO: Implement failed queue logic
+    async fn fail(&self, job_id: &str, error: String) -> Result<()> {
+        // Move failed jobs to a separate failed queue for inspection
+        let failed_key = format!("{}_failed", self.queue_key);
+        
+        let mut conn = self.client.get_multiplexed_async_connection()
+            .await
+            .map_err(|e| QueueError::BackendError(e.to_string()))?;
+        
+        // Store the failed job with error information
+        let failed_job = serde_json::json!({
+            "job_id": job_id,
+            "error": error,
+            "failed_at": chrono::Utc::now().to_rfc3339()
+        });
+        
+        let payload = serde_json::to_string(&failed_job)
+            .map_err(|e| QueueError::SerializationError(e))?;
+        
+        let _: () = conn.lpush(&failed_key, payload)
+            .await
+            .map_err(|e| QueueError::BackendError(e.to_string()))?;
+        
         Ok(())
     }
 

@@ -209,7 +209,7 @@ async fn access_raw_body(mut req: Request) -> Result<Response> {
         .body_mut()
         .collect()
         .await
-        .map_err(|e| Error::Server(e.to_string()))?
+        .map_err(|e| Error::InternalServerError(e.to_string()))?
         .to_bytes();
     
     let body_str = String::from_utf8_lossy(&body_bytes);
