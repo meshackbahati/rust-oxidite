@@ -6,20 +6,19 @@ This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
-## [0.1.2] - 2025-12-11
+## [2.0.2] - 2026-25-01
 
 ### ✨ Features
 
-- Initial release of the Oxidite CLI.
+- N/A
 
 ### 🐛 Bug Fixes
 
-- Corrected the generated `main.rs` file to remove unused imports and handle `Option` to `Result` conversion correctly.
-- Fixed the generated `routes/mod.rs` file to use the correct `response::html` and `response::json` functions.
+- Fixed  and aliased OxiditeRequest and OxiditeResponse types to Request and Response respectively
 
 ### 🚀 Performance Improvements
 
-- N/A
+- Improved Hot reload functioning.
 
 ### 📝 Documentation
 
