@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-cli"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "CLI tool for the Oxidite v2 web framework"
