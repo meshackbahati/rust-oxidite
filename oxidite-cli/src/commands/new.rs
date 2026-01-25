@@ -302,9 +302,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 "#,
-        ProjectType::Serverless => r#"use oxidite_core::{OxiditeRequest, OxiditeResponse};
+        ProjectType::Serverless => r#"use oxidite_core::{Request, Response};
 
-pub async fn handler(req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+pub async fn handler(req: Request) -> Result<Response, oxidite_core::Error> {
     Ok(OxiditeResponse::json(serde_json::json!({
         "message": "Hello from Serverless Function!"
     })))
@@ -339,14 +339,14 @@ fn create_boilerplate(path: &Path, p_type: ProjectType) -> std::io::Result<()> {
     
     // Create routes/mod.rs
     let routes_content = match p_type {
-        ProjectType::Fullstack => r#"use oxidite_core::{response, Router, OxiditeRequest, OxiditeResponse};
+        ProjectType::Fullstack => r#"use oxidite_core::{Router, Request, Response};
 use oxidite_template::{TemplateEngine, Context};
 
 pub fn register(router: &mut Router) {
     router.get("/", index);
 }
 
-async fn index(_req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+async fn index(_req: Request) -> Result<Response, oxidite_core::Error> {
     let mut engine = TemplateEngine::new();
     engine.load_dir("templates").unwrap();
 
@@ -354,16 +354,16 @@ async fn index(_req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Er
     context.set("name", "Oxidite");
 
     let body = engine.render("index.html", &context).unwrap();
-    Ok(response::html(body))
+    Ok(Response::html(body))
 }
 "#,
-        ProjectType::Api => r#"use oxidite_core::{response, Router, OxiditeRequest, OxiditeResponse};
+        ProjectType::Api => r#"use oxidite_core::{Router, Request, Response};
 
 pub fn register(router: &mut Router) {
     router.get("/api/health", health);
 }
 
-async fn health(_req: OxiditeRequest) -> Result<OxiditeResponse, oxidite_core::Error> {
+async fn health(_req: Request) -> Result<Response, oxidite_core::Error> {
     Ok(response::json(serde_json::json!({"status": "ok"})))
 }
 "#,
