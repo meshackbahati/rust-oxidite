@@ -21,6 +21,5 @@ members = [
     "oxidite-openapi",
     "oxidite-graphql",
     "oxidite-plugin",
-    "heirloom-waitlist",
     "examples/*",
 ]
