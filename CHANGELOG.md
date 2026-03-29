@@ -22,7 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified workspace crate versioning to `2.1.0`
 - Roadmap updated with Batch B marked complete and promoted as single planning source
 - Status document simplified to avoid roadmap/status drift
-- Removed `Oxidite v2` wording in crate metadata in favor of `Oxidite`
 
 ## [2.0.0] - 2026-01-21
 
