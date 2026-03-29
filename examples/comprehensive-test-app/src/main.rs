@@ -14,10 +14,10 @@ async fn main() -> Result<()> {
     println!("Starting Comprehensive Test App...");
     
     // Initialize components
-    let db = db::init_db().await?;
-    let auth = auth::init_auth().await?;
-    let queue = queue::init_queue().await?;
-    let realtime = realtime::init_realtime().await?;
+    let _db = db::init_db().await?;
+    let _auth = auth::init_auth().await?;
+    let _queue = queue::init_queue().await?;
+    let _realtime = realtime::init_realtime().await?;
     
     // Create router
     let mut router = Router::new();

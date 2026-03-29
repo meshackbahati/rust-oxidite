@@ -1,4 +1,4 @@
-# Oxidite v2 Web Framework
+# Oxidite Web Framework
 
 <div align="center">
 
@@ -9,7 +9,8 @@ A modern, high-performance web framework for Rust, inspired by FastAPI, Express.
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/github-meshackbahati%2Frust--oxidite-black)](https://github.com/meshackbahati/rust-oxidite)
-[![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](STATUS.md)
+[![Stability](https://img.shields.io/badge/stability-beta-2ea043.svg)](ROADMAP.md)
+[![Roadmap](https://img.shields.io/badge/roadmap-public-0a66c2.svg)](ROADMAP.md)
 
 Built with ❤️ by [Meshack Bahati Ouma](https://github.com/meshackbahati)
 
@@ -33,7 +34,7 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 - **Type-Safe**: Strong typing for requests, responses, and database queries
 - **Auto-Documentation**: OpenAPI/Swagger UI generation
 
-> **Status**: See [STATUS.md](STATUS.md) for detailed feature completeness
+> **Roadmap**: See [ROADMAP.md](ROADMAP.md) for public progress and upcoming milestones.
 
 ## Installation
 

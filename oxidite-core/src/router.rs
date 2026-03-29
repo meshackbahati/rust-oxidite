@@ -198,7 +198,6 @@ impl Router {
     pub async fn handle(&self, mut req: OxiditeRequest) -> Result<OxiditeResponse> {
         let method = req.method().clone();
         let path = req.uri().path().to_string();
-        let path_for_error = path.clone();
 
         // Helper to try matching routes for a specific method
         let try_match = |target_method: &Method, req: &mut OxiditeRequest| -> Option<Arc<Route>> {
@@ -244,8 +243,28 @@ impl Router {
             }
         }
 
-        // Log which path was not found
-        eprintln!("🔍 Route not found: {} {}", method, path_for_error);
+        // 3. Path exists for other methods => method not allowed
+        let allowed_methods: Vec<String> = self
+            .routes
+            .iter()
+            .filter(|(route_method, _)| **route_method != method)
+            .filter_map(|(route_method, routes)| {
+                if routes.iter().any(|route| route.pattern.is_match(&path)) {
+                    Some(route_method.as_str().to_string())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        if !allowed_methods.is_empty() {
+            return Err(Error::MethodNotAllowed(format!(
+                "{} {} (allowed: {})",
+                method,
+                path,
+                allowed_methods.join(", ")
+            )));
+        }
+
         Err(Error::NotFound("Route not found".to_string()))
     }
 }
@@ -319,6 +338,7 @@ fn compile_path(path: &str) -> (Regex, Vec<String>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::BoxBody;
 
     #[test]
     fn test_compile_path() {
@@ -338,5 +358,32 @@ mod tests {
         assert_eq!(params.len(), 0);
         assert!(regex.is_match("/users"));
         assert!(!regex.is_match("/users/123"));
+    }
+
+    #[tokio::test]
+    async fn test_method_not_allowed_when_path_exists() {
+        let mut router = Router::new();
+        router.get("/users", || async { Ok(crate::OxiditeResponse::text("ok")) });
+        let req = http::Request::builder()
+            .method(Method::POST)
+            .uri("/users")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let result = router.handle(req).await;
+        assert!(matches!(result, Err(Error::MethodNotAllowed(_))));
+    }
+
+    #[tokio::test]
+    async fn test_not_found_when_path_missing() {
+        let router = Router::new();
+        let req = http::Request::builder()
+            .method(Method::GET)
+            .uri("/missing")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let result = router.handle(req).await;
+        assert!(matches!(result, Err(Error::NotFound(_))));
     }
 }

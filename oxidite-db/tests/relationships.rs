@@ -62,3 +62,14 @@ async fn test_relationships_compilation() {
     // Test BelongsTo
     let _user = post.user().get(&db).await;
 }
+
+#[tokio::test]
+async fn eager_load_rejects_invalid_foreign_key() {
+    let db = MockDb;
+
+    let has_many_result = HasMany::<User, Post>::eager_load(&db, &[1, 2], "user_id;DROP").await;
+    assert!(has_many_result.is_err());
+
+    let has_one_result = HasOne::<User, Post>::eager_load(&db, &[1, 2], "user_id;DROP").await;
+    assert!(has_one_result.is_err());
+}

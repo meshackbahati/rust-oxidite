@@ -1,8 +1,6 @@
 use clap::{Parser, Subcommand};
 use oxidite_core::{Router, Server, OxiditeRequest, OxiditeResponse, Result};
 use oxidite_middleware::{ServiceBuilder, LoggerLayer};
-use http_body_util::Full;
-use bytes::Bytes;
 mod commands;
 
 #[derive(Parser)]
@@ -68,6 +66,16 @@ enum Generator {
     Controller { name: String },
     /// Generate middleware
     Middleware { name: String },
+    /// Generate a service
+    Service { name: String },
+    /// Generate a validator
+    Validator { name: String },
+    /// Generate a background job
+    Job { name: String },
+    /// Generate an authorization policy
+    Policy { name: String },
+    /// Generate a domain event
+    Event { name: String },
 }
 
 #[derive(Subcommand)]
@@ -143,6 +151,26 @@ async fn main() -> Result<()> {
                 }
                 Generator::Middleware { name } => {
                     commands::make::make_middleware(&name)
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+                }
+                Generator::Service { name } => {
+                    commands::make::make_service(&name)
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+                }
+                Generator::Validator { name } => {
+                    commands::make::make_validator(&name)
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+                }
+                Generator::Job { name } => {
+                    commands::make::make_job(&name)
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+                }
+                Generator::Policy { name } => {
+                    commands::make::make_policy(&name)
+                        .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+                }
+                Generator::Event { name } => {
+                    commands::make::make_event(&name)
                         .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
                 }
             }

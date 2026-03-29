@@ -69,7 +69,7 @@ fn trim(s: &str) -> String {
 }
 
 fn length(s: &str) -> String {
-    s.len().to_string()
+    s.chars().count().to_string()
 }
 
 fn reverse(s: &str) -> String {
@@ -78,8 +78,8 @@ fn reverse(s: &str) -> String {
 
 fn truncate_default(s: &str) -> String {
     // Default truncate to 100 chars
-    if s.len() > 100 {
-        format!("{}...", &s[..97])
+    if s.chars().count() > 100 {
+        format!("{}...", s.chars().take(97).collect::<String>())
     } else {
         s.to_string()
     }
@@ -123,5 +123,24 @@ fn default_value(s: &str) -> String {
         "N/A".to_string()
     } else {
         s.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{truncate_default, Filters};
+
+    #[test]
+    fn truncate_default_handles_unicode_without_panicking() {
+        let input = "é".repeat(120);
+        let output = truncate_default(&input);
+        assert!(output.ends_with("..."));
+    }
+
+    #[test]
+    fn length_filter_counts_characters() {
+        let filters = Filters::new();
+        let out = filters.apply("length", "éé").expect("filter should exist");
+        assert_eq!(out, "2");
     }
 }

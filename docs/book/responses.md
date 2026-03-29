@@ -10,7 +10,7 @@ Oxidite provides several convenience methods on the `Response` type to create di
 
 The most common response type for APIs is JSON:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn api_handler(_req: Request) -> Result<Response> {
@@ -27,7 +27,7 @@ async fn api_handler(_req: Request) -> Result<Response> {
 
 For server-rendered content, you can create HTML responses:
 
-```rust
+```rust,ignore
 async fn home_page(_req: Request) -> Result<Response> {
     Ok(Response::html("<h1>Welcome to Oxidite!</h1>".to_string()))
 }
@@ -37,7 +37,7 @@ async fn home_page(_req: Request) -> Result<Response> {
 
 For plain text responses:
 
-```rust
+```rust,ignore
 async fn plain_text_handler(_req: Request) -> Result<Response> {
     Ok(Response::text("This is plain text"))
 }
@@ -47,7 +47,7 @@ async fn plain_text_handler(_req: Request) -> Result<Response> {
 
 Sometimes you just need to return an empty response with a specific status:
 
-```rust
+```rust,ignore
 async fn empty_ok(_req: Request) -> Result<Response> {
     Ok(Response::ok()) // 200 OK
 }
@@ -61,7 +61,7 @@ async fn no_content(_req: Request) -> Result<Response> {
 
 While the direct methods on `Response` are preferred, you can also use the response utilities:
 
-```rust
+```rust,ignore
 use oxidite::response;
 
 async fn alternative_json(_req: Request) -> Result<Response> {
@@ -77,7 +77,7 @@ async fn alternative_html(_req: Request) -> Result<Response> {
 
 For more control, you can create custom responses with specific headers and status codes:
 
-```rust
+```rust,ignore
 use hyper::header::{CONTENT_TYPE, LOCATION};
 use http::StatusCode;
 
@@ -100,7 +100,7 @@ async fn custom_response(_req: Request) -> Result<Response> {
 
 When using the template engine, you can render templates directly as responses:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::{TemplateEngine, Context};
 
@@ -121,7 +121,7 @@ async fn template_handler(_req: Request) -> Result<Response> {
 
 Oxidite provides various error response types that automatically map to appropriate HTTP status codes:
 
-```rust
+```rust,ignore
 async fn error_example(_req: Request) -> Result<Response> {
     // This will return a 404 Not Found
     if !resource_exists() {
@@ -172,7 +172,7 @@ async fn error_example(_req: Request) -> Result<Response> {
 
 You can also add custom headers to your responses. While the direct Response methods don't expose headers directly, you can create custom responses when needed:
 
-```rust
+```rust,ignore
 use hyper::header::{HeaderMap, HeaderValue, CACHE_CONTROL};
 
 async fn cached_response(_req: Request) -> Result<Response> {
@@ -194,7 +194,7 @@ async fn cached_response(_req: Request) -> Result<Response> {
 
 For large data or streaming content, you can create responses with streaming bodies, though this requires more advanced usage:
 
-```rust
+```rust,ignore
 use futures::stream::{self, StreamExt};
 use http_body_util::StreamBody;
 use hyper::body::Frame;

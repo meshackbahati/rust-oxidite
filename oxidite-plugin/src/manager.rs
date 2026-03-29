@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 use oxidite_core::{Result, Error};
 
 use crate::{Plugin, PluginInfo, PluginHook, HookResult, PluginLoader, PluginConfig};
@@ -10,7 +9,6 @@ use crate::{Plugin, PluginInfo, PluginHook, HookResult, PluginLoader, PluginConf
 pub struct PluginManager {
     plugins: HashMap<String, Arc<dyn Plugin>>,
     config: PluginConfig,
-    hooks: HashMap<String, Vec<Arc<dyn Plugin>>>,
 }
 
 impl PluginManager {
@@ -18,18 +16,24 @@ impl PluginManager {
         Self {
             plugins: HashMap::new(),
             config,
-            hooks: HashMap::new(),
         }
     }
     
     /// Load plugins from a directory
     pub async fn load_plugins_from_directory<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let loader = PluginLoader::new();
-        
-        // For now, we'll just simulate loading
-        // In a real implementation, this would dynamically load .so/.dll files
-        println!("Loading plugins from: {:?}", path.as_ref());
-        
+        let loaded_plugins = loader.load_from_directory(path).await?;
+        for plugin in loaded_plugins {
+            self.register_plugin(plugin)?;
+        }
+
+        if self.config.enabled_plugins.is_empty() {
+            return Ok(());
+        }
+
+        for plugin_id in self.config.enabled_plugins.clone() {
+            let _ = self.enable_plugin(&plugin_id).await;
+        }
         Ok(())
     }
     
@@ -126,4 +130,3 @@ impl PluginManager {
 pub fn create_manager(config: PluginConfig) -> PluginManager {
     PluginManager::new(config)
 }
-

@@ -6,11 +6,11 @@ pub struct QueryRoot;
 
 #[juniper::graphql_object(Context = Context)]
 impl QueryRoot {
-    async fn api_version() -> &str {
+    fn api_version() -> &str {
         "1.0"
     }
 
-    async fn health_check() -> bool {
+    fn health_check() -> bool {
         true
     }
 }
@@ -20,7 +20,7 @@ pub struct MutationRoot;
 
 #[juniper::graphql_object(Context = Context)]
 impl MutationRoot {
-    async fn add_todo(text: String) -> FieldResult<String> {
+    fn add_todo(text: String) -> FieldResult<String> {
         Ok(format!("Added todo: {}", text))
     }
 }

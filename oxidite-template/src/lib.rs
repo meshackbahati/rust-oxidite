@@ -11,7 +11,7 @@ pub mod static_files;
 pub use parser::{Parser, TemplateNode};
 pub use renderer::Renderer;
 pub use filters::Filters;
-pub use static_files::{StaticFiles, serve_static};
+pub use static_files::{StaticFiles, serve_static, static_handler};
 use oxidite_core::types::OxiditeResponse;
 
 /// Template context for variable interpolation
@@ -154,7 +154,7 @@ impl Default for TemplateEngine {
 /// Template
 #[derive(Debug, Clone)]
 pub struct Template {
-    source: String,
+    _source: String,
     parsed: Vec<TemplateNode>,
 }
 
@@ -164,7 +164,7 @@ impl Template {
         let parser = Parser::new(&source);
         let parsed = parser.parse()?;
 
-        Ok(Self { source, parsed })
+        Ok(Self { _source: source, parsed })
     }
 
     pub fn render(&self, context: &Context) -> Result<String> {

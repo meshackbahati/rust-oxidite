@@ -27,7 +27,7 @@ pub async fn server_header_middleware(
 pub fn add_server_header(mut response: OxiditeResponse) -> OxiditeResponse {
     response.headers_mut().insert(
         "server",
-        "Oxidite/0.1.0".parse().unwrap()
+        format!("Oxidite/{}", OXIDITE_VERSION).parse().unwrap()
     );
     
     response.headers_mut().insert(

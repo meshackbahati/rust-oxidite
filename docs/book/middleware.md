@@ -15,7 +15,7 @@ Middleware in Oxidite is a function that sits between the server and your route 
 
 A basic middleware function has the signature `async fn(Request, Next) -> Result<Response>`:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn basic_middleware(req: Request, next: Next) -> Result<Response> {
@@ -36,7 +36,7 @@ async fn basic_middleware(req: Request, next: Next) -> Result<Response> {
 
 You can add middleware to specific routes:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn handler(_req: Request) -> Result<Response> {
@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
 
 Add middleware to apply to all routes:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn global_middleware(req: Request, next: Next) -> Result<Response> {
@@ -98,7 +98,7 @@ async fn main() -> Result<()> {
 
 Middleware can modify both requests and responses:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn request_modifier(req: Request, next: Next) -> Result<Response> {
@@ -133,7 +133,7 @@ async fn response_modifier(req: Request, next: Next) -> Result<Response> {
 
 A common use case is authentication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn auth_middleware(req: Request, next: Next) -> Result<Response> {
@@ -175,7 +175,7 @@ async fn protected_route(_req: Request) -> Result<Response> {
 
 A comprehensive logging middleware:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use chrono::Utc;
 
@@ -217,7 +217,7 @@ async fn logging_middleware(req: Request, next: Next) -> Result<Response> {
 
 Cross-Origin Resource Sharing middleware:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn cors_middleware(req: Request, next: Next) -> Result<Response> {
@@ -254,7 +254,7 @@ fn set_cors_headers(headers: &mut http::HeaderMap) {
 
 Simple rate limiting middleware:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -328,7 +328,7 @@ async fn rate_limit_middleware(
 
 You can compose multiple middleware functions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn middleware_a(req: Request, next: Next) -> Result<Response> {
@@ -387,7 +387,7 @@ async fn main() -> Result<()> {
 
 Middleware can catch and handle errors:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn error_handling_middleware(req: Request, next: Next) -> Result<Response> {
@@ -415,7 +415,7 @@ async fn error_handling_middleware(req: Request, next: Next) -> Result<Response>
 
 Apply middleware conditionally:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn conditional_middleware(req: Request, next: Next) -> Result<Response> {
@@ -453,7 +453,7 @@ async fn main() -> Result<()> {
 
 Middleware can use application state:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -496,7 +496,7 @@ async fn main() -> Result<()> {
 
 Oxidite provides several built-in middleware options:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_middleware::{Logger, RateLimiter, Cors};
 

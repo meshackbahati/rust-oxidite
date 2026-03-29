@@ -82,7 +82,7 @@ oxidite make controller Users
 oxidite make middleware Auth
 
 # Generate a migration
-oxidite make migration create_users_table
+oxidite migrate create create_users_table
 ```
 
 ### Database Migrations
@@ -97,7 +97,7 @@ oxidite migrate create add_email_to_users
 oxidite migrate run
 
 # Rollback the last migration
-oxidite migrate rollback
+oxidite migrate revert
 
 # View migration status
 oxidite migrate status
@@ -140,12 +140,12 @@ oxidite watch                 # Watch files and run tests/builds
 oxidite make model <name>     # Generate a model
 oxidite make controller <name> # Generate a controller
 oxidite make middleware <name> # Generate middleware
-oxidite make migration <name> # Generate a migration
+oxidite migrate create <name> # Generate a migration
 
 # Database commands
 oxidite migrate create <name> # Create migration
 oxidite migrate run          # Run migrations
-oxidite migrate rollback     # Rollback migrations
+oxidite migrate revert       # Revert the last migration
 oxidite migrate status       # Show migration status
 
 # Utility commands

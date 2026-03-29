@@ -5,6 +5,8 @@ use std::sync::Arc;
 use std::future::Future;
 use std::pin::Pin;
 
+const SERVER_HEADER: &str = concat!("Oxidite/", env!("CARGO_PKG_VERSION"));
+
 /// Configuration for static file serving
 #[derive(Clone)]
 pub struct StaticFiles {
@@ -97,7 +99,7 @@ impl StaticFiles {
                     .status(StatusCode::OK)
                     .header(header::CONTENT_TYPE, content_type)
                     .header(header::CONTENT_LENGTH, content.len())
-                    .header(header::SERVER, "Oxidite/2.0.1")
+                    .header(header::SERVER, SERVER_HEADER)
                     .body(Full::new(Bytes::from(content)).map_err(|e| match e {}).boxed())
                     .map_err(|e| Error::InternalServerError(format!("Failed to build response: {}", e)))?;
                 
@@ -108,7 +110,7 @@ impl StaticFiles {
                 let res = Response::builder()
                     .status(StatusCode::NOT_FOUND)
                     .header(header::CONTENT_TYPE, "text/plain")
-                    .header(header::SERVER, "Oxidite/2.0.1")
+                    .header(header::SERVER, SERVER_HEADER)
                     .body(Full::new(Bytes::from("404 Not Found")).map_err(|e| match e {}).boxed())
                     .map_err(|e| Error::InternalServerError(format!("Failed to build response: {}", e)))?;
                 
@@ -125,8 +127,11 @@ impl StaticFiles {
 /// Create a static file handler for a specific directory.
 /// 
 /// # Example
-/// ```rust
-/// router.get("/assets/*", static_handler("public"));
+/// ```ignore
+/// use oxidite_template::static_handler;
+///
+/// // Register in your router:
+/// // router.get("/assets/*", static_handler("public"));
 /// ```
 pub fn static_handler(root: impl Into<String>) -> impl Fn(OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> + Send + Sync + 'static {
     let root = root.into();

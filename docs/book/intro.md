@@ -1,5 +1,9 @@
 # Introduction to Oxidite
 
+<p align="center">
+  <img src="assets/oxidite.svg" alt="Oxidite Logo" width="180">
+</p>
+
 Welcome to the comprehensive guide to Oxidite, a modern, high-performance web framework for Rust. This book will take you from installation to advanced features, covering everything you need to build production-ready applications.
 
 ## What is Oxidite?

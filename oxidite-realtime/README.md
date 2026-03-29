@@ -6,30 +6,27 @@ WebSocket and real-time features for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-realtime = "0.1"
+oxidite-realtime = "2.1.0"
 ```
 
 ## Usage
 
 ```rust
-use oxidite_realtime::*;
+use oxidite_realtime::{Event, Message, PubSub, WebSocketManager};
 
-// Create WebSocket manager
-let ws_manager = WebSocketManager::new();
+#[tokio::main]
+async fn main() {
+    // Pub/Sub
+    let pubsub = PubSub::new();
+    let mut subscriber = pubsub.subscribe("news").await;
+    let event = Event::message("news", serde_json::json!({"headline": "hello"}));
+    let _ = pubsub.publish("news", event).await;
+    let _ = subscriber.recv().await;
 
-// Handle WebSocket connections
-router.get("/ws", move |req| {
-    ws_manager.handle(req)
-});
-
-// Broadcast to all clients
-ws_manager.broadcast("room1", "Hello everyone!").await;
-
-// Send to specific client
-ws_manager.send_to(&client_id, "Direct message").await;
-
-// Join room
-ws_manager.join(&client_id, "room1").await;
+    // WebSocket manager
+    let ws = WebSocketManager::new();
+    let _ = ws.broadcast(Message::text("system broadcast")).await;
+}
 ```
 
 ## Features
@@ -38,6 +35,7 @@ ws_manager.join(&client_id, "room1").await;
 - Room management
 - Pub/sub messaging
 - Direct messaging
+- SSE event formatting helpers
 
 ## License
 

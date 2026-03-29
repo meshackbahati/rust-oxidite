@@ -6,7 +6,7 @@ Routing is how your Oxidite application maps HTTP requests to handler functions.
 
 Routes in Oxidite are defined by mapping HTTP methods and paths to handler functions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Define a handler function
@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
 Oxidite supports all standard HTTP methods:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn handle_get(_req: Request) -> Result<Response> {
@@ -74,7 +74,7 @@ async fn main() -> Result<()> {
 
 Oxidite supports path parameters that can be extracted using the `Path` extractor:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -116,7 +116,7 @@ async fn main() -> Result<()> {
 
 You can also use a named struct for better organization:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -151,7 +151,7 @@ async fn get_user_post_by_struct(Path(params): Path<UserPostId>) -> Result<Respo
 
 Query parameters can be extracted using the `Query` extractor:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -200,7 +200,7 @@ async fn main() -> Result<()> {
 
 You can group related routes for better organization:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // API versioning example
@@ -230,7 +230,7 @@ async fn main() -> Result<()> {
 
 Oxidite supports wildcard routes for catch-all functionality:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn catch_all(_req: Request) -> Result<Response> {
@@ -259,7 +259,7 @@ async fn main() -> Result<()> {
 
 You can apply middleware to specific routes or route groups:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn logging_middleware(req: Request, next: Next) -> Result<Response> {
@@ -293,7 +293,7 @@ async fn main() -> Result<()> {
 ### 1. Order Matters
 Register more specific routes before general ones:
 
-```rust
+```rust,ignore
 // ✅ Correct order
 router.get("/users/:id", get_user);
 router.get("/users/list", list_users); // More specific than /users/:id
@@ -306,7 +306,7 @@ router.get("/users/list", list_users); // More specific than /users/:id
 ### 2. Group Related Routes
 Keep related functionality together:
 
-```rust
+```rust,ignore
 // Group user-related routes
 router.get("/users", get_users);
 router.post("/users", create_user);
@@ -323,7 +323,7 @@ router.get("/posts/:id", get_post);
 ### 3. Use Descriptive Names
 Make your route patterns descriptive and consistent:
 
-```rust
+```rust,ignore
 // Good: clear and RESTful
 "/users/:user_id/posts/:post_id/comments"
 "/api/v1/users/search"

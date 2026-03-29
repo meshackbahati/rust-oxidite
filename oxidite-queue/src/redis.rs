@@ -153,4 +153,15 @@ impl QueueBackend for RedisBackend {
         
         Ok(())
     }
+
+    async fn clear(&self) -> Result<()> {
+        let mut conn = self.client.get_multiplexed_async_connection()
+            .await
+            .map_err(|e| QueueError::BackendError(e.to_string()))?;
+
+        let _: () = conn.del(&self.queue_key)
+            .await
+            .map_err(|e| QueueError::BackendError(e.to_string()))?;
+        Ok(())
+    }
 }

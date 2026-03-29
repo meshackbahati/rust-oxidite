@@ -1,0 +1,12 @@
+/* Keep docs crawlable and readable with sensible defaults. */
+:root {
+  --content-max-width: 980px;
+}
+
+.content main {
+  max-width: var(--content-max-width);
+}
+
+h1, h2, h3 {
+  scroll-margin-top: 72px;
+}

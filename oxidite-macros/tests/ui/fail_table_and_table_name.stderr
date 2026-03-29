@@ -1,0 +1,5 @@
+error: use either `table_name` or `table` in #[model(...)], not both
+ --> tests/ui/fail_table_and_table_name.rs:4:1
+  |
+4 | #[model(table = "users", table_name = "users")]
+  | ^

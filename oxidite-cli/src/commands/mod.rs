@@ -5,5 +5,6 @@ pub mod dev;
 pub mod seed;
 pub mod queue;
 pub mod doctor;
+pub mod sql_script;
 
 pub use new::create_project;

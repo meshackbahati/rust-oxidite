@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: /doc/book/book/sitemap.xml

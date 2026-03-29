@@ -2,13 +2,7 @@
 //!
 //! Provides dynamic loading and extension capabilities for Oxidite applications
 
-use std::collections::HashMap;
-use std::path::Path;
-use std::sync::Arc;
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use oxidite_core::{Router, Result, Error};
-use oxidite_config::Config;
 
 pub mod plugin;
 pub mod loader;

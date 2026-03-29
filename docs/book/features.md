@@ -10,7 +10,7 @@ This chapter consolidates all the features of the Oxidite framework into a singl
 - Zero-copy transfers for optimal performance
 - Concurrent request handling with async runtime
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn hello_world(_req: Request) -> Result<Response> {
@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
 - Automatic serialization/deserialization with Serde
 - Error handling with custom error types
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -63,7 +63,7 @@ async fn api_handler(
 - Template engine integration
 - Proper HTTP status codes
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn various_responses(_req: Request) -> Result<Response> {
@@ -94,7 +94,7 @@ async fn various_responses(_req: Request) -> Result<Response> {
 - Migrations and schema management
 - Validation and hooks
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -148,7 +148,7 @@ async fn user_operations() -> Result<()> {
 - Role-based access control (RBAC)
 - Two-factor authentication (2FA)
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // JWT authentication middleware
@@ -183,7 +183,7 @@ async fn verify_jwt(_token: &str) -> Result<()> {
 - Cross-cutting concerns
 - Built-in middleware for common tasks
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn logging_middleware(req: Request, next: Next) -> Result<Response> {
@@ -217,7 +217,7 @@ async fn cors_middleware(req: Request, next: Next) -> Result<Response> {
 - Context variable binding
 - Direct integration with Response system
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::{TemplateEngine, Context};
 
@@ -261,7 +261,7 @@ async fn template_example(_req: Request) -> Result<Response> {
 - Job scheduling and retries
 - Worker management
 
-```rust
+```rust,ignore
 use oxidite_queue::{Job, Queue, Worker};
 
 // Define a job
@@ -310,7 +310,7 @@ async fn queue_example() -> Result<()> {
 - Pub/Sub messaging
 - Live updates and notifications
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_realtime::websocket::{WebSocket, Message};
 
@@ -356,7 +356,7 @@ async fn sse_example(_req: Request) -> Result<Response> {
 - Multiple storage backends (local, S3, etc.)
 - Streaming uploads for large files
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn upload_handler(_req: Request) -> Result<Response> {
@@ -378,7 +378,7 @@ async fn upload_handler(_req: Request) -> Result<Response> {
 - Input validation
 - Secure headers
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn security_middleware(req: Request, next: Next) -> Result<Response> {
@@ -418,7 +418,7 @@ async fn is_request_allowed(_req: &Request) -> bool {
 - Type-safe configuration loading
 - Hot reloading support
 
-```rust
+```rust,ignore
 use oxidite_config::Config;
 
 #[derive(serde::Deserialize)]
@@ -473,7 +473,7 @@ oxidite dev
 - Test server for integration tests
 - Fixture management
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_testing::{TestServer, RequestBuilder};
 
@@ -502,7 +502,7 @@ mod tests {
 - Interactive API explorer
 - Validation against OpenAPI spec
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_openapi::OpenApi;
 
@@ -532,7 +532,7 @@ async fn setup_openapi_docs() -> Result<()> {
 - Third-party integrations
 - Custom middleware and handlers
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 trait Plugin {

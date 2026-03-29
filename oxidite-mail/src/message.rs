@@ -1,4 +1,5 @@
 use crate::{Attachment, Result, MailError};
+use lettre::Address;
 
 /// Email message builder (Nodemailer-style)
 #[derive(Debug, Clone)]
@@ -97,6 +98,30 @@ impl Message {
         if self.text.is_none() && self.html.is_none() {
             return Err(MailError::MissingField("text or html".to_string()));
         }
+
+        // Validate address formats early for clearer diagnostics.
+        if let Some(from) = &self.from {
+            from.parse::<Address>()
+                .map_err(|_| MailError::InvalidAddress(format!("from: {from}")))?;
+        }
+        for to in &self.to {
+            to.parse::<Address>()
+                .map_err(|_| MailError::InvalidAddress(format!("to: {to}")))?;
+        }
+        for cc in &self.cc {
+            cc.parse::<Address>()
+                .map_err(|_| MailError::InvalidAddress(format!("cc: {cc}")))?;
+        }
+        for bcc in &self.bcc {
+            bcc.parse::<Address>()
+                .map_err(|_| MailError::InvalidAddress(format!("bcc: {bcc}")))?;
+        }
+        if let Some(reply_to) = &self.reply_to {
+            reply_to
+                .parse::<Address>()
+                .map_err(|_| MailError::InvalidAddress(format!("reply_to: {reply_to}")))?;
+        }
+
         Ok(())
     }
 }
@@ -104,5 +129,20 @@ impl Message {
 impl Default for Message {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Message;
+
+    #[test]
+    fn validate_rejects_bad_recipient() {
+        let msg = Message::new()
+            .from("sender@example.com")
+            .to("bad-address")
+            .subject("hello")
+            .text("body");
+        assert!(msg.validate().is_err());
     }
 }

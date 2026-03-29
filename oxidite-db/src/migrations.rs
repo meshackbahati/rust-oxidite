@@ -4,6 +4,19 @@ use std::path::{Path, PathBuf};
 use std::fs;
 use chrono::Utc;
 use sqlx::Row;
+use thiserror::Error;
+
+pub type MigrationResult<T> = std::result::Result<T, MigrationError>;
+
+#[derive(Debug, Error)]
+pub enum MigrationError {
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Database(#[from] sqlx::Error),
+    #[error("invalid migration filename `{filename}`")]
+    InvalidFilename { filename: String },
+}
 
 /// Migration file
 #[derive(Debug)]
@@ -28,17 +41,28 @@ impl Migration {
     }
     
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, std::io::Error> {
+        Self::from_file_checked(path).map_err(|err| match err {
+            MigrationError::Io(io) => io,
+            other => std::io::Error::new(std::io::ErrorKind::InvalidData, other.to_string()),
+        })
+    }
+
+    pub fn from_file_checked(path: impl AsRef<Path>) -> MigrationResult<Self> {
         let path = path.as_ref();
         let content = fs::read_to_string(path)?;
         
         let filename = path.file_stem()
             .and_then(|s| s.to_str())
-            .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid filename"))?;
+            .ok_or_else(|| MigrationError::InvalidFilename {
+                filename: path.display().to_string(),
+            })?;
         
         // Parse filename: 20240101120000_create_users
         let parts: Vec<&str> = filename.splitn(2, '_').collect();
         if parts.len() != 2 {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid migration filename"));
+            return Err(MigrationError::InvalidFilename {
+                filename: filename.to_string(),
+            });
         }
         
         let version = filename.to_string();
@@ -95,6 +119,13 @@ impl MigrationManager {
     }
     
     pub fn list_migrations(&self) -> Result<Vec<Migration>, std::io::Error> {
+        self.list_migrations_checked().map_err(|err| match err {
+            MigrationError::Io(io) => io,
+            other => std::io::Error::new(std::io::ErrorKind::InvalidData, other.to_string()),
+        })
+    }
+
+    pub fn list_migrations_checked(&self) -> MigrationResult<Vec<Migration>> {
         let mut migrations = Vec::new();
         
         if !self.migrations_dir.exists() {
@@ -106,9 +137,8 @@ impl MigrationManager {
             let path = entry.path();
             
             if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("sql") {
-                if let Ok(migration) = Migration::from_file(&path) {
-                    migrations.push(migration);
-                }
+                let migration = Migration::from_file_checked(&path)?;
+                migrations.push(migration);
             }
         }
         
@@ -119,19 +149,48 @@ impl MigrationManager {
     }
     
     pub fn create_migration(&self, name: &str) -> Result<PathBuf, std::io::Error> {
+        self.create_migration_checked(name).map_err(|err| match err {
+            MigrationError::Io(io) => io,
+            other => std::io::Error::new(std::io::ErrorKind::InvalidData, other.to_string()),
+        })
+    }
+
+    pub fn create_migration_checked(&self, name: &str) -> MigrationResult<PathBuf> {
         let migration = Migration::new(name);
-        migration.save(&self.migrations_dir)
+        Ok(migration.save(&self.migrations_dir)?)
     }
     
     /// Ensure migrations table exists
     pub async fn ensure_migrations_table(&self, db: &impl crate::Database) -> crate::Result<()> {
-        let sql = r#"
-            CREATE TABLE IF NOT EXISTS _migrations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                version TEXT NOT NULL UNIQUE,
-                applied_at INTEGER NOT NULL
-            )
-        "#;
+        let sql = match db.db_type() {
+            crate::DatabaseType::Sqlite => {
+                r#"
+                CREATE TABLE IF NOT EXISTS _migrations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    version TEXT NOT NULL UNIQUE,
+                    applied_at INTEGER NOT NULL
+                )
+                "#
+            }
+            crate::DatabaseType::Postgres => {
+                r#"
+                CREATE TABLE IF NOT EXISTS _migrations (
+                    id BIGSERIAL PRIMARY KEY,
+                    version TEXT NOT NULL UNIQUE,
+                    applied_at BIGINT NOT NULL
+                )
+                "#
+            }
+            crate::DatabaseType::MySql => {
+                r#"
+                CREATE TABLE IF NOT EXISTS _migrations (
+                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    version VARCHAR(255) NOT NULL UNIQUE,
+                    applied_at BIGINT NOT NULL
+                )
+                "#
+            }
+        };
         db.execute(sql).await?;
         Ok(())
     }
@@ -157,24 +216,35 @@ impl MigrationManager {
         self.ensure_migrations_table(db).await?;
         
         let timestamp = chrono::Utc::now().timestamp();
-        let sql = format!(
-            "INSERT INTO _migrations (version, applied_at) VALUES ('{}', {})",
-            version, timestamp
-        );
-        db.execute(&sql).await?;
+        let query = sqlx::query(
+            "INSERT INTO _migrations (version, applied_at) VALUES (?, ?)"
+        )
+            .bind(version)
+            .bind(timestamp);
+        db.execute_query(query).await?;
         Ok(())
     }
     
     /// Remove migration record (for rollback)
     pub async fn mark_migration_reverted(&self, db: &impl crate::Database, version: &str) -> crate::Result<()> {
-        let sql = format!("DELETE FROM _migrations WHERE version = '{}'", version);
-        db.execute(&sql).await?;
+        let query = sqlx::query(
+            "DELETE FROM _migrations WHERE version = ?"
+        )
+            .bind(version);
+        db.execute_query(query).await?;
         Ok(())
     }
     
     /// Get pending migrations
     pub async fn get_pending_migrations(&self, db: &impl crate::Database) -> Result<Vec<Migration>, Box<dyn std::error::Error>> {
-        let all_migrations = self.list_migrations()?;
+        Ok(self.get_pending_migrations_checked(db).await?)
+    }
+
+    pub async fn get_pending_migrations_checked(
+        &self,
+        db: &impl crate::Database,
+    ) -> MigrationResult<Vec<Migration>> {
+        let all_migrations = self.list_migrations_checked()?;
         let applied = self.get_applied_migrations(db).await?;
         
         let pending: Vec<Migration> = all_migrations
@@ -183,5 +253,89 @@ impl MigrationManager {
             .collect();
         
         Ok(pending)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Migration, MigrationManager};
+    use crate::{Database, DatabaseType, DbTransaction, Result, sqlx};
+    use async_trait::async_trait;
+    use std::sync::Arc;
+    use sqlx::any::AnyRow;
+    use tokio::sync::Mutex;
+
+    #[derive(Debug, Clone)]
+    struct MockDb {
+        db_type: DatabaseType,
+        executed_sql: Arc<Mutex<Vec<String>>>,
+    }
+
+    impl MockDb {
+        fn new(db_type: DatabaseType) -> Self {
+            Self {
+                db_type,
+                executed_sql: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+
+        async fn last_sql(&self) -> Option<String> {
+            self.executed_sql.lock().await.last().cloned()
+        }
+    }
+
+    #[async_trait]
+    impl Database for MockDb {
+        fn db_type(&self) -> DatabaseType { self.db_type }
+        async fn execute(&self, query: &str) -> Result<u64> {
+            self.executed_sql.lock().await.push(query.to_string());
+            Ok(0)
+        }
+        async fn query(&self, _query: &str) -> Result<Vec<AnyRow>> { Ok(vec![]) }
+        async fn query_one(&self, _query: &str) -> Result<Option<AnyRow>> { Ok(None) }
+        async fn ping(&self) -> Result<()> { Ok(()) }
+        async fn begin_transaction(&self) -> Result<DbTransaction> { unimplemented!() }
+        async fn execute_query<'q>(&self, _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64> { Ok(0) }
+        async fn fetch_all<'q>(&self, _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> { Ok(vec![]) }
+        async fn fetch_one<'q>(&self, _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> { Ok(None) }
+    }
+
+    #[tokio::test]
+    async fn ensure_migrations_table_uses_backend_specific_sql() {
+        let manager = MigrationManager::new("migrations");
+
+        let sqlite = MockDb::new(DatabaseType::Sqlite);
+        manager.ensure_migrations_table(&sqlite).await.unwrap();
+        assert!(sqlite
+            .last_sql()
+            .await
+            .unwrap()
+            .contains("AUTOINCREMENT"));
+
+        let postgres = MockDb::new(DatabaseType::Postgres);
+        manager.ensure_migrations_table(&postgres).await.unwrap();
+        assert!(postgres
+            .last_sql()
+            .await
+            .unwrap()
+            .contains("BIGSERIAL"));
+
+        let mysql = MockDb::new(DatabaseType::MySql);
+        manager.ensure_migrations_table(&mysql).await.unwrap();
+        assert!(mysql
+            .last_sql()
+            .await
+            .unwrap()
+            .contains("AUTO_INCREMENT"));
+    }
+
+    #[test]
+    fn migration_from_file_checked_rejects_bad_filename() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("badname.sql");
+        std::fs::write(&path, "-- migrate:up\nSELECT 1;\n-- migrate:down\nSELECT 1;").unwrap();
+
+        let err = Migration::from_file_checked(&path).unwrap_err().to_string();
+        assert!(err.contains("invalid migration filename"));
     }
 }

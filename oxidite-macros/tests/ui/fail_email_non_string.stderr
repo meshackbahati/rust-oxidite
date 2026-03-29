@@ -1,0 +1,5 @@
+error: #[validate(email)] can only be used on String fields
+ --> tests/ui/fail_email_non_string.rs:5:12
+  |
+5 |     email: i64,
+  |            ^^^

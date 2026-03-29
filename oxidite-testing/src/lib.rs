@@ -19,7 +19,7 @@ pub mod request;
 pub mod response;
 pub mod server;
 
-pub use request::TestRequest;
+pub use request::{TestRequest, TestRequestError};
 pub use response::TestResponse;
 pub use server::{TestServer, test_router};
 

@@ -44,7 +44,8 @@ where
         let mut inner = self.inner.clone();
 
         Box::pin(async move {
-            // TODO: Attach request_id to request extensions
+            let mut req = req;
+            req.extensions_mut().insert(request_id.clone());
             let mut response = inner.call(req).await?;
 
             // Add request ID to response headers

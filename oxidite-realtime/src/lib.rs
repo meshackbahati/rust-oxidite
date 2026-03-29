@@ -23,6 +23,9 @@ pub enum RealtimeError {
     
     #[error("Subscriber disconnected")]
     Disconnected,
+
+    #[error("Subscriber lagged behind and missed {0} message(s)")]
+    Lagged(u64),
     
     #[error("Failed to send event: {0}")]
     SendError(String),

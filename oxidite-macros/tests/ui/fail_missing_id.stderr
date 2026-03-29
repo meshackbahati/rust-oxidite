@@ -1,0 +1,5 @@
+error: Model derive requires an `id` field
+ --> tests/ui/fail_missing_id.rs:2:1
+  |
+2 | struct Bad {
+  | ^^^^^^

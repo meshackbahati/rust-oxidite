@@ -21,7 +21,7 @@ echo "Building HTML documentation..."
 mdbook build
 
 echo "Documentation built successfully!"
-echo "You can find the HTML output in the 'book-output' directory."
+echo "You can find the HTML output in '/home/bealthguy/Public/rust-oxidite/doc/book/book'."
 echo ""
 echo "To serve the documentation locally, run:"
 echo "  cd /home/bealthguy/Public/rust-oxidite/docs/book"

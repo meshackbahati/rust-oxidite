@@ -1,35 +1,57 @@
 # oxidite-mail
 
-Email sending for Oxidite with SMTP support.
+SMTP email sending for Oxidite.
 
 ## Installation
 
 ```toml
 [dependencies]
-oxidite-mail = "0.1"
+oxidite-mail = "2.1.0"
 ```
 
-## Usage
+## Basic Usage
 
 ```rust
-use oxidite_mail::*;
+use oxidite_mail::{Mailer, Message, SmtpConfig, SmtpTransport};
 
-// Create transport
-let transport = SmtpTransport::new("smtp.gmail.com", 587).unwrap()
-    .credentials("user", "password")
-    .build();
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = SmtpConfig::new("smtp.example.com", 587)
+        .credentials("smtp-user", "smtp-pass")
+        .use_tls(true);
 
-// Create mailer
-let mailer = Mailer::new(transport);
+    let transport = SmtpTransport::from_config(config)?;
+    let mailer = Mailer::new(transport);
 
-mailer.send(
-    Email::new()
+    let message = Message::new()
+        .from("sender@example.com")
         .to("recipient@example.com")
         .subject("Hello")
-        .body("Email content")
-).await?;
+        .text("Email content");
+
+    mailer.send(message).await?;
+    Ok(())
+}
 ```
 
-## License
+## Attachments
 
-MIT
+```rust
+use oxidite_mail::{Attachment, Message};
+
+let message = Message::new()
+    .from("sender@example.com")
+    .to("recipient@example.com")
+    .subject("With attachment")
+    .html("<img src=\"cid:logo\" />")
+    .attach(
+        Attachment::from_file("./logo.png")?
+            .inline_with_cid("logo")
+    );
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+## Notes
+
+- `Message` validates required fields and email addresses before send.
+- Use `mailer.verify().await` to test SMTP connectivity.

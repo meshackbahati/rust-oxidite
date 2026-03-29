@@ -1,7 +1,8 @@
-use std::path::Path;
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use crate::{Plugin, PluginInfo, Result};
+use crate::Plugin;
+use oxidite_core::Result;
 
 /// Plugin loader responsible for loading plugins from disk
 pub struct PluginLoader;
@@ -13,7 +14,7 @@ impl PluginLoader {
     
     /// Load a plugin from a shared library file
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn load_from_file<P: AsRef<Path>>(&self, path: P) -> Result<Arc<dyn Plugin>> {
+    pub fn load_from_file<P: AsRef<Path>>(&self, _path: P) -> Result<Arc<dyn Plugin>> {
         // For now, just return an error since we don't have actual plugin loading implemented
         // This avoids the libloading error
         Err(oxidite_core::Error::InternalServerError(
@@ -22,21 +23,44 @@ impl PluginLoader {
     }
     
     /// Scan a directory for plugin files
-    pub fn scan_directory<P: AsRef<Path>>(&self, path: P) -> Result<Vec<std::path::PathBuf>> {
+    pub fn scan_directory<P: AsRef<Path>>(&self, path: P) -> Result<Vec<PathBuf>> {
+        let dir = path.as_ref();
+        if !dir.exists() {
+            return Ok(Vec::new());
+        }
+
         let mut plugins = Vec::new();
-        
-        // For now, just return an empty vector since we don't have actual plugin files
-        // This avoids the fs::read_dir error conversion issue
+        for entry in fs::read_dir(dir)
+            .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?
+        {
+            let entry = entry
+                .map_err(|e| oxidite_core::Error::InternalServerError(e.to_string()))?;
+            let path = entry.path();
+
+            let is_plugin_file = path.extension()
+                .and_then(|e| e.to_str())
+                .map(|ext| matches!(ext, "so" | "dylib" | "dll"))
+                .unwrap_or(false);
+            if is_plugin_file {
+                plugins.push(path);
+            }
+        }
+
         Ok(plugins)
     }
     
     /// Load all plugins from a directory
     pub async fn load_from_directory<P: AsRef<Path>>(&self, path: P) -> Result<Vec<Arc<dyn Plugin>>> {
-        let mut plugins = Vec::new();
-        
-        // For now, just return an empty vector since we don't have actual plugin files
         println!("Scanning for plugins in: {:?}", path.as_ref());
-        
+        let mut plugins = Vec::new();
+        for plugin_path in self.scan_directory(path)? {
+            match self.load_from_file(&plugin_path) {
+                Ok(plugin) => plugins.push(plugin),
+                Err(e) => {
+                    eprintln!("Failed to load plugin {:?}: {}", plugin_path, e);
+                }
+            }
+        }
         Ok(plugins)
     }
 }
@@ -44,6 +68,7 @@ impl PluginLoader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::PluginInfo;
     
     // Example plugin implementation for testing
     struct TestPlugin;

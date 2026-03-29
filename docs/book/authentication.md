@@ -16,7 +16,7 @@ Oxidite provides comprehensive authentication support including:
 
 JSON Web Tokens provide stateless authentication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 use chrono::{Duration, Utc};
@@ -100,7 +100,7 @@ async fn verify_credentials(_username: &str, _password: &str) -> bool {
 
 Create middleware to protect routes with JWT authentication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn jwt_auth_middleware(req: Request, next: Next) -> Result<Response> {
@@ -151,7 +151,7 @@ async fn protected_route(user: AuthenticatedUser) -> Result<Response> {
 
 Session-based authentication stores user state on the server:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -286,7 +286,7 @@ async fn session_login(
 
 API key authentication for service-to-service communication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -401,7 +401,7 @@ async fn api_protected_route(user: ApiKeyUser) -> Result<Response> {
 
 Secure password handling with hashing:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 pub struct PasswordHasher;
@@ -499,7 +499,7 @@ async fn save_user_to_db(_user: UserRegistration) -> Result<()> {
 
 OAuth2 support for third-party authentication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -607,7 +607,7 @@ async fn validate_state(_state: &str) -> bool {
 
 Implement role-based access control:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashSet;
 
@@ -731,7 +731,7 @@ async fn admin_only_route(user: AuthenticatedUser) -> Result<Response> {
 
 Implement two-factor authentication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use qrcode::QrCode;
 use base32;
@@ -863,7 +863,7 @@ async fn twofa_middleware(
 ## Security Best Practices
 
 ### 1. Secure Token Storage
-```rust
+```rust,ignore
 // Store tokens securely, never in plain text
 const TOKEN_LENGTH: usize = 32; // 256 bits
 
@@ -876,7 +876,7 @@ fn generate_secure_token() -> String {
 ```
 
 ### 2. Rate Limiting for Auth Attempts
-```rust
+```rust,ignore
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -923,7 +923,7 @@ impl RateLimiter {
 ```
 
 ### 3. Session Regeneration
-```rust
+```rust,ignore
 // Regenerate session ID after login to prevent session fixation
 async fn regenerate_session(
     old_session_id: &str,

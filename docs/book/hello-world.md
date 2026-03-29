@@ -6,7 +6,7 @@ Let's start with the classic "Hello, World!" example to get familiar with Oxidit
 
 Here's the most basic Oxidite application:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn hello(_req: Request) -> Result<Response> {
@@ -41,7 +41,7 @@ Let's break this down:
 Let's explore different ways to respond:
 
 ### JSON Response
-```rust
+```rust,ignore
 async fn api_hello(_req: Request) -> Result<Response> {
     Ok(Response::json(serde_json::json!({
         "message": "Hello, World!",
@@ -51,7 +51,7 @@ async fn api_hello(_req: Request) -> Result<Response> {
 ```
 
 ### HTML Response
-```rust
+```rust,ignore
 async fn html_hello(_req: Request) -> Result<Response> {
     Ok(Response::html(r#"
         <!DOCTYPE html>
@@ -67,7 +67,7 @@ async fn html_hello(_req: Request) -> Result<Response> {
 ```
 
 ### Different Routes
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn home(_req: Request) -> Result<Response> {
@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
 
 Oxidite supports path parameters that you can extract:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn greet(Path(name): Path<String>) -> Result<Response> {
@@ -135,7 +135,7 @@ async fn main() -> Result<()> {
 
 You can also extract query parameters:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -177,7 +177,7 @@ async fn main() -> Result<()> {
 
 For POST requests, you can extract JSON data:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -214,7 +214,7 @@ async fn main() -> Result<()> {
 
 Let's add some error handling:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn maybe_error(query: Query<serde_json::Value>) -> Result<Response> {
@@ -248,7 +248,7 @@ async fn main() -> Result<()> {
 
 Here's a more complete example combining multiple features:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -327,7 +327,7 @@ To run any of these examples:
 2. Add Oxidite to your `Cargo.toml`:
    ```toml
    [dependencies]
-   oxidite = { version = "2.0", features = ["full"] }
+   oxidite = { version = "2.1", features = ["full"] }
    tokio = { version = "1.0", features = ["full"] }
    serde = { version = "1.0", features = ["derive"] }
    serde_json = "1.0"

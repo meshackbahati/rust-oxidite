@@ -45,7 +45,7 @@ oxidite new my_app --template fullstack
 
 The CLI creates a complete project structure:
 
-```
+```text
 my_app/
 ├── Cargo.toml
 ├── src/
@@ -132,7 +132,7 @@ oxidite generate model Product \
 
 The generated model looks like:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -173,7 +173,7 @@ oxidite generate route --template api-crud products
 
 Generated route file:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use crate::models::User;
 
@@ -252,7 +252,7 @@ oxidite generate migration --model OldTable --delete-table
 
 Example generated migration:
 
-```rust
+```rust,ignore
 use oxidite_db::Migration;
 
 pub struct AddPhoneToUsers;
@@ -470,7 +470,7 @@ oxidite generate command import --args "source:string destination:string"
 
 Custom command template:
 
-```rust
+```rust,ignore
 use clap::Parser;
 use oxidite_cli::Command;
 
@@ -506,7 +506,7 @@ impl Command for BackupCommand {
 
 Register the command in your CLI:
 
-```rust
+```rust,ignore
 use oxidite_cli::{Cli, Command};
 
 pub struct MyAppCli {
@@ -595,7 +595,7 @@ oxidite run backup -- --output /tmp/backup.sql
 
 Task definition in `tasks.rs`:
 
-```rust
+```rust,ignore
 use oxidite_cli::Task;
 
 pub struct SetupTask;

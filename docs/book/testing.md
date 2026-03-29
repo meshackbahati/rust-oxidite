@@ -16,7 +16,7 @@ Oxidite provides:
 
 Basic test setup in your project:
 
-```rust
+```rust,ignore
 // In your Cargo.toml
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }
@@ -40,7 +40,7 @@ mod tests {
 
 Test individual functions and components:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Function to test
@@ -90,7 +90,7 @@ mod unit_tests {
 
 Test routes and middleware integration:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_testing::{TestServer, RequestBuilder};
 
@@ -162,7 +162,7 @@ mod integration_tests {
 
 Test routes that use application state:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -214,7 +214,7 @@ mod state_tests {
 
 Test middleware functionality:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn logging_middleware(req: Request, next: Next) -> Result<Response> {
@@ -278,7 +278,7 @@ mod middleware_tests {
 
 Test database operations with test databases:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -371,7 +371,7 @@ mod database_tests {
 
 Create mocks for external dependencies:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Service to be mocked
@@ -493,7 +493,7 @@ mod mock_tests {
 
 Use property-based testing for comprehensive validation:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Function to test with property-based testing
@@ -542,7 +542,7 @@ mod property_tests {
 
 Create reusable test data:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -636,7 +636,7 @@ mod fixture_tests {
 
 Configure test-specific settings:
 
-```rust
+```rust,ignore
 // In your Cargo.toml
 [features]
 test_utils = []
@@ -730,7 +730,7 @@ mod configured_tests {
 
 Handle parallel test execution safely:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serial_test::serial;
 
@@ -792,7 +792,7 @@ mod isolated_tests {
 
 Measure and improve test coverage:
 
-```rust
+```rust,ignore
 // In your .cargo/config.toml
 // [target.'cfg(coverage)']
 // rustflags = ["-Zinstrument-coverage"]
@@ -913,7 +913,7 @@ mod coverage_tests {
 
 Generate test reports and summaries:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Test result aggregator

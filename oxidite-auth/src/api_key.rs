@@ -43,22 +43,25 @@ impl ApiKey {
         let key_hash = Self::hash_key(&key);
         let now = chrono::Utc::now().timestamp();
         
-        let query = format!(
-            "INSERT INTO api_keys (user_id, key_hash, name, expires_at, created_at, updated_at) 
-             VALUES ({}, '{}', '{}', {}, {}, {})",
-            user_id, key_hash, name,
-            expires_at.map(|e| e.to_string()).unwrap_or("NULL".to_string()),
-            now, now
-        );
-        
-        db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "INSERT INTO api_keys (user_id, key_hash, name, expires_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?)"
+        )
+            .bind(user_id)
+            .bind(&key_hash)
+            .bind(name)
+            .bind(expires_at)
+            .bind(now)
+            .bind(now);
+
+        db.execute_query(query).await?;
         
         // Retrieve the created key
-        let get_query = format!(
-            "SELECT * FROM api_keys WHERE key_hash = '{}'",
-            key_hash
-        );
-        let row = db.query_one(&get_query).await?
+        let get_query = oxidite_db::sqlx::query(
+            "SELECT * FROM api_keys WHERE key_hash = ?"
+        )
+            .bind(&key_hash);
+        let row = db.fetch_one(get_query).await?
             .ok_or_else(|| sqlx::Error::RowNotFound)?;
         
         let api_key = ApiKey::from_row(&row)?;
@@ -73,25 +76,27 @@ impl ApiKey {
         let key_hash = Self::hash_key(key);
         let now = chrono::Utc::now().timestamp();
         
-        let query = format!(
-            "SELECT * FROM api_keys 
-             WHERE key_hash = '{}' 
-             AND (expires_at IS NULL OR expires_at > {})",
-            key_hash, now
-        );
-        
-        let row = db.query_one(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "SELECT * FROM api_keys
+             WHERE key_hash = ?
+             AND (expires_at IS NULL OR expires_at > ?)"
+        )
+            .bind(&key_hash)
+            .bind(now);
+
+        let row = db.fetch_one(query).await?;
         
         match row {
             Some(row) => {
                 let mut api_key = ApiKey::from_row(&row)?;
                 
                 // Update last_used_at
-                let update_query = format!(
-                    "UPDATE api_keys SET last_used_at = {} WHERE id = {}",
-                    now, api_key.id
-                );
-                let _ = db.execute(&update_query).await;
+                let update_query = oxidite_db::sqlx::query(
+                    "UPDATE api_keys SET last_used_at = ? WHERE id = ?"
+                )
+                    .bind(now)
+                    .bind(api_key.id);
+                let _ = db.execute_query(update_query).await;
                 api_key.last_used_at = Some(now);
                 
                 Ok(Some(api_key))
@@ -106,11 +111,12 @@ impl ApiKey {
         key_id: i64,
         user_id: i64,
     ) -> oxidite_db::Result<bool> {
-        let query = format!(
-            "DELETE FROM api_keys WHERE id = {} AND user_id = {}",
-            key_id, user_id
-        );
-        let rows = db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "DELETE FROM api_keys WHERE id = ? AND user_id = ?"
+        )
+            .bind(key_id)
+            .bind(user_id);
+        let rows = db.execute_query(query).await?;
         Ok(rows > 0)
     }
     
@@ -119,12 +125,12 @@ impl ApiKey {
         db: &D,
         user_id: i64,
     ) -> oxidite_db::Result<Vec<ApiKey>> {
-        let query = format!(
-            "SELECT * FROM api_keys WHERE user_id = {} ORDER BY created_at DESC",
-            user_id
-        );
-        
-        let rows = db.query(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "SELECT * FROM api_keys WHERE user_id = ? ORDER BY created_at DESC"
+        )
+            .bind(user_id);
+
+        let rows = db.fetch_all(query).await?;
         let mut keys = Vec::new();
         
         for row in rows {

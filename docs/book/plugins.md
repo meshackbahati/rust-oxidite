@@ -15,7 +15,7 @@ Oxidite plugins allow you to:
 
 The plugin system is built around traits and hooks:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -101,7 +101,7 @@ impl PluginManager {
 
 Create your first plugin:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -175,7 +175,7 @@ impl Server {
 
 Create plugins that act as middleware:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -322,7 +322,7 @@ impl Plugin for RateLimitPlugin {
 
 Create plugins that integrate with databases:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -408,7 +408,7 @@ impl Plugin for MigrationPlugin {
 
 Create authentication plugins:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -524,7 +524,7 @@ struct ApiKeyUser {
 
 Create plugins that integrate with template engines:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -580,7 +580,7 @@ impl Plugin for TemplatePlugin {
 
 Configure plugins with options:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -670,7 +670,7 @@ plugins:
 
 Create a registry for managing plugins:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -775,7 +775,7 @@ impl PluginFactory {
 
 Handle plugin dependencies and ordering:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -879,7 +879,7 @@ pub fn create_db_dependent_plugin() -> DependencyAwarePlugin {
 
 Concept for a plugin marketplace:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -962,7 +962,7 @@ impl Plugin for DummyPlugin {
 
 Test your plugins properly:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_testing::TestServer;
 
@@ -1089,7 +1089,7 @@ mod plugin_tests {
 
 Follow these best practices when creating plugins:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 /// Well-designed plugin example

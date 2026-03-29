@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>/doc/book/book/index.html</loc></url>
+  <url><loc>/doc/book/book/installation.html</loc></url>
+  <url><loc>/doc/book/book/hello-world.html</loc></url>
+  <url><loc>/doc/book/book/routing.html</loc></url>
+  <url><loc>/doc/book/book/database.html</loc></url>
+  <url><loc>/doc/book/book/authentication.html</loc></url>
+  <url><loc>/doc/book/book/cli.html</loc></url>
+  <url><loc>/doc/book/book/production.html</loc></url>
+  <url><loc>/doc/book/book/performance.html</loc></url>
+</urlset>

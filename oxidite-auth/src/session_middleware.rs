@@ -81,9 +81,14 @@ where
                 None
             };
 
-            // TODO: Attach session to request context
-            // For now, we just validate that the session exists
-            // In a full implementation, we'd use request extensions
+            let mut req = req;
+            if let Some(sess) = session.clone() {
+                req.extensions_mut().insert(sess.clone());
+                req.extensions_mut().insert(sess.user_id.clone());
+                if let Ok(user_id) = sess.user_id.parse::<i64>() {
+                    req.extensions_mut().insert(user_id);
+                }
+            }
 
             let mut response = inner.call(req).await?;
 

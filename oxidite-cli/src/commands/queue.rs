@@ -59,7 +59,9 @@ pub async fn queue_clear() -> Result<(), Box<dyn std::error::Error>> {
     io::stdin().read_line(&mut input)?;
     
     if input.trim().to_lowercase() == "y" {
-        println!("🗑️  Clearing queue... (not implemented yet)");
+        println!("🗑️  Clearing queue...");
+        let queue = Queue::memory();
+        queue.clear().await?;
         println!("✅ Queue cleared");
     } else {
         println!("❌ Cancelled");

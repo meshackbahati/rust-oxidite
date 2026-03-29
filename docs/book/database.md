@@ -16,7 +16,7 @@ The Oxidite ORM provides:
 
 Define your database models using the `Model` derive macro:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -47,7 +47,7 @@ fn now() -> String {
 
 ### Creating Records
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn create_user() -> Result<()> {
@@ -84,7 +84,7 @@ async fn create_user_alternative() -> Result<()> {
 
 ### Reading Records
 
-```rust
+```rust,ignore
 async fn find_users() -> Result<()> {
     // Find all users
     let all_users = User::find_all().await?;
@@ -107,7 +107,7 @@ async fn find_users() -> Result<()> {
 
 ### Updating Records
 
-```rust
+```rust,ignore
 async fn update_user() -> Result<()> {
     if let Some(mut user) = User::find_by_id(1).await? {
         user.name = "John Updated".to_string();
@@ -134,7 +134,7 @@ async fn bulk_update() -> Result<()> {
 
 ### Deleting Records
 
-```rust
+```rust,ignore
 async fn delete_user() -> Result<()> {
     if let Some(user) = User::find_by_id(1).await? {
         user.delete().await?;
@@ -156,7 +156,7 @@ async fn bulk_delete() -> Result<()> {
 
 Define relationships between models:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -223,7 +223,7 @@ async fn work_with_relationships() -> Result<()> {
 
 Use the query builder for complex queries:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn complex_queries() -> Result<()> {
@@ -260,7 +260,7 @@ async fn execute_raw_query<T>(_sql: &str) -> Result<Vec<T>> {
 
 Database migrations allow you to manage schema changes:
 
-```rust
+```rust,ignore
 use oxidite_db::Migration;
 
 pub struct CreateUsersTable;
@@ -325,7 +325,7 @@ impl Migration for CreatePostsTable {
 
 Add validation to your models:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -375,7 +375,7 @@ impl ValidatedUser {
 
 Perform operations within transactions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn transaction_example() -> Result<()> {
@@ -444,7 +444,7 @@ impl Transaction {
 
 Models can support soft deletes:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -492,7 +492,7 @@ async fn soft_delete_example() -> Result<()> {
 
 Configure database connections:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn configure_database() -> Result<()> {
@@ -525,7 +525,7 @@ async fn init_database(_config: DatabaseConfig) -> Result<()> {
 
 Handle database errors appropriately:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn error_handling_example() -> Result<()> {

@@ -1,9 +1,9 @@
 [package]
 name = "oxidite-macros"
-version = "2.0.1"
+version = "2.1.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "Procedural macros for the Oxidite v2 web framework (Model derive, etc.)"
+description = "Procedural macros for the Oxidite web framework (Model derive, etc.)"
 license = "MIT"
 repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["macros", "derive", "web", "framework", "orm"]
@@ -16,3 +16,8 @@ proc-macro = true
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
+
+[dev-dependencies]
+trybuild = "1.0"
+oxidite-db = { path = "../oxidite-db" }
+sqlx = { version = "0.8.2", features = ["macros", "any"] }

@@ -20,7 +20,7 @@ Add the database feature to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite = { version = "1.0", features = ["database"] }
+oxidite = { version = "2.1", features = ["database"] }
 ```
 
 ## Database Connection

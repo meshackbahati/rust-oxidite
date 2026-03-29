@@ -82,7 +82,7 @@ export AWS_SECRET_ACCESS_KEY="your-secret-key"
 
 Load configuration dynamically:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use config::{Config, ConfigError, Environment, File};
 
@@ -224,7 +224,7 @@ async fn create_routes(_config: &AppConfig) -> Result<Router> {
 
 Implement security best practices:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Security middleware
@@ -369,7 +369,7 @@ async fn rate_limiting_middleware(
 
 Optimize your application for production performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -608,7 +608,7 @@ fn get_content_type(path: &str) -> &'static str {
 
 Implement comprehensive monitoring:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde_json::json;
 
@@ -912,7 +912,7 @@ spec:
 
 Implement health check endpoints:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Health check endpoint
@@ -988,7 +988,7 @@ async fn check_readiness_conditions() -> bool {
 
 Implement backup strategies:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use tokio::fs;
 use std::path::Path;
@@ -1106,7 +1106,7 @@ async fn list_backups(_req: Request) -> Result<Response> {
 
 Design for horizontal scaling:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Horizontal scaling considerations

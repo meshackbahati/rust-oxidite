@@ -1,5 +1,42 @@
 use crate::Result;
 use regex::Regex;
+use std::sync::OnceLock;
+
+fn variable_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\{\{\s*([a-zA-Z0-9_.]+)((?:\s*\|\s*[a-zA-Z0-9_]+)*)\s*\}\}")
+            .expect("variable regex must compile")
+    })
+}
+
+fn if_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"\{%\s*if\s+([a-zA-Z0-9_.]+)\s*%\}").expect("if regex"))
+}
+
+fn for_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\{%\s*for\s+([a-zA-Z0-9_]+)\s+in\s+([a-zA-Z0-9_.]+)\s*%\}")
+            .expect("for regex")
+    })
+}
+
+fn block_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"\{%\s*block\s+([a-zA-Z0-9_]+)\s*%\}").expect("block regex"))
+}
+
+fn extends_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"\{%\s*extends\s+"([^"]+)"\s*%\}"#).expect("extends regex"))
+}
+
+fn include_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"\{%\s*include\s+"([^"]+)"\s*%\}"#).expect("include regex"))
+}
 
 /// Template AST nodes
 #[derive(Debug, Clone, PartialEq)]
@@ -61,12 +98,20 @@ impl Parser {
     }
 
     fn parse_variable(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re = Regex::new(r"\{\{\s*([a-zA-Z0-9_.]+)(\s*\|\s*([a-zA-Z0-9_]+))?\s*\}\}").unwrap();
-        
-        if let Some(cap) = re.captures(source) {
+        if let Some(cap) = variable_regex().captures(source) {
             let full_match = cap.get(0).unwrap();
             let var_name = cap.get(1).unwrap().as_str().to_string();
-            let filter = cap.get(3).map(|m| vec![m.as_str().to_string()]).unwrap_or_default();
+            let filter = cap
+                .get(2)
+                .map(|m| {
+                    m.as_str()
+                        .split('|')
+                        .map(str::trim)
+                        .filter(|part| !part.is_empty())
+                        .map(ToOwned::to_owned)
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
 
             let node = TemplateNode::Variable {
                 name: var_name,
@@ -109,9 +154,7 @@ impl Parser {
     }
 
     fn parse_if(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re_if = Regex::new(r"\{%\s*if\s+([a-zA-Z0-9_.]+)\s*%\}").unwrap();
-        
-        if let Some(cap) = re_if.captures(source) {
+        if let Some(cap) = if_regex().captures(source) {
             let condition = cap.get(1).unwrap().as_str().to_string();
             let start_pos = cap.get(0).unwrap().end();
 
@@ -151,9 +194,7 @@ impl Parser {
     }
 
     fn parse_for(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re_for = Regex::new(r"\{%\s*for\s+([a-zA-Z0-9_]+)\s+in\s+([a-zA-Z0-9_.]+)\s*%\}").unwrap();
-        
-        if let Some(cap) = re_for.captures(source) {
+        if let Some(cap) = for_regex().captures(source) {
             let item = cap.get(1).unwrap().as_str().to_string();
             let iterable = cap.get(2).unwrap().as_str().to_string();
             let start_pos = cap.get(0).unwrap().end();
@@ -180,9 +221,7 @@ impl Parser {
     }
 
     fn parse_block(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re_block = Regex::new(r"\{%\s*block\s+([a-zA-Z0-9_]+)\s*%\}").unwrap();
-        
-        if let Some(cap) = re_block.captures(source) {
+        if let Some(cap) = block_regex().captures(source) {
             let name = cap.get(1).unwrap().as_str().to_string();
             let start_pos = cap.get(0).unwrap().end();
 
@@ -239,9 +278,7 @@ impl Parser {
     }
 
     fn parse_extends(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re_extends = Regex::new(r#"\{%\s*extends\s+"([^"]+)"\s*%\}"#).unwrap();
-        
-        if let Some(cap) = re_extends.captures(source) {
+        if let Some(cap) = extends_regex().captures(source) {
             let template = cap.get(1).unwrap().as_str().to_string();
             let len = cap.get(0).unwrap().len();
             
@@ -252,9 +289,7 @@ impl Parser {
     }
 
     fn parse_include(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
-        let re_include = Regex::new(r#"\{%\s*include\s+"([^"]+)"\s*%\}"#).unwrap();
-        
-        if let Some(cap) = re_include.captures(source) {
+        if let Some(cap) = include_regex().captures(source) {
             let template = cap.get(1).unwrap().as_str().to_string();
             let len = cap.get(0).unwrap().len();
             
@@ -286,5 +321,24 @@ impl Parser {
             // No more tags, rest is text
             Some((source.to_string(), source.len()))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Parser, TemplateNode};
+
+    #[test]
+    fn parse_variable_with_multiple_filters() {
+        let nodes = Parser::new("{{ user.name | trim | uppercase }}")
+            .parse()
+            .expect("parser should succeed");
+        assert_eq!(
+            nodes,
+            vec![TemplateNode::Variable {
+                name: "user.name".to_string(),
+                filters: vec!["trim".to_string(), "uppercase".to_string()]
+            }]
+        );
     }
 }

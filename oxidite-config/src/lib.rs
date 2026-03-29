@@ -3,6 +3,23 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::Path;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum ConfigError {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("TOML parse error: {0}")]
+    TomlDe(#[from] toml::de::Error),
+    #[error("YAML parse error: {0}")]
+    YamlDe(#[from] serde_yaml::Error),
+    #[error("invalid value for environment variable `{name}`: `{value}`")]
+    InvalidEnvValue { name: String, value: String },
+    #[error("missing configuration key: {0}")]
+    MissingKey(String),
+    #[error("invalid type for configuration key: {0}")]
+    InvalidType(String),
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Environment {
@@ -217,8 +234,53 @@ impl Default for Config {
 }
 
 impl Config {
+    fn apply_env_overrides(&mut self) -> Result<(), ConfigError> {
+        if let Ok(val) = env::var("APP_NAME") {
+            self.app.name = val;
+        }
+        if let Ok(val) = env::var("SERVER_HOST") {
+            self.server.host = val;
+        }
+        if let Ok(val) = env::var("SERVER_PORT") {
+            self.server.port = val
+                .parse()
+                .map_err(|_| ConfigError::InvalidEnvValue {
+                    name: "SERVER_PORT".to_string(),
+                    value: val,
+                })?;
+        }
+        if let Ok(val) = env::var("DATABASE_URL") {
+            self.database.url = val;
+        }
+        if let Ok(val) = env::var("REDIS_URL") {
+            self.cache.redis_url = val.clone();
+            self.queue.redis_url = val;
+        }
+        if let Ok(val) = env::var("JWT_SECRET") {
+            self.security.jwt_secret = val;
+        }
+        Ok(())
+    }
+
+    fn has_key(&self, key: &str) -> bool {
+        if self.custom.contains_key(key) {
+            return true;
+        }
+        let Some(root) = toml::Value::try_from(self).ok() else {
+            return false;
+        };
+        let mut cursor = &root;
+        for part in key.split('.') {
+            let Some(next) = cursor.get(part) else {
+                return false;
+            };
+            cursor = next;
+        }
+        true
+    }
+
     /// Load configuration from environment variables and config files
-    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load() -> Result<Self, ConfigError> {
         // Load .env file if it exists
         let _ = dotenv::dotenv();
 
@@ -235,34 +297,94 @@ impl Config {
         };
 
         // Override with environment variables
-        if let Ok(val) = env::var("APP_NAME") {
-            config.app.name = val;
-        }
-        if let Ok(val) = env::var("SERVER_HOST") {
-            config.server.host = val;
-        }
-        if let Ok(val) = env::var("SERVER_PORT") {
-            config.server.port = val.parse().unwrap_or(default_port());
-        }
-        if let Ok(val) = env::var("DATABASE_URL") {
-            config.database.url = val;
-        }
-        if let Ok(val) = env::var("REDIS_URL") {
-            config.cache.redis_url = val.clone();
-            config.queue.redis_url = val;
-        }
-        if let Ok(val) = env::var("JWT_SECRET") {
-            config.security.jwt_secret = val;
-        }
+        config.apply_env_overrides()?;
 
         config.app.environment = env;
 
         Ok(config)
     }
 
+    /// Load configuration from a specific TOML file path and env overrides.
+    pub fn load_from(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+        let _ = dotenv::dotenv();
+        let env_name = env::var("OXIDITE_ENV")
+            .or_else(|_| env::var("ENVIRONMENT"))
+            .unwrap_or_else(|_| "development".to_string());
+
+        let mut config = if path.as_ref().exists() {
+            let content = fs::read_to_string(path)?;
+            toml::from_str(&content)?
+        } else {
+            Config::default()
+        };
+
+        config.app.environment = env_name;
+        config.apply_env_overrides()?;
+        Ok(config)
+    }
+
+    /// Load configuration from a YAML file path and env overrides.
+    pub fn load_yaml_from(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+        let _ = dotenv::dotenv();
+        let env_name = env::var("OXIDITE_ENV")
+            .or_else(|_| env::var("ENVIRONMENT"))
+            .unwrap_or_else(|_| "development".to_string());
+
+        let mut config = if path.as_ref().exists() {
+            let content = fs::read_to_string(path)?;
+            serde_yaml::from_str(&content)?
+        } else {
+            Config::default()
+        };
+
+        config.app.environment = env_name;
+        config.apply_env_overrides()?;
+        Ok(config)
+    }
+
     /// Get value from custom configuration
     pub fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> Option<T> {
-        self.custom.get(key).and_then(|v| T::deserialize(v.clone()).ok())
+        // Prefer explicitly registered custom keys first.
+        if let Some(value) = self.custom.get(key) {
+            if let Ok(parsed) = T::deserialize(value.clone()) {
+                return Some(parsed);
+            }
+        }
+
+        // Support dotted lookup across the full config tree, e.g. "database.url".
+        let root = toml::Value::try_from(self).ok()?;
+        let mut cursor = &root;
+        for part in key.split('.') {
+            cursor = cursor.get(part)?;
+        }
+
+        T::deserialize(cursor.clone()).ok()
+    }
+
+    /// Get required typed configuration value.
+    pub fn get_required<T: for<'de> Deserialize<'de>>(&self, key: &str) -> Result<T, ConfigError> {
+        self.get(key).ok_or_else(|| {
+            if self.has_key(key) {
+                ConfigError::InvalidType(key.to_string())
+            } else {
+                ConfigError::MissingKey(key.to_string())
+            }
+        })
+    }
+
+    /// Get a required string configuration value.
+    pub fn get_string(&self, key: &str) -> Result<String, ConfigError> {
+        self.get_required(key)
+    }
+
+    /// Get a required boolean configuration value.
+    pub fn get_bool(&self, key: &str) -> Result<bool, ConfigError> {
+        self.get_required(key)
+    }
+
+    /// Get a required unsigned 16-bit integer configuration value.
+    pub fn get_u16(&self, key: &str) -> Result<u16, ConfigError> {
+        self.get_required(key)
     }
 }
 
@@ -282,5 +404,45 @@ mod tests {
         assert_eq!(Environment::from_str("production"), Environment::Production);
         assert_eq!(Environment::from_str("PROD"), Environment::Production);
         assert_eq!(Environment::from_str("development"), Environment::Development);
+    }
+
+    #[test]
+    fn test_get_required_typed_values() {
+        let config = Config::default();
+        assert_eq!(config.get_u16("server.port").unwrap(), 3000);
+        assert_eq!(config.get_bool("app.debug").unwrap(), true);
+    }
+
+    #[test]
+    fn test_invalid_server_port_env_returns_error() {
+        let prev = env::var("SERVER_PORT").ok();
+        env::set_var("SERVER_PORT", "not-a-port");
+
+        let result = Config::load();
+        assert!(matches!(
+            result,
+            Err(ConfigError::InvalidEnvValue { name, .. }) if name == "SERVER_PORT"
+        ));
+
+        if let Some(value) = prev {
+            env::set_var("SERVER_PORT", value);
+        } else {
+            env::remove_var("SERVER_PORT");
+        }
+    }
+
+    #[test]
+    fn test_load_from_applies_env_overrides() {
+        let prev_host = env::var("SERVER_HOST").ok();
+        env::set_var("SERVER_HOST", "0.0.0.0");
+
+        let cfg = Config::load_from("this-file-does-not-exist.toml").expect("load");
+        assert_eq!(cfg.server.host, "0.0.0.0");
+
+        if let Some(v) = prev_host {
+            env::set_var("SERVER_HOST", v);
+        } else {
+            env::remove_var("SERVER_HOST");
+        }
     }
 }

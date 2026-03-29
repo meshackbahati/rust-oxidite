@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-03-29
+
+### Added
+- Typed ORM error surface with ergonomic query builder extensions (`ModelQuery`, pagination, sort helpers, `find_or_fail`)
+- Relation eager-loading helpers and bulk operation primitives in `oxidite-db`
+- Checked migration APIs with typed migration errors and backend-specific migration-table DDL
+- Macro diagnostics improvements for `#[derive(Model)]` misuse cases with expanded `trybuild` coverage
+- Shared SQL script execution utility in CLI commands
+- CLI integration tests for real subcommands in temporary project directories
+- Additional `oxidite make` generators (`job`, `policy`, `event`)
+- Expanded mdBook deployment support to static HTML root (`doc/book/book`) with index/search assets
+- Deep migration assessment documentation for external project interoperability (notably `g24sec`)
+
+### Changed
+- Unified workspace crate versioning to `2.1.0`
+- Roadmap updated with Batch B marked complete and promoted as single planning source
+- Status document simplified to avoid roadmap/status drift
+- Removed `Oxidite v2` wording in crate metadata in favor of `Oxidite`
+
 ## [2.0.0] - 2026-01-21
 
 ### Added

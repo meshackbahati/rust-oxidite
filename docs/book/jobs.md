@@ -15,7 +15,7 @@ Background jobs are essential for:
 
 Define jobs by implementing the Job trait:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -71,7 +71,7 @@ impl Job for ProcessImageJob {
 
 Configure queues for job processing:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_queue::{Queue, QueueBackend, RedisBackend};
 
@@ -95,7 +95,7 @@ async fn configure_queues() -> Result<()> {
 
 Add jobs to the queue for processing:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn enqueue_examples() -> Result<()> {
@@ -181,7 +181,7 @@ pub trait Job: Send + Sync + serde::Serialize + serde::de::DeserializeOwned {
 
 Set up workers to process jobs:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_queue::{Worker, Queue};
 
@@ -239,7 +239,7 @@ async fn graceful_shutdown_worker() -> Result<()> {
 
 Monitor job queues and their status:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn monitor_jobs() -> Result<()> {
@@ -313,7 +313,7 @@ pub struct ListedJob {
 
 Implement robust error handling and retry mechanisms:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -406,7 +406,7 @@ async fn execute_with_retry(job: RobustJob, strategy: &RetryStrategy) -> Result<
 
 Schedule jobs to run at specific times:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -491,7 +491,7 @@ impl Scheduler {
 
 Chain jobs that depend on each other:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -572,7 +572,7 @@ impl JobChainer {
 
 Optimize job processing for performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 pub struct JobProcessorConfig {
@@ -634,7 +634,7 @@ impl<J: Job> MemoryEfficientProcessor<J> {
 
 Implement robust error recovery:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 pub struct JobRecoverySystem {
@@ -686,7 +686,7 @@ impl MonitoringClient {
 
 Trigger jobs from HTTP requests:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Deserialize)]

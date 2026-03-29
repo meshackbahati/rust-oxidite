@@ -1,9 +1,9 @@
 [package]
 name = "oxidite-graphql"
-version = "2.0.1"
+version = "2.1.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "GraphQL integration for Oxidite v2 web framework with schema generation and resolvers"
+description = "GraphQL integration for Oxidite web framework with schema generation and resolvers"
 license = "MIT"
 repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["graphql", "api", "web", "schema"]
@@ -22,8 +22,8 @@ futures = "0.3"
 http-body-util = "0.1.3"
 
 # Oxidite dependencies
-oxidite-core = { version = "2.0.1", path = "../oxidite-core" }
-oxidite-db = { version = "2.0.1", path = "../oxidite-db", optional = true }
+oxidite-core = { version = "2.1.0", path = "../oxidite-core" }
+oxidite-db = { version = "2.1.0", path = "../oxidite-db", optional = true }
 
 [features]
 default = ["database"]

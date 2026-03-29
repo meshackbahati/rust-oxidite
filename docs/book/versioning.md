@@ -15,7 +15,7 @@ API versioning strategies include:
 
 The most common approach is to include the version in the URL path:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // V1 API routes
@@ -86,7 +86,7 @@ async fn main() -> Result<()> {
 
 Use HTTP headers to specify the API version:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Middleware to extract version from headers
@@ -163,7 +163,7 @@ async fn v2_get_users(_req: Request) -> Result<Response> {
 
 Use query parameters to specify the API version:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -236,7 +236,7 @@ async fn query_version_middleware(req: Request, next: Next) -> Result<Response> 
 
 Handle different versions of data models:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -368,7 +368,7 @@ impl UserV1 {
 
 Implement automatic version negotiation:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Clone)]
@@ -477,7 +477,7 @@ async fn api_version_info(State(version_manager): State<Arc<ApiVersionManager>>)
 
 Manage deprecated versions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 #[derive(Clone)]
@@ -570,7 +570,7 @@ async fn deprecation_middleware(
 
 Handle different content types based on version:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Content negotiation middleware
@@ -663,7 +663,7 @@ async fn versioned_content_handler(req: Request) -> Result<Response> {
 
 Apply different middleware based on API version:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Version-specific rate limiting
@@ -734,7 +734,7 @@ impl<F> Next<F> {
 
 Write tests for versioned APIs:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_testing::{TestServer, RequestBuilder};
 
@@ -825,7 +825,7 @@ mod version_tests {
 
 Plan for API migrations:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Migration guide endpoint

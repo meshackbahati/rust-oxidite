@@ -19,7 +19,7 @@ Add the template feature to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite = { version = "1.0", features = ["templates"] }
+oxidite = { version = "2.1", features = ["templates"] }
 ```
 
 ## Basic Usage

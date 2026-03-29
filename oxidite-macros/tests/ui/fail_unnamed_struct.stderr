@@ -1,0 +1,5 @@
+error: Model derive requires a struct with named fields
+ --> tests/ui/fail_unnamed_struct.rs:2:11
+  |
+2 | struct Bad(i64);
+  |           ^^^^^

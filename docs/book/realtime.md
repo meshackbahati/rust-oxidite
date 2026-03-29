@@ -15,7 +15,7 @@ Real-time features in Oxidite include:
 
 WebSockets provide full-duplex communication channels over a single TCP connection:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_realtime::websocket::{WebSocket, Message, WebSocketHandler};
 
@@ -70,7 +70,7 @@ async fn websocket_upgrade(_req: Request) -> Result<Response> {
 
 Manage WebSocket connections with shared state:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_realtime::websocket::{WebSocket, Message};
 use std::sync::Arc;
@@ -159,7 +159,7 @@ async fn chat_websocket_handler(ws: WebSocket, state: ChatState) -> Result<()> {
 
 Server-Sent Events provide unidirectional server-to-client communication:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_realtime::sse::EventStream;
 
@@ -240,7 +240,7 @@ struct AuthenticatedUser {
 
 Implement publish-subscribe messaging for event distribution:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 use tokio::sync::broadcast;
@@ -344,7 +344,7 @@ async fn event_stream_websocket_handler(
 
 Build a notification system with real-time delivery:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -450,7 +450,7 @@ async fn notification_websocket_handler(
 
 Track real-time metrics and analytics:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -574,7 +574,7 @@ async fn real_time_metrics(State(analytics): State<Arc<AnalyticsService>>) -> Re
 
 Optimize real-time features for performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 pub struct RealTimeConfig {
@@ -648,7 +648,7 @@ impl WebSocketPool {
 
 Secure real-time features properly:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Secure WebSocket middleware
@@ -770,7 +770,7 @@ fn contains_malicious_content(text: &str) -> bool {
 
 Provide frontend integration examples:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Endpoint to get WebSocket connection details

@@ -1,10 +1,10 @@
-
+use super::sql_script::{execute_sql_script, load_database_url};
 
 pub fn create_migration(name: &str) -> Result<(), Box<dyn std::error::Error>> {
     use oxidite_db::MigrationManager;
     
     let manager = MigrationManager::new("migrations");
-    let path = manager.create_migration(name)?;
+    let path = manager.create_migration_checked(name)?;
     
     println!("✅ Created migration: {}", path.display());
     println!("\nEdit the migration file to add SQL:");
@@ -15,19 +15,15 @@ pub fn create_migration(name: &str) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub async fn run_migrations() -> Result<(), Box<dyn std::error::Error>> {
-    use oxidite_db::{MigrationManager, DbPool, Database};
-    use oxidite_config::Config;
+    use oxidite_db::{MigrationManager, DbPool};
     
-    // Load database URL from config
-    let config = Config::load()?;
-    let db_url = config.get::<String>("database.url")
-        .unwrap_or("sqlite://data.db".to_string());
+    let db_url = load_database_url()?;
     
     let db = DbPool::connect(&db_url).await?;
     let manager = MigrationManager::new("migrations");
     
     // Get pending migrations
-    let pending = manager.get_pending_migrations(&db).await?;
+    let pending = manager.get_pending_migrations_checked(&db).await?;
     
     if pending.is_empty() {
         println!("✅ No pending migrations.");
@@ -40,7 +36,7 @@ pub async fn run_migrations() -> Result<(), Box<dyn std::error::Error>> {
         println!("⏫ Applying: {} - {}", migration.version, migration.name);
         
         if !migration.up_sql.is_empty() {
-            db.execute(&migration.up_sql).await?;
+            execute_sql_script(&db, &migration.up_sql).await?;
             manager.mark_migration_applied(&db, &migration.version).await?;
             println!("   ✅ Done");
         } else {
@@ -54,13 +50,9 @@ pub async fn run_migrations() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub async fn revert_migration() -> Result<(), Box<dyn std::error::Error>> {
-    use oxidite_db::{MigrationManager, DbPool, Database};
-    use oxidite_config::Config;
+    use oxidite_db::{MigrationManager, DbPool};
     
-    // Load database URL from config
-    let config = Config::load()?;
-    let db_url = config.get::<String>("database.url")
-        .unwrap_or("sqlite://data.db".to_string());
+    let db_url = load_database_url()?;
     
     let db = DbPool::connect(&db_url).await?;
     let manager = MigrationManager::new("migrations");
@@ -77,7 +69,7 @@ pub async fn revert_migration() -> Result<(), Box<dyn std::error::Error>> {
     let last_version = applied.last().unwrap();
     
     // Find the migration file
-    let all_migrations = manager.list_migrations()?;
+    let all_migrations = manager.list_migrations_checked()?;
     let migration = all_migrations
         .iter()
         .find(|m| &m.version == last_version)
@@ -86,7 +78,7 @@ pub async fn revert_migration() -> Result<(), Box<dyn std::error::Error>> {
     println!("⏬ Reverting: {} - {}", migration.version, migration.name);
     
     if !migration.down_sql.is_empty() {
-        db.execute(&migration.down_sql).await?;
+        execute_sql_script(&db, &migration.down_sql).await?;
         manager.mark_migration_reverted(&db, &migration.version).await?;
         println!("   ✅ Done");
     } else {
@@ -101,10 +93,9 @@ pub async fn revert_migration() -> Result<(), Box<dyn std::error::Error>> {
 
 pub async fn migration_status() -> Result<(), Box<dyn std::error::Error>> {
     use oxidite_db::{MigrationManager, DbPool};
-    use oxidite_config::Config;
     
     let manager = MigrationManager::new("migrations");
-    let migrations = manager.list_migrations()?;
+    let migrations = manager.list_migrations_checked()?;
     
     if migrations.is_empty() {
         println!("No migrations found.");
@@ -112,13 +103,9 @@ pub async fn migration_status() -> Result<(), Box<dyn std::error::Error>> {
     }
     
     // Try to connect to database to get applied migrations
-    let applied = if let Ok(config) = Config::load() {
-        if let Some(db_url) = config.get::<String>("database.url").map(String::from) {
-            if let Ok(db) = DbPool::connect(&db_url).await {
-                manager.get_applied_migrations(&db).await.unwrap_or_default()
-            } else {
-                Vec::new()
-            }
+    let applied = if let Ok(db_url) = load_database_url() {
+        if let Ok(db) = DbPool::connect(&db_url).await {
+            manager.get_applied_migrations(&db).await.unwrap_or_default()
         } else {
             Vec::new()
         }
@@ -143,4 +130,24 @@ pub async fn migration_status() -> Result<(), Box<dyn std::error::Error>> {
         migrations.len(), applied_count, pending_count);
     
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::sql_script::split_sql_statements;
+
+    #[test]
+    fn sql_split_ignores_comments_and_empty_lines() {
+        let sql = r#"
+            -- comment
+            CREATE TABLE users (id INTEGER);
+
+            INSERT INTO users (id) VALUES (1);
+            -- trailing
+        "#;
+        let statements = split_sql_statements(sql);
+        assert_eq!(statements.len(), 2);
+        assert!(statements[0].starts_with("CREATE TABLE users"));
+        assert!(statements[1].starts_with("INSERT INTO users"));
+    }
 }

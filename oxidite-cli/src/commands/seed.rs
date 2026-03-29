@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use super::sql_script::{load_database_url, split_sql_statements};
 
 pub fn create_seeder(name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let seeds_dir = Path::new("seeds");
@@ -34,12 +35,8 @@ INSERT INTO users (username, email) VALUES ('admin', 'admin@example.com');
 
 pub async fn run_seeders() -> Result<(), Box<dyn std::error::Error>> {
     use oxidite_db::{DbPool, Database};
-    use oxidite_config::Config;
     
-    // Load database URL from config
-    let config = Config::load()?;
-    let db_url = config.get("database.url")
-        .unwrap_or("sqlite://data.db".to_string());
+    let db_url = load_database_url()?;
     
     let db = DbPool::connect(&db_url).await?;
     
@@ -80,12 +77,8 @@ pub async fn run_seeders() -> Result<(), Box<dyn std::error::Error>> {
         let sql = fs::read_to_string(&path)?;
         
         if !sql.trim().is_empty() {
-            // Split by semicolons and execute each statement
-            for statement in sql.split(';') {
-                let statement = statement.trim();
-                if !statement.is_empty() && !statement.starts_with("--") {
-                    db.execute(statement).await?;
-                }
+            for statement in split_sql_statements(&sql) {
+                db.execute(&statement).await?;
             }
             println!("   ✅ Done");
         } else {
@@ -96,4 +89,24 @@ pub async fn run_seeders() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n✅ All seeders run successfully!");
     
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::commands::sql_script::split_sql_statements;
+
+    #[test]
+    fn sql_split_ignores_comments() {
+        let sql = r#"
+            -- start
+            INSERT INTO users (id) VALUES (1);
+            -- another
+            INSERT INTO users (id) VALUES (2);
+        "#;
+
+        let statements = split_sql_statements(sql);
+        assert_eq!(statements.len(), 2);
+        assert!(statements[0].contains("VALUES (1)"));
+        assert!(statements[1].contains("VALUES (2)"));
+    }
 }

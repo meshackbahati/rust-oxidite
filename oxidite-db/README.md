@@ -1,204 +1,97 @@
 # oxidite-db
 
-Database ORM with relationships and migrations for Oxidite.
+Lightweight ORM and migration helpers for Oxidite, built on `sqlx::Any`.
 
-<div align="center">
+## What this crate provides
 
-[![Crates.io](https://img.shields.io/crates/v/oxidite-db.svg)](https://crates.io/crates/oxidite-db)
-[![Docs.rs](https://docs.rs/oxidite-db/badge.svg)](https://docs.rs/oxidite-db)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+- `DbPool` and `DbTransaction` wrappers for multi-backend SQL access.
+- `#[derive(Model)]` CRUD generation via `oxidite-macros`.
+- Relationship helpers: `HasMany`, `HasOne`, `BelongsTo`.
+- File-based migrations with `MigrationManager`.
+- Typed query ergonomics through `ModelQuery`.
+- Strongly-typed ORM-side errors with `OrmError` for ergonomic APIs.
+- Eager-loading helpers for has-many/has-one relations.
 
-</div>
-
-## Overview
-
-`oxidite-db` provides a powerful and intuitive Object-Relational Mapping (ORM) system for Rust. It includes model derivation, relationship management, migrations, and query building capabilities to make database interactions simple and type-safe.
-
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-oxidite-db = "0.1"
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-```
-
-## Features
-
-- **Model derive macro** - Automatic CRUD operations with the `#[derive(Model)]` macro
-- **Relationships** - Support for HasOne, HasMany, and BelongsTo relationships
-- **Migrations** - Database schema evolution with rollback support
-- **Soft deletes** - Logical deletion with automatic filtering
-- **Timestamps** - Automatic created_at and updated_at tracking
-- **Field validation** - Built-in validation for model fields
-- **Transaction support** - ACID-compliant transaction handling
-- **Multi-database support** - Works with PostgreSQL, MySQL, and SQLite
-
-## Usage
-
-### Defining Models
-
-Define your database models using the `#[derive(Model)]` macro:
+## Quick start
 
 ```rust
-use oxidite_db::{Model, Database};
-use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
+use oxidite_db::{DbPool, Model, Pagination, SortDirection, sqlx};
 
-#[derive(Model, Serialize, Deserialize, Clone)]
-#[table_name = "users"]
-pub struct User {
-    pub id: i64,
-    pub name: String,
-    pub email: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+#[derive(Model, sqlx::FromRow)]
+#[model(table = "users")]
+struct User {
+    id: i64,
+    name: String,
+    email: String,
+    created_at: i64,
+    updated_at: i64,
+    deleted_at: Option<i64>,
 }
-```
 
-### Database Connection
+# async fn demo() -> Result<(), Box<dyn std::error::Error>> {
+let db = DbPool::connect("sqlite::memory:").await?;
 
-Establish a connection to your database:
-
-```rust
-use oxidite_db::DbPool;
-
-// Connect to PostgreSQL
-let pool = DbPool::connect("postgresql://user:password@localhost/database").await?;
-
-// Connect to SQLite
-let pool = DbPool::connect("sqlite::memory:").await?;
-
-// Connect to MySQL
-let pool = DbPool::connect("mysql://user:password@localhost/database").await?;
-```
-
-### CRUD Operations
-
-Perform Create, Read, Update, and Delete operations:
-
-```rust
-// Create a new record
-let mut user = User {
-    id: 0, // Will be set by database
-    name: "John Doe".to_string(),
-    email: "john@example.com".to_string(),
-    created_at: Utc::now(),
-    updated_at: Utc::now(),
-};
-
-user.create(&pool).await?; // User now has an assigned ID
-
-// Read records
-let all_users = User::all(&pool).await?;
-let specific_user = User::find(&pool, 1).await?;
-
-// Update a record
-user.name = "Jane Doe".to_string();
-user.update(&pool).await?;
-
-// Delete a record
-user.delete(&pool).await?;
-```
-
-### Query Building
-
-Build complex queries with the fluent interface:
-
-```rust
-// Find with conditions
-let users = User::where_eq(&pool, "email", "john@example.com")
-    .order_by("created_at", "DESC")
-    .limit(10)
-    .get()
+let active_users = User::query()
+    .filter_like("email", "%@example.com")
+    .order_by("id", SortDirection::Desc)
+    .paginate(Pagination::from_page(1, 20)?)
+    .fetch_all(&db)
     .await?;
 
-// Count records
-let count = User::count(&pool).await?;
+let first = User::find_or_fail(&db, 1).await?;
+let many = User::find_many(&db, &[1, 2, 3]).await?;
 
-// Find first matching record
-let user = User::where_eq(&pool, "name", "John")
-    .first()
-    .await?;
+let _ = (active_users, first, many);
+# Ok(())
+# }
 ```
 
-### Relationships
+## Model derive notes
 
-Define and use relationships between models:
+`#[derive(Model)]` expects a named struct with an `id: i64` field.
+
+Supported model attributes:
+
+- `#[model(table_name = "...")]`
+- `#[model(table = "...")]` (alias)
+
+Conventions:
+
+- `created_at: i64` and `updated_at: i64` are auto-maintained when present.
+- `deleted_at: Option<i64>` enables soft deletes.
+- `#[validate(email)]` on `String` fields adds email validation.
+- `save()` uses `is_persisted()` (derived models use `id > 0`).
+
+## Transaction ergonomics
 
 ```rust
-#[derive(Model, Serialize, Deserialize, Clone)]
-#[table_name = "posts"]
-pub struct Post {
-    pub id: i64,
-    pub user_id: i64,
-    pub title: String,
-    pub content: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-// Get user's posts
-let user_posts = user.has_many::<Post>(&pool, "user_id").await?;
-
-// Get post's author
-let author = post.belongs_to::<User>(&pool, "user_id", "id").await?;
+# use oxidite_db::DbPool;
+# async fn tx(pool: &DbPool) -> Result<(), sqlx::Error> {
+pool.with_transaction(|tx| async move {
+    tx.execute("UPDATE users SET updated_at = strftime('%s','now')").await?;
+    Ok(())
+}).await?;
+# Ok(())
+# }
 ```
 
-### Migrations
+## Escape hatch: raw SQL remains first-class
 
-Manage your database schema with migrations:
+All high-level APIs compose with raw SQL through `Database` methods:
 
-```rust
-use oxidite_db::{Migration, DbPool};
+- `execute(&str)`
+- `query(&str)`
+- `query_one(&str)`
+- `execute_query(sqlx::query(...))`
+- `fetch_all(sqlx::query(...))`
+- `fetch_one(sqlx::query(...))`
 
-struct CreateUsersTable;
+## Query value support
 
-impl Migration for CreateUsersTable {
-    fn up(&self) -> String {
-        "CREATE TABLE users (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        )".to_string()
-    }
-    
-    fn down(&self) -> String {
-        "DROP TABLE users".to_string()
-    }
-}
+`ModelQuery::filter_eq` supports common values including:
 
-// Run migrations
-CreateUsersTable.run_up(&pool).await?;
-```
-
-### Transactions
-
-Use transactions for atomic database operations:
-
-```rust
-use oxidite_db::Transaction;
-
-let tx = pool.begin_transaction().await?;
-
-// Perform operations within transaction
-let mut user = User { /* ... */ };
-user.create(&tx).await?;
-
-let mut post = Post { /* ... */ };
-post.create(&tx).await?;
-
-// Commit the transaction
-tx.commit().await?;
-
-// Or rollback if something goes wrong
-// tx.rollback().await?;
-```
-
-## License
-
-MIT
+- integers and strings
+- `bool` and `f64`
+- `uuid::Uuid`
+- `chrono::DateTime<Utc>`
+- `serde_json::Value`

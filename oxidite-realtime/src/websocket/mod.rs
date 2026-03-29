@@ -127,24 +127,40 @@ impl WebSocketManager {
 
     pub async fn broadcast(&self, message: Message) -> Result<()> {
         let connections = self.connections.read().await;
+        let mut failed = 0usize;
         for conn in connections.values() {
-            let _ = conn.send(message.clone());
+            if conn.send(message.clone()).is_err() {
+                failed += 1;
+            }
+        }
+        if failed > 0 {
+            return Err(WebSocketError::PartialSend { failed });
         }
         Ok(())
     }
 
     pub async fn send_to_user(&self, user_id: &str, message: Message) -> Result<()> {
         let connections = self.connections.read().await;
+        let mut matched = 0usize;
         for conn in connections.values() {
             if conn.user_id.as_deref() == Some(user_id) {
+                matched += 1;
                 conn.send(message.clone())?;
             }
+        }
+        if matched == 0 {
+            return Err(WebSocketError::UserNotConnected(user_id.to_string()));
         }
         Ok(())
     }
 
     pub fn room_manager(&self) -> Arc<RoomManager> {
         self.room_manager.clone()
+    }
+
+    /// Number of active websocket connections.
+    pub async fn connection_count(&self) -> usize {
+        self.connections.read().await.len()
     }
 }
 
@@ -159,6 +175,9 @@ impl Default for WebSocketManager {
 pub enum WebSocketError {
     #[error("Failed to send message")]
     SendError,
+
+    #[error("Failed to send message to {failed} connection(s)")]
+    PartialSend { failed: usize },
     
     #[error("Invalid message format")]
     InvalidMessage,
@@ -168,6 +187,52 @@ pub enum WebSocketError {
     
     #[error("Room not found")]
     RoomNotFound,
+
+    #[error("No active connection found for user `{0}`")]
+    UserNotConnected(String),
 }
 
 pub type Result<T> = std::result::Result<T, WebSocketError>;
+
+#[cfg(test)]
+mod tests {
+    use super::{Message, WebSocketConnection, WebSocketManager, WebSocketError};
+
+    #[test]
+    fn message_roundtrip_json() {
+        let message = Message::json(serde_json::json!({"k": "v"}));
+        let ws = message.to_ws_message().expect("to ws");
+        let parsed = Message::from_ws_message(ws).expect("from ws");
+        match parsed {
+            Message::Json { data } => assert_eq!(data["k"], "v"),
+            other => panic!("expected json message, got: {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn send_to_unknown_user_returns_error() {
+        let manager = WebSocketManager::new();
+        let err = manager
+            .send_to_user("missing-user", Message::text("hello"))
+            .await
+            .expect_err("expected user missing error");
+        match err {
+            WebSocketError::UserNotConnected(user) => assert_eq!(user, "missing-user"),
+            other => panic!("unexpected error: {other}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn connection_count_tracks_lifecycle() {
+        let manager = WebSocketManager::new();
+        let (conn, _rx) = WebSocketConnection::new(Some("u1".to_string()));
+        let conn = std::sync::Arc::new(conn);
+        let id = conn.id.clone();
+
+        manager.add_connection(conn).await;
+        assert_eq!(manager.connection_count().await, 1);
+
+        manager.remove_connection(&id).await;
+        assert_eq!(manager.connection_count().await, 0);
+    }
+}

@@ -33,8 +33,13 @@ where
         let fut = self.inner.call(req);
         Box::pin(async move {
             let res = fut.await;
-            if let Ok(ref response) = res {
-                println!("Response: {}", response.status());
+            match &res {
+                Ok(response) => {
+                    println!("Response: {}", response.status());
+                }
+                Err(err) => {
+                    println!("Response error: {} {}", err.status_code(), err);
+                }
             }
             res
         })

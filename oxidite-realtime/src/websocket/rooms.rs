@@ -121,10 +121,39 @@ impl RoomManager {
         let rooms = self.rooms.read().await;
         rooms.keys().cloned().collect()
     }
+
+    /// Get number of members in a room.
+    pub async fn room_member_count(&self, room_name: &str) -> usize {
+        let rooms = self.rooms.read().await;
+        rooms.get(room_name).map(|r| r.member_count()).unwrap_or(0)
+    }
+
+    /// Get total number of members across all rooms.
+    pub async fn total_members(&self) -> usize {
+        let rooms = self.rooms.read().await;
+        rooms.values().map(Room::member_count).sum()
+    }
 }
 
 impl Default for RoomManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RoomManager;
+
+    #[tokio::test]
+    async fn room_metrics_track_members() {
+        let rooms = RoomManager::new();
+        rooms.join_room("r1", "c1".to_string()).await.expect("join");
+        rooms.join_room("r1", "c2".to_string()).await.expect("join");
+        rooms.join_room("r2", "c3".to_string()).await.expect("join");
+
+        assert_eq!(rooms.room_member_count("r1").await, 2);
+        assert_eq!(rooms.room_member_count("missing").await, 0);
+        assert_eq!(rooms.total_members().await, 3);
     }
 }

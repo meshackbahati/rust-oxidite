@@ -1,4 +1,4 @@
-use crate::{Storage, StoredFile, FileMetadata, Result, StorageError};
+use crate::{validate_storage_path, Storage, StoredFile, FileMetadata, Result, StorageError};
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::path::PathBuf;
@@ -21,13 +21,9 @@ impl LocalStorage {
     }
 
     fn resolve_path(&self, path: &str) -> Result<PathBuf> {
+        validate_storage_path(path)?;
         let full_path = self.root.join(path);
-        
-        // Prevent directory traversal
-        if !full_path.starts_with(&self.root) {
-            return Err(StorageError::InvalidPath(path.to_string()));
-        }
-        
+
         Ok(full_path)
     }
 }
@@ -62,7 +58,7 @@ impl Storage for LocalStorage {
     async fn get(&self, path: &str) -> Result<Bytes> {
         let full_path = self.resolve_path(path)?;
         
-        if !full_path.exists() {
+        if !fs::try_exists(&full_path).await? {
             return Err(StorageError::NotFound(path.to_string()));
         }
         
@@ -76,7 +72,7 @@ impl Storage for LocalStorage {
     async fn delete(&self, path: &str) -> Result<()> {
         let full_path = self.resolve_path(path)?;
         
-        if !full_path.exists() {
+        if !fs::try_exists(&full_path).await? {
             return Err(StorageError::NotFound(path.to_string()));
         }
         
@@ -86,13 +82,13 @@ impl Storage for LocalStorage {
 
     async fn exists(&self, path: &str) -> Result<bool> {
         let full_path = self.resolve_path(path)?;
-        Ok(full_path.exists())
+        Ok(fs::try_exists(full_path).await?)
     }
 
     async fn metadata(&self, path: &str) -> Result<FileMetadata> {
         let full_path = self.resolve_path(path)?;
         
-        if !full_path.exists() {
+        if !fs::try_exists(&full_path).await? {
             return Err(StorageError::NotFound(path.to_string()));
         }
         
@@ -118,9 +114,13 @@ impl Storage for LocalStorage {
     }
 
     async fn list(&self, prefix: &str) -> Result<Vec<String>> {
-        let dir_path = self.resolve_path(prefix)?;
+        let dir_path = if prefix.is_empty() {
+            self.root.clone()
+        } else {
+            self.resolve_path(prefix)?
+        };
         
-        if !dir_path.exists() {
+        if !fs::try_exists(&dir_path).await? {
             return Ok(Vec::new());
         }
         
@@ -128,11 +128,41 @@ impl Storage for LocalStorage {
         let mut read_dir = fs::read_dir(&dir_path).await?;
         
         while let Some(entry) = read_dir.next_entry().await? {
-            if let Some(name) = entry.file_name().to_str() {
-                entries.push(format!("{}/{}", prefix, name));
+            let entry_path = entry.path();
+            if let Ok(relative) = entry_path.strip_prefix(&self.root) {
+                if let Some(name) = relative.to_str() {
+                    entries.push(name.replace('\\', "/"));
+                }
             }
         }
         
         Ok(entries)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{LocalStorage, Storage};
+    use bytes::Bytes;
+
+    #[tokio::test]
+    async fn local_storage_rejects_parent_dir_paths() {
+        let root = std::env::temp_dir().join(format!("oxidite-storage-{}", uuid::Uuid::new_v4()));
+        let storage = LocalStorage::new(&root).expect("storage init");
+        let err = storage.put("../escape.txt", Bytes::from_static(b"x")).await;
+        assert!(err.is_err());
+    }
+
+    #[tokio::test]
+    async fn local_storage_list_returns_root_relative_paths() {
+        let root = std::env::temp_dir().join(format!("oxidite-storage-{}", uuid::Uuid::new_v4()));
+        let storage = LocalStorage::new(&root).expect("storage init");
+
+        storage
+            .put("images/logo.txt", Bytes::from_static(b"logo"))
+            .await
+            .expect("put");
+        let files = storage.list("images").await.expect("list");
+        assert_eq!(files, vec!["images/logo.txt".to_string()]);
     }
 }

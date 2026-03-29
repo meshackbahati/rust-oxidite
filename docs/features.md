@@ -1,6 +1,6 @@
-# Oxidite v2 Features
+# Oxidite Features
 
-This document provides a comprehensive overview of all features available in Oxidite v2.
+This document provides a comprehensive overview of all features available in Oxidite.
 
 ## Core Features
 

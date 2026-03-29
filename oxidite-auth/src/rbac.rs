@@ -24,14 +24,14 @@ pub struct Permission {
 impl Role {
     /// Get all permissions for this role
     pub async fn permissions(&self, db: &impl oxidite_db::Database) -> oxidite_db::Result<Vec<Permission>> {
-        let query = format!(
-            "SELECT p.* FROM permissions p 
-             INNER JOIN role_permissions rp ON p.id = rp.permission_id 
-             WHERE rp.role_id = {}",
-            self.id
-        );
-        
-        let rows = db.query(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "SELECT p.* FROM permissions p
+             INNER JOIN role_permissions rp ON p.id = rp.permission_id
+             WHERE rp.role_id = ?"
+        )
+            .bind(self.id);
+
+        let rows = db.fetch_all(query).await?;
         let mut permissions = Vec::new();
         
         for row in rows {
@@ -43,8 +43,15 @@ impl Role {
     
     /// Check if role has a specific permission
     pub async fn has_permission(&self, db: &impl oxidite_db::Database, permission_name: &str) -> oxidite_db::Result<bool> {
-        let permissions = self.permissions(db).await?;
-        Ok(permissions.iter().any(|p| p.name == permission_name))
+        let query = oxidite_db::sqlx::query(
+            "SELECT 1 FROM permissions p
+             INNER JOIN role_permissions rp ON p.id = rp.permission_id
+             WHERE rp.role_id = ? AND p.name = ?
+             LIMIT 1"
+        )
+            .bind(self.id)
+            .bind(permission_name);
+        Ok(db.fetch_one(query).await?.is_some())
     }
 }
 

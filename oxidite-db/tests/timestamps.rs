@@ -1,7 +1,6 @@
-use oxidite_db::{Model, sqlx, Database, DatabaseType, DbTransaction, Result, chrono};
+use oxidite_db::{Model, sqlx, Database, DatabaseType, DbTransaction, Result};
 use async_trait::async_trait;
 use sqlx::any::AnyRow;
-use chrono::Utc;
 
 #[derive(Model, sqlx::FromRow, Clone)]
 struct UserWithTimestamps {

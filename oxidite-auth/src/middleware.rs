@@ -47,18 +47,23 @@ where
             // Verify token
             if let Some(token_str) = token {
                 match verify_token(&token_str, &secret) {
-                    Ok(_claims) => {
+                    Ok(claims) => {
+                        let mut req = req;
+                        req.extensions_mut().insert(claims.clone());
+                        if let Ok(user_id) = claims.sub.parse::<i64>() {
+                            req.extensions_mut().insert(user_id);
+                        }
                         // Token is valid, proceed with request
                         inner.call(req).await
                     }
                     Err(_) => {
                         // Invalid token
-                        Err(CoreError::BadRequest("Invalid token".to_string()))
+                        Err(CoreError::Unauthorized("Invalid token".to_string()))
                     }
                 }
             } else {
                 // No token provided
-                Err(CoreError::BadRequest("Missing authorization header".to_string()))
+                Err(CoreError::Unauthorized("Missing authorization header".to_string()))
             }
         })
     }

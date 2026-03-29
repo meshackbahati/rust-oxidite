@@ -1,8 +1,7 @@
 use oxidite_core::{Router, OxiditeRequest, OxiditeResponse, Result};
+use bytes::Bytes;
+use http_body_util::{BodyExt, Full};
 use tower::Service;
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Context, Poll};
 
 /// Test server for integration testing
 pub struct TestServer<S> {
@@ -30,6 +29,13 @@ where
             .call(request)
             .await
             .map_err(|e| oxidite_core::Error::InternalServerError(format!("Request failed: {:?}", e.into())))
+    }
+
+    /// Send a plain HTTP test request after converting its body to Oxidite's boxed body.
+    pub async fn call_http(&mut self, request: http::Request<Full<Bytes>>) -> Result<OxiditeResponse> {
+        let (parts, body) = request.into_parts();
+        let request = http::Request::from_parts(parts, body.map_err(|e| match e {}).boxed());
+        self.call(request).await
     }
 }
 

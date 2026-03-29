@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use oxidite_core::{OxiditeResponse, Error, Result};
+use oxidite_core::{Error, Result};
 
 // Don't import the types that cause conflicts
 
@@ -42,7 +42,7 @@ pub trait Plugin: Send + Sync {
     }
     
     /// Hook into various parts of the application lifecycle
-    async fn hook(&self, hook: PluginHook) -> HookResult {
+    async fn hook(&self, _hook: PluginHook) -> HookResult {
         HookResult::Continue
     }
 }

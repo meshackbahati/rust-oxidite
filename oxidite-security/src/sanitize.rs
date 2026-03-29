@@ -1,6 +1,7 @@
 //! HTML sanitization utilities
 
 /// Escape HTML special characters (prevents XSS)
+#[must_use]
 pub fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
@@ -12,6 +13,7 @@ pub fn escape_html(s: &str) -> String {
 /// Sanitize HTML by removing dangerous tags and attributes
 /// This is a basic implementation - for production use consider
 /// a dedicated library like ammonia
+#[must_use]
 pub fn sanitize_html(s: &str) -> String {
     // Remove script tags
     let mut result = remove_tag(s, "script");
@@ -31,31 +33,23 @@ pub fn sanitize_html(s: &str) -> String {
 }
 
 fn remove_tag(s: &str, tag: &str) -> String {
-    let lower = s.to_lowercase();
     let mut result = String::new();
-    let mut i = 0;
-    let bytes = s.as_bytes();
-    
-    while i < bytes.len() {
-        let remaining = &lower[i..];
-        
-        // Look for opening tag
-        if remaining.starts_with(&format!("<{}", tag)) {
-            // Find closing tag
-            if let Some(end) = remaining.find(&format!("</{}>", tag)) {
-                i += end + tag.len() + 3;
-                continue;
-            } else if let Some(end) = remaining.find('>') {
-                // Self-closing or unclosed
-                i += end + 1;
-                continue;
-            }
+    let open = format!("<{}", tag);
+    let close = format!("</{}>", tag);
+
+    let mut cursor = 0usize;
+    while let Some(start) = find_ascii_case_insensitive(s, &open, cursor) {
+        result.push_str(&s[cursor..start]);
+
+        if let Some(end) = find_ascii_case_insensitive(s, &close, start) {
+            cursor = end + close.len();
+        } else if let Some(gt) = s[start..].find('>') {
+            cursor = start + gt + 1;
+        } else {
+            cursor = s.len();
         }
-        
-        result.push(bytes[i] as char);
-        i += 1;
     }
-    
+    result.push_str(&s[cursor..]);
     result
 }
 
@@ -68,25 +62,22 @@ fn remove_event_handlers(s: &str) -> String {
     
     let mut result = s.to_string();
     for handler in event_handlers {
-        // Remove handler="..."
-        while let Some(start) = result.to_lowercase().find(handler) {
-            if let Some(eq_pos) = result[start..].find('=') {
-                let quote_start = start + eq_pos + 1;
-                if quote_start < result.len() {
-                    let quote = result.chars().nth(quote_start);
-                    if quote == Some('"') || quote == Some('\'') {
-                        if let Some(quote_end) = result[quote_start + 1..].find(quote.unwrap()) {
-                            result = format!(
-                                "{}{}",
-                                &result[..start],
-                                &result[quote_start + quote_end + 2..]
-                            );
-                            continue;
-                        }
-                    }
-                }
+        while let Some(start) = find_ascii_case_insensitive(&result, handler, 0) {
+            let Some(eq_pos) = result[start..].find('=') else {
+                break;
+            };
+            let quote_start = start + eq_pos + 1;
+            let quote = result.as_bytes().get(quote_start).copied();
+            let Some(quote) = quote else { break };
+            if quote != b'"' && quote != b'\'' {
+                break;
             }
-            break;
+            let next = result[quote_start + 1..]
+                .find(quote as char)
+                .map(|idx| quote_start + 2 + idx);
+            let Some(end) = next else { break };
+
+            result.replace_range(start..end, "");
         }
     }
     
@@ -94,12 +85,46 @@ fn remove_event_handlers(s: &str) -> String {
 }
 
 fn remove_javascript_urls(s: &str) -> String {
-    s.replace("javascript:", "")
-        .replace("data:", "")
-        .replace("vbscript:", "")
+    let without_js = replace_ascii_case_insensitive(s, "javascript:", "");
+    replace_ascii_case_insensitive(&without_js, "vbscript:", "")
+}
+
+fn find_ascii_case_insensitive(haystack: &str, needle: &str, from: usize) -> Option<usize> {
+    if needle.is_empty() || from >= haystack.len() {
+        return None;
+    }
+    let h = haystack.as_bytes();
+    let n = needle.as_bytes();
+    if n.len() > h.len().saturating_sub(from) {
+        return None;
+    }
+
+    for i in from..=h.len() - n.len() {
+        if h[i..i + n.len()]
+            .iter()
+            .zip(n.iter())
+            .all(|(a, b)| a.eq_ignore_ascii_case(b))
+        {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fn replace_ascii_case_insensitive(input: &str, needle: &str, replacement: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    let mut cursor = 0usize;
+    while let Some(idx) = find_ascii_case_insensitive(input, needle, cursor) {
+        out.push_str(&input[cursor..idx]);
+        out.push_str(replacement);
+        cursor = idx + needle.len();
+    }
+    out.push_str(&input[cursor..]);
+    out
 }
 
 /// Strip all HTML tags
+#[must_use]
 pub fn strip_tags(s: &str) -> String {
     let mut result = String::new();
     let mut in_tag = false;
@@ -138,5 +163,19 @@ mod tests {
         let input = "<p>Hello</p><script>alert('xss')</script>";
         let sanitized = sanitize_html(input);
         assert!(!sanitized.contains("script"));
+    }
+
+    #[test]
+    fn sanitize_handles_unicode_without_corruption() {
+        let input = "Привет<script>alert(1)</script>世界";
+        let sanitized = sanitize_html(input);
+        assert_eq!(sanitized, "Привет世界");
+    }
+
+    #[test]
+    fn sanitize_removes_case_insensitive_js_scheme() {
+        let input = r#"<a href="JaVaScRiPt:alert(1)">x</a>"#;
+        let sanitized = sanitize_html(input);
+        assert!(!sanitized.to_lowercase().contains("javascript:"));
     }
 }

@@ -45,7 +45,7 @@ If you prefer to add Oxidite to an existing project manually, add it to your `Ca
 
 ```toml
 [dependencies]
-oxidite = { version = "2.0", features = ["full"] }
+oxidite = { version = "2.1", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 ```
@@ -64,7 +64,7 @@ tokio-test = "0.4"
 
 To verify your installation, create a simple test file:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn hello(_req: Request) -> Result<Response> {

@@ -18,12 +18,13 @@ pub mod email_verification {
         user_id: i64,
     ) -> oxidite_db::Result<String> {
         let token = generate_token();
-        
-        let query = format!(
-            "UPDATE users SET verification_token = '{}' WHERE id = {}",
-            token, user_id
-        );
-        db.execute(&query).await?;
+
+        let query = oxidite_db::sqlx::query(
+            "UPDATE users SET verification_token = ? WHERE id = ?"
+        )
+            .bind(&token)
+            .bind(user_id);
+        db.execute_query(query).await?;
         
         Ok(token)
     }
@@ -33,12 +34,12 @@ pub mod email_verification {
         db: &D,
         token: &str,
     ) -> oxidite_db::Result<bool> {
-        let query = format!(
-            "UPDATE users SET email_verified = 1, verification_token = NULL 
-             WHERE verification_token = '{}'",
-            token
-        );
-        let rows = db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "UPDATE users SET email_verified = 1, verification_token = NULL
+             WHERE verification_token = ?"
+        )
+            .bind(token);
+        let rows = db.execute_query(query).await?;
         Ok(rows > 0)
     }
     
@@ -47,11 +48,11 @@ pub mod email_verification {
         db: &D,
         user_id: i64,
     ) -> oxidite_db::Result<bool> {
-        let query = format!(
-            "SELECT email_verified FROM users WHERE id = {}",
-            user_id
-        );
-        let row = db.query_one(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "SELECT email_verified FROM users WHERE id = ?"
+        )
+            .bind(user_id);
+        let row = db.fetch_one(query).await?;
         
         if let Some(row) = row {
             let verified: i64 = row.try_get("email_verified").unwrap_or(0);
@@ -83,12 +84,15 @@ pub mod password_reset {
         let now = chrono::Utc::now().timestamp();
         let expires_at = now + 3600; // 1 hour
         
-        let query = format!(
+        let query = oxidite_db::sqlx::query(
             "INSERT INTO password_reset_tokens (user_id, token, expires_at, created_at)
-             VALUES ({}, '{}', {}, {})",
-            user_id, token, expires_at, now
-        );
-        db.execute(&query).await?;
+             VALUES (?, ?, ?, ?)"
+        )
+            .bind(user_id)
+            .bind(&token)
+            .bind(expires_at)
+            .bind(now);
+        db.execute_query(query).await?;
         
         Ok(token)
     }
@@ -99,14 +103,15 @@ pub mod password_reset {
         token: &str,
     ) -> oxidite_db::Result<Option<i64>> {
         let now = chrono::Utc::now().timestamp();
-        
-        let query = format!(
-            "SELECT user_id FROM password_reset_tokens 
-             WHERE token = '{}' AND expires_at > {}",
-            token, now
-        );
-        
-        let row = db.query_one(&query).await?;
+
+        let query = oxidite_db::sqlx::query(
+            "SELECT user_id FROM password_reset_tokens
+             WHERE token = ? AND expires_at > ?"
+        )
+            .bind(token)
+            .bind(now);
+
+        let row = db.fetch_one(query).await?;
         
         if let Some(row) = row {
             let user_id: i64 = row.try_get("user_id").unwrap_or(0);
@@ -121,11 +126,11 @@ pub mod password_reset {
         db: &D,
         token: &str,
     ) -> oxidite_db::Result<()> {
-        let query = format!(
-            "DELETE FROM password_reset_tokens WHERE token = '{}'",
-            token
-        );
-        db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "DELETE FROM password_reset_tokens WHERE token = ?"
+        )
+            .bind(token);
+        db.execute_query(query).await?;
         Ok(())
     }
     
@@ -134,11 +139,11 @@ pub mod password_reset {
         db: &D,
     ) -> oxidite_db::Result<()> {
         let now = chrono::Utc::now().timestamp();
-        let query = format!(
-            "DELETE FROM password_reset_tokens WHERE expires_at < {}",
-            now
-        );
-        db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "DELETE FROM password_reset_tokens WHERE expires_at < ?"
+        )
+            .bind(now);
+        db.execute_query(query).await?;
         Ok(())
     }
 }
@@ -163,12 +168,13 @@ pub mod two_factor {
         user_id: i64,
         secret: &str,
     ) -> oxidite_db::Result<()> {
-        let query = format!(
-            "UPDATE users SET two_factor_secret = '{}', two_factor_enabled = 1 
-             WHERE id = {}",
-            secret, user_id
-        );
-        db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "UPDATE users SET two_factor_secret = ?, two_factor_enabled = 1
+             WHERE id = ?"
+        )
+            .bind(secret)
+            .bind(user_id);
+        db.execute_query(query).await?;
         Ok(())
     }
     
@@ -177,12 +183,12 @@ pub mod two_factor {
         db: &D,
         user_id: i64,
     ) -> oxidite_db::Result<()> {
-        let query = format!(
-            "UPDATE users SET two_factor_secret = NULL, two_factor_enabled = 0 
-             WHERE id = {}",
-            user_id
-        );
-        db.execute(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "UPDATE users SET two_factor_secret = NULL, two_factor_enabled = 0
+             WHERE id = ?"
+        )
+            .bind(user_id);
+        db.execute_query(query).await?;
         Ok(())
     }
     
@@ -213,12 +219,12 @@ pub mod two_factor {
         db: &D,
         user_id: i64,
     ) -> oxidite_db::Result<Option<String>> {
-        let query = format!(
-            "SELECT two_factor_secret, two_factor_enabled FROM users WHERE id = {}",
-            user_id
-        );
-        
-        let row = db.query_one(&query).await?;
+        let query = oxidite_db::sqlx::query(
+            "SELECT two_factor_secret, two_factor_enabled FROM users WHERE id = ?"
+        )
+            .bind(user_id);
+
+        let row = db.fetch_one(query).await?;
         
         if let Some(row) = row {
             let enabled: i64 = row.try_get("two_factor_enabled").unwrap_or(0);

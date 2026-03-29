@@ -16,7 +16,7 @@ Oxidite's GraphQL integration includes:
 
 Set up a basic GraphQL endpoint:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use juniper::{EmptyMutation, EmptySubscription, RootNode};
 
@@ -118,7 +118,7 @@ struct DatabaseContext;
 
 Define more complex schemas with mutations and relationships:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use juniper::{FieldResult, GraphQLInputObject};
 
@@ -329,7 +329,7 @@ fn create_advanced_schema() -> Schema {
 
 Integrate GraphQL with Oxidite's routing system:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -471,7 +471,7 @@ async fn main() -> Result<()> {
 
 Connect GraphQL resolvers to your database:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_db::Model;
 use serde::{Deserialize, Serialize};
@@ -639,7 +639,7 @@ fn create_db_schema() -> DbSchema {
 
 Secure your GraphQL endpoints:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Context with authentication info
@@ -822,7 +822,7 @@ fn create_secured_schema() -> SecuredSchema {
 
 Implement real-time GraphQL subscriptions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use juniper::http::GraphQLRequest;
 use futures::stream::Stream;
@@ -948,7 +948,7 @@ struct SubscriptionMessage {
 
 Optimize GraphQL performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -1120,7 +1120,7 @@ fn create_optimized_schema() -> OptimizedSchema {
 
 Test your GraphQL endpoints:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_testing::TestServer;
 

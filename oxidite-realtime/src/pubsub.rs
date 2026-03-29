@@ -30,7 +30,7 @@ impl Channel {
     pub fn publish(&self, event: Event) -> Result<usize> {
         self.sender
             .send(event)
-            .map_err(|_| RealtimeError::SendError("No subscribers".to_string()))
+            .map_err(|_| RealtimeError::SendError(format!("No subscribers on channel `{}`", self.name)))
     }
 
     /// Subscribe to the channel
@@ -54,10 +54,11 @@ pub struct Subscriber {
 impl Subscriber {
     /// Receive the next event
     pub async fn recv(&mut self) -> Result<Event> {
-        self.receiver
-            .recv()
-            .await
-            .map_err(|_| RealtimeError::Disconnected)
+        match self.receiver.recv().await {
+            Ok(event) => Ok(event),
+            Err(broadcast::error::RecvError::Closed) => Err(RealtimeError::Disconnected),
+            Err(broadcast::error::RecvError::Lagged(n)) => Err(RealtimeError::Lagged(n)),
+        }
     }
 }
 
@@ -103,6 +104,16 @@ impl PubSub {
         channel.publish(event)
     }
 
+    /// Publish a message event using channel name as the event channel.
+    pub async fn publish_message(
+        &self,
+        channel_name: &str,
+        data: serde_json::Value,
+    ) -> Result<usize> {
+        let event = Event::message(channel_name, data);
+        self.publish(channel_name, event).await
+    }
+
     /// Subscribe to a channel
     pub async fn subscribe(&self, channel_name: &str) -> Subscriber {
         let channel = self.channel(channel_name).await;
@@ -119,6 +130,12 @@ impl PubSub {
     pub async fn channels(&self) -> Vec<String> {
         let channels = self.channels.read().await;
         channels.keys().cloned().collect()
+    }
+
+    /// Get current subscriber count for an existing channel.
+    pub async fn subscriber_count(&self, channel_name: &str) -> Option<usize> {
+        let channels = self.channels.read().await;
+        channels.get(channel_name).map(|channel| channel.subscriber_count())
     }
 }
 
@@ -172,5 +189,13 @@ mod tests {
         
         assert!(r1.is_ok());
         assert!(r2.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_subscriber_count() {
+        let pubsub = PubSub::new();
+        let _sub = pubsub.subscribe("counted").await;
+        assert_eq!(pubsub.subscriber_count("counted").await, Some(1));
+        assert_eq!(pubsub.subscriber_count("missing").await, None);
     }
 }

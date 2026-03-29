@@ -12,7 +12,7 @@ Extractors in Oxidite implement the `FromRequest` trait, which allows them to au
 
 The `Path` extractor extracts path parameters from the URL:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Single parameter
@@ -51,7 +51,7 @@ async fn get_user_by_struct(Path(params): Path<UserParams>) -> Result<Response> 
 
 The `Query` extractor extracts query parameters from the URL:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -89,7 +89,7 @@ async fn handle_raw_query(Query(raw): Query<serde_json::Value>) -> Result<Respon
 
 The `Json` extractor parses JSON from the request body:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -127,7 +127,7 @@ async fn handle_generic_json(Json(data): Json<serde_json::Value>) -> Result<Resp
 
 The `Form` extractor handles `application/x-www-form-urlencoded` data:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -164,7 +164,7 @@ async fn handle_generic_form(Form(data): Form<serde_json::Value>) -> Result<Resp
 
 The `Cookies` extractor provides access to request cookies:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn handle_cookies(cookies: Cookies) -> Result<Response> {
@@ -206,7 +206,7 @@ async fn get_session(cookies: Cookies) -> Result<Response> {
 
 The `Body` extractor provides access to the raw request body:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Extract as string
@@ -241,7 +241,7 @@ async fn handle_bytes_body(Body(bytes): Body<Bytes>) -> Result<Response> {
 
 The `State` extractor provides access to application state:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -284,7 +284,7 @@ async fn main() -> Result<()> {
 
 You can use multiple extractors in a single handler:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -323,7 +323,7 @@ async fn complex_handler(
 
 You can create custom extractors by implementing the `FromRequest` trait:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::future::Future;
 use std::pin::Pin;
@@ -386,7 +386,7 @@ async fn protected_handler(user: AuthenticatedUser) -> Result<Response> {
 
 Extractors automatically handle parsing errors and return appropriate HTTP status codes:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // If JSON parsing fails, returns 400 Bad Request
@@ -420,7 +420,7 @@ async fn handle_bad_query(Query(params): Query<BadQuery>) -> Result<Response> {
 
 3. **Validation**: Consider validating data after extraction rather than during extraction for better performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 

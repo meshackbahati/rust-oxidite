@@ -17,6 +17,7 @@ pub trait QueueBackend: Send + Sync {
     async fn move_to_dead_letter(&self, job: JobWrapper) -> Result<()>;
     async fn list_dead_letter(&self) -> Result<Vec<JobWrapper>>;
     async fn retry_from_dead_letter(&self, job_id: &str) -> Result<()>;
+    async fn clear(&self) -> Result<()>;
 }
 
 /// In-memory queue backend
@@ -112,6 +113,12 @@ impl QueueBackend for MemoryBackend {
         }
         Ok(())
     }
+
+    async fn clear(&self) -> Result<()> {
+        let mut queue = self.queue.lock().await;
+        queue.clear();
+        Ok(())
+    }
 }
 
 /// Queue for managing jobs
@@ -177,6 +184,12 @@ impl Queue {
 
     pub async fn retry_from_dead_letter(&self, job_id: &str) -> Result<()> {
         self.backend.retry_from_dead_letter(job_id).await
+    }
+
+    pub async fn clear(&self) -> Result<()> {
+        self.backend.clear().await?;
+        self.stats.reset().await;
+        Ok(())
     }
 
     pub async fn get_stats(&self) -> crate::stats::QueueStats {

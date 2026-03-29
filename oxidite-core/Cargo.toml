@@ -1,9 +1,9 @@
 [package]
 name = "oxidite-core"
-version = "2.0.1"
+version = "2.1.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
-description = "Core HTTP server and routing for the Oxidite v2 web framework"
+description = "Core HTTP server and routing for the Oxidite web framework"
 license = "MIT"
 repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["web", "framework", "http", "async", "server"]

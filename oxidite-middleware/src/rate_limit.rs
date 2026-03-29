@@ -98,23 +98,30 @@ impl RateLimiter {
         let window_start = (now / 60) * 60; // Round to minute
         
         // Try to increment existing record
-        let update_query = format!(
-            "UPDATE rate_limits 
-             SET request_count = request_count + 1, updated_at = {}
-             WHERE identifier = '{}' AND endpoint = '{}' AND window_start = {}",
-            now, identifier, endpoint, window_start
-        );
-        
-        let rows = db.execute(&update_query).await?;
+        let update_query = oxidite_db::sqlx::query(
+            "UPDATE rate_limits
+             SET request_count = request_count + 1, updated_at = ?
+             WHERE identifier = ? AND endpoint = ? AND window_start = ?"
+        )
+            .bind(now)
+            .bind(identifier)
+            .bind(endpoint)
+            .bind(window_start);
+
+        let rows = db.execute_query(update_query).await?;
         
         // If no existing record, insert new one
         if rows == 0 {
-            let insert_query = format!(
+            let insert_query = oxidite_db::sqlx::query(
                 "INSERT INTO rate_limits (identifier, endpoint, request_count, window_start, created_at, updated_at)
-                 VALUES ('{}', '{}', 1, {}, {}, {})",
-                identifier, endpoint, window_start, now, now
-            );
-            db.execute(&insert_query).await?;
+                 VALUES (?, ?, 1, ?, ?, ?)"
+            )
+                .bind(identifier)
+                .bind(endpoint)
+                .bind(window_start)
+                .bind(now)
+                .bind(now);
+            db.execute_query(insert_query).await?;
         }
         
         Ok(())

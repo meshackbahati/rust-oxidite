@@ -27,6 +27,7 @@ impl AesKey {
     }
 
     /// Generate a new random key
+    #[must_use]
     pub fn generate() -> Self {
         let cipher = Aes256Gcm::new(&Aes256Gcm::generate_key(&mut OsRng));
         Self { cipher }

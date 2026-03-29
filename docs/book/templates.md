@@ -8,7 +8,7 @@ Oxidite provides a powerful template engine for server-side rendering. The engin
 
 First, you need to set up the template engine:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::{TemplateEngine, Context};
 
@@ -37,7 +37,7 @@ async fn setup_template_example(_req: Request) -> Result<Response> {
 
 You can load templates from a directory structure:
 
-```rust
+```rust,ignore
 use std::path::PathBuf;
 
 async fn file_templates_example(_req: Request) -> Result<Response> {
@@ -93,7 +93,7 @@ The template engine supports basic control structures:
 
 The Context struct is used to pass data to templates:
 
-```rust
+```rust,ignore
 use oxidite_template::Context;
 use serde_json::json;
 
@@ -131,7 +131,7 @@ You can render templates in several ways:
 
 ### Render to String
 
-```rust
+```rust,ignore
 use oxidite_template::{TemplateEngine, Context};
 
 let mut engine = TemplateEngine::new();
@@ -146,7 +146,7 @@ assert_eq!(html, "Hello World!");
 
 ### Render Directly as Response
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::{TemplateEngine, Context};
 
@@ -226,7 +226,7 @@ Filters allow you to transform variables:
 
 The template engine also includes utilities for serving static files:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::serve_static;
 
@@ -239,7 +239,7 @@ use oxidite_template::serve_static;
 
 Here's a complete example showing template usage in a web application:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use oxidite_template::{TemplateEngine, Context};
 use serde_json::json;

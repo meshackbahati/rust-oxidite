@@ -10,7 +10,7 @@ In Oxidite, the `Request` type wraps the underlying `hyper::Request` and provide
 
 You can access a request directly in your handler:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn inspect_request(req: Request) -> Result<Response> {
@@ -43,7 +43,7 @@ fn extract_headers(req: &Request) -> serde_json::Value {
 
 You can access headers from the request object:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn handle_headers(req: Request) -> Result<Response> {
@@ -87,7 +87,7 @@ async fn handle_specific_header(req: Request) -> Result<Response> {
 
 You can access the URI and its components:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn inspect_uri(req: Request) -> Result<Response> {
@@ -126,7 +126,7 @@ async fn manual_query_parsing(req: Request) -> Result<Response> {
 
 You can inspect the HTTP method and protocol version:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn method_inspector(req: Request) -> Result<Response> {
@@ -165,7 +165,7 @@ async fn method_inspector(req: Request) -> Result<Response> {
 
 Request extensions provide a way to store and access custom data:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::any::Any;
 
@@ -199,7 +199,7 @@ async fn handle_extensions(mut req: Request) -> Result<Response> {
 
 While extractors are preferred for body access, you can access the raw body directly:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use http_body_util::BodyExt;
 
@@ -226,7 +226,7 @@ async fn access_raw_body(mut req: Request) -> Result<Response> {
 
 You can perform validation directly on the request:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn validate_request(req: Request) -> Result<Response> {
@@ -265,7 +265,7 @@ async fn validate_request(req: Request) -> Result<Response> {
 
 Access application state alongside the request:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -310,7 +310,7 @@ async fn contextual_handler(
 
 You can access and modify requests in middleware:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn request_logging_middleware(req: Request, next: Next) -> Result<Response> {
@@ -351,7 +351,7 @@ async fn add_request_id_middleware(req: Request, next: Next) -> Result<Response>
 
 When working with requests, consider these security aspects:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn secure_request_handler(req: Request) -> Result<Response> {

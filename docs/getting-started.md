@@ -1,4 +1,4 @@
-# Getting Started with Oxidite v2
+# Getting Started with Oxidite
 
 This guide will walk you through creating your first Oxidite application.
 
@@ -221,7 +221,7 @@ To use the database features, enable the database feature in your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite = { version = "1.0", features = ["database"] }
+oxidite = { version = "2.1", features = ["database"] }
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 ```

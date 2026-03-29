@@ -1,32 +1,53 @@
 # oxidite-storage
 
-File storage for Oxidite with local and S3 backends.
+File storage abstraction for Oxidite with local filesystem and optional S3 backend.
 
 ## Installation
 
 ```toml
 [dependencies]
-oxidite-storage = "0.1"
+oxidite-storage = "2.1.0"
+```
+
+Disable S3 if you only need local storage:
+
+```toml
+[dependencies]
+oxidite-storage = { version = "2.1.0", default-features = false }
 ```
 
 ## Usage
 
 ```rust
-use oxidite_storage::*;
+use bytes::Bytes;
+use oxidite_storage::{LocalStorage, Storage};
 
-// Local storage
-let storage = LocalStorage::new("uploads").unwrap();
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let storage = LocalStorage::new("uploads")?;
 
-// Store file
-storage.put("file.txt", data).await?;
+    storage.put("avatars/user-1.png", Bytes::from_static(b"png-data")).await?;
+    let file = storage.get("avatars/user-1.png").await?;
+    assert!(!file.is_empty());
 
-// Get file
-let data = storage.get("file.txt").await?;
-
-// Delete
-storage.delete("file.txt").await?;
+    Ok(())
+}
 ```
 
-## License
+## Validation
 
-MIT
+Use `FileValidator` + `ValidationRules` to enforce upload constraints:
+
+```rust
+use bytes::Bytes;
+use oxidite_storage::{FileValidator, ValidationRules};
+
+let rules = ValidationRules::new()
+    .max_size(5 * 1024 * 1024)
+    .allowed_extensions(vec!["png".into(), "jpg".into()])
+    .allowed_mime_types(vec!["image/".into()]);
+
+let validator = FileValidator::new(rules);
+validator.validate("avatar.png", &Bytes::from_static(b"data"))?;
+# Ok::<(), oxidite_storage::StorageError>(())
+```

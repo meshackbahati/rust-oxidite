@@ -252,6 +252,14 @@ impl QueueBackend for PostgresBackend {
 
         Ok(())
     }
+
+    async fn clear(&self) -> Result<()> {
+        sqlx::query(&format!("DELETE FROM {}", self.table_name))
+            .execute(&self.pool)
+            .await
+            .map_err(|e| QueueError::BackendError(e.to_string()))?;
+        Ok(())
+    }
 }
 
 impl PostgresBackend {

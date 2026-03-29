@@ -24,12 +24,22 @@ impl ValidationRules {
     }
 
     pub fn allowed_mime_types(mut self, types: Vec<String>) -> Self {
-        self.allowed_mime_types = Some(types);
+        self.allowed_mime_types = Some(
+            types
+                .into_iter()
+                .map(|t| t.trim().to_ascii_lowercase())
+                .collect(),
+        );
         self
     }
 
     pub fn allowed_extensions(mut self, extensions: Vec<String>) -> Self {
-        self.allowed_extensions = Some(extensions);
+        self.allowed_extensions = Some(
+            extensions
+                .into_iter()
+                .map(|e| e.trim().trim_start_matches('.').to_ascii_lowercase())
+                .collect(),
+        );
         self
     }
 }
@@ -66,8 +76,9 @@ impl FileValidator {
                 .extension()
                 .and_then(|e| e.to_str())
                 .unwrap_or("");
+            let extension = extension.to_ascii_lowercase();
 
-            if !allowed_extensions.contains(&extension.to_lowercase()) {
+            if !allowed_extensions.iter().any(|allowed| allowed == &extension) {
                 return Err(StorageError::Validation(
                     format!("File extension '{}' not allowed", extension)
                 ));
@@ -78,7 +89,8 @@ impl FileValidator {
         if let Some(allowed_mime_types) = &self.rules.allowed_mime_types {
             let mime_type = mime_guess::from_path(filename)
                 .first_or_octet_stream()
-                .to_string();
+                .to_string()
+                .to_ascii_lowercase();
 
             if !allowed_mime_types.iter().any(|m| mime_type.starts_with(m)) {
                 return Err(StorageError::Validation(
@@ -103,6 +115,28 @@ pub fn generate_filename(original: &str) -> String {
     if extension.is_empty() {
         uuid.to_string()
     } else {
-        format!("{}.{}", uuid, extension)
+        format!("{}.{}", uuid, extension.to_ascii_lowercase())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{generate_filename, FileValidator, ValidationRules};
+    use bytes::Bytes;
+
+    #[test]
+    fn validator_accepts_case_insensitive_extension_and_mime() {
+        let rules = ValidationRules::new()
+            .allowed_extensions(vec!["JPG".to_string()])
+            .allowed_mime_types(vec!["IMAGE/".to_string()]);
+        let validator = FileValidator::new(rules);
+        let data = Bytes::from_static(b"fake");
+        assert!(validator.validate("photo.JPG", &data).is_ok());
+    }
+
+    #[test]
+    fn generate_filename_preserves_extension_lowercased() {
+        let name = generate_filename("avatar.PNG");
+        assert!(name.ends_with(".png"));
     }
 }

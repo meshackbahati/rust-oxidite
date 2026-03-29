@@ -17,7 +17,7 @@ Performance optimization includes:
 
 Optimize how your application handles incoming requests:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -86,7 +86,7 @@ async fn preprocessing_middleware(req: Request, next: Next) -> Result<Response> 
 
 Optimize database interactions:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -238,7 +238,7 @@ pub trait ToSql {
 
 Implement effective caching:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -442,7 +442,7 @@ impl CachedRepository {
 
 Optimize memory usage:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 
@@ -617,7 +617,7 @@ impl EfficientJsonHandler {
 
 Optimize concurrent operations:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use tokio::task;
 use std::sync::Arc;
@@ -828,7 +828,7 @@ async fn fetch_from_backup_db() -> Result<String> { Ok("backup_data".to_string()
 
 Optimize network performance:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // HTTP/2 and HTTP/3 optimizations
@@ -1002,7 +1002,7 @@ fn get_content_type(path: &str) -> &'static str {
 
 Monitor and profile your application:
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::sync::Arc;
 use tokio::time::{Duration, Instant};

@@ -25,7 +25,8 @@ pub fn slugify(s: &str) -> String {
 
 /// Truncate a string to a maximum length
 pub fn truncate(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
+    let char_count = s.chars().count();
+    if char_count <= max_len {
         s.to_string()
     } else if max_len <= 3 {
         s.chars().take(max_len).collect()
@@ -107,6 +108,7 @@ mod tests {
         assert_eq!(truncate("Hello World", 5), "He...");
         assert_eq!(truncate("Hi", 5), "Hi");
         assert_eq!(truncate("Hello", 5), "Hello");
+        assert_eq!(truncate("éééé", 3), "ééé");
     }
 
     #[test]

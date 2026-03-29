@@ -1,0 +1,5 @@
+error: Model derive requires `id` to be of type i64
+ --> tests/ui/fail_id_not_i64.rs:5:9
+  |
+5 |     id: i32,
+  |         ^^^

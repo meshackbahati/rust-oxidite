@@ -6,7 +6,7 @@ This appendix contains common patterns, recipes, and solutions to frequently enc
 
 ### Extracting Multiple Types of Data from One Request
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -40,7 +40,7 @@ async fn advanced_search(
 
 ### Working with Cookies
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn handle_cookies(cookies: Cookies) -> Result<Response> {
@@ -64,7 +64,7 @@ async fn handle_cookies(cookies: Cookies) -> Result<Response> {
 
 ### Conditional Responses
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn conditional_response(query: Query<serde_json::Value>) -> Result<Response> {
@@ -82,7 +82,7 @@ async fn conditional_response(query: Query<serde_json::Value>) -> Result<Respons
 
 ### Streaming Large Data
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use futures::stream::{self, StreamExt};
 use http_body_util::StreamBody;
@@ -118,7 +118,7 @@ async fn stream_large_data(_req: Request) -> Result<Response> {
 
 ### Custom Error Responses
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 // Create a custom error response
@@ -144,7 +144,7 @@ async fn custom_error_handler(_req: Request) -> Result<Response> {
 
 ### Error Recovery Pattern
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn recoverable_operation(_req: Request) -> Result<Response> {
@@ -177,7 +177,7 @@ fn get_cached_data() -> serde_json::Value {
 
 ### Authentication Middleware
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 
 async fn auth_middleware(req: Request, next: Next) -> Result<Response> {
@@ -226,7 +226,7 @@ async fn protected_route(user: CurrentUser) -> Result<Response> {
 
 ### Repository Pattern
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -300,7 +300,7 @@ struct PageParams {
 
 ### Environment-Based Configuration
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use serde::Deserialize;
 
@@ -333,7 +333,7 @@ async fn config_endpoint(State(config): State<AppConfig>) -> Result<Response> {
 
 ### Unit Testing Handlers
 
-```rust
+```rust,ignore
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -372,7 +372,7 @@ mod tests {
 
 ### Caching with Memoization
 
-```rust
+```rust,ignore
 use oxidite::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -465,7 +465,7 @@ async fn perform_expensive_computation(_input: &str) -> serde_json::Value {
 ### Blocking Operations in Async Context
 
 ❌ Don't do this:
-```rust
+```rust,ignore
 // BAD: This blocks the async runtime
 async fn bad_handler(_req: Request) -> Result<Response> {
     let result = std::process::Command::new("slow_command").output().unwrap();
@@ -474,7 +474,7 @@ async fn bad_handler(_req: Request) -> Result<Response> {
 ```
 
 ✅ Do this instead:
-```rust
+```rust,ignore
 // GOOD: Use spawn_blocking for CPU-intensive operations
 use tokio::task;
 
@@ -490,7 +490,7 @@ async fn good_handler(_req: Request) -> Result<Response> {
 ### Improper Error Handling
 
 ❌ Don't do this:
-```rust
+```rust,ignore
 // BAD: Converting errors to strings loses context
 async fn bad_error_handling(_req: Request) -> Result<Response> {
     let data = some_operation().await.map_err(|e| Error::InternalServerError(e.to_string()))?;
@@ -499,7 +499,7 @@ async fn bad_error_handling(_req: Request) -> Result<Response> {
 ```
 
 ✅ Do this instead:
-```rust
+```rust,ignore
 // GOOD: Preserve error types when possible
 async fn good_error_handling(_req: Request) -> Result<Response> {
     let data = some_operation().await?;

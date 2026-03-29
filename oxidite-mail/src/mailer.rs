@@ -1,5 +1,4 @@
 use crate::{Result, transport::Transport, Message};
-use async_trait::async_trait;
 
 /// Mailer - Nodemailer-style API
 pub struct Mailer<T: Transport> {
@@ -14,6 +13,11 @@ impl<T: Transport> Mailer<T> {
     /// Send an email
     pub async fn send_mail(&self, message: Message) -> Result<()> {
         self.transport.send(message).await
+    }
+
+    /// Alias for `send_mail` for a more concise API.
+    pub async fn send(&self, message: Message) -> Result<()> {
+        self.send_mail(message).await
     }
 
     /// Verify transport connection

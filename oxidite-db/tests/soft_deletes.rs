@@ -2,6 +2,7 @@ use oxidite_db::{Model, sqlx, Database, DatabaseType, DbTransaction, Result};
 use async_trait::async_trait;
 use sqlx::any::AnyRow;
 
+#[allow(dead_code)]
 #[derive(Model, sqlx::FromRow, Clone)]
 struct UserWithSoftDelete {
     id: i64,

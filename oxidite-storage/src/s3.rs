@@ -3,7 +3,7 @@
 //! This module provides S3 storage support for the oxidite-storage crate.
 //! Requires the `s3` feature to be enabled.
 
-use crate::{Storage, StoredFile, FileMetadata, Result, StorageError};
+use crate::{validate_storage_path, Storage, StoredFile, FileMetadata, Result, StorageError};
 use async_trait::async_trait;
 use bytes::Bytes;
 use aws_sdk_s3::Client;
@@ -79,6 +79,7 @@ impl S3Storage {
 #[async_trait]
 impl Storage for S3Storage {
     async fn put(&self, path: &str, data: Bytes) -> Result<StoredFile> {
+        validate_storage_path(path)?;
         let size = data.len() as u64;
         
         // Guess content type from path
@@ -94,7 +95,7 @@ impl Storage for S3Storage {
             .content_type(&content_type)
             .send()
             .await
-            .map_err(|e| StorageError::Other(format!("S3 put failed: {}", e)))?;
+            .map_err(|e| StorageError::S3(format!("put failed: {e}")))?;
 
         Ok(StoredFile {
             path: path.to_string(),
@@ -105,6 +106,7 @@ impl Storage for S3Storage {
     }
 
     async fn get(&self, path: &str) -> Result<Bytes> {
+        validate_storage_path(path)?;
         let response = self.client
             .get_object()
             .bucket(&self.config.bucket)
@@ -115,7 +117,7 @@ impl Storage for S3Storage {
                 if e.to_string().contains("NoSuchKey") {
                     StorageError::NotFound(path.to_string())
                 } else {
-                    StorageError::Other(format!("S3 get failed: {}", e))
+                    StorageError::S3(format!("get failed: {e}"))
                 }
             })?;
 
@@ -123,25 +125,27 @@ impl Storage for S3Storage {
             .body
             .collect()
             .await
-            .map_err(|e| StorageError::Other(format!("Failed to read S3 response: {}", e)))?
+            .map_err(|e| StorageError::S3(format!("failed to read response: {e}")))?
             .into_bytes();
 
         Ok(data)
     }
 
     async fn delete(&self, path: &str) -> Result<()> {
+        validate_storage_path(path)?;
         self.client
             .delete_object()
             .bucket(&self.config.bucket)
             .key(path)
             .send()
             .await
-            .map_err(|e| StorageError::Other(format!("S3 delete failed: {}", e)))?;
+            .map_err(|e| StorageError::S3(format!("delete failed: {e}")))?;
 
         Ok(())
     }
 
     async fn exists(&self, path: &str) -> Result<bool> {
+        validate_storage_path(path)?;
         let result = self.client
             .head_object()
             .bucket(&self.config.bucket)
@@ -152,11 +156,12 @@ impl Storage for S3Storage {
         match result {
             Ok(_) => Ok(true),
             Err(e) if e.to_string().contains("NotFound") => Ok(false),
-            Err(e) => Err(StorageError::Other(format!("S3 exists check failed: {}", e))),
+            Err(e) => Err(StorageError::S3(format!("exists check failed: {e}"))),
         }
     }
 
     async fn metadata(&self, path: &str) -> Result<FileMetadata> {
+        validate_storage_path(path)?;
         let response = self.client
             .head_object()
             .bucket(&self.config.bucket)
@@ -167,7 +172,7 @@ impl Storage for S3Storage {
                 if e.to_string().contains("NotFound") {
                     StorageError::NotFound(path.to_string())
                 } else {
-                    StorageError::Other(format!("S3 metadata failed: {}", e))
+                    StorageError::S3(format!("metadata failed: {e}"))
                 }
             })?;
 
@@ -185,13 +190,16 @@ impl Storage for S3Storage {
     }
 
     async fn list(&self, prefix: &str) -> Result<Vec<String>> {
+        if !prefix.is_empty() {
+            validate_storage_path(prefix)?;
+        }
         let response = self.client
             .list_objects_v2()
             .bucket(&self.config.bucket)
             .prefix(prefix)
             .send()
             .await
-            .map_err(|e| StorageError::Other(format!("S3 list failed: {}", e)))?;
+            .map_err(|e| StorageError::S3(format!("list failed: {e}")))?;
 
         let files = response
             .contents()

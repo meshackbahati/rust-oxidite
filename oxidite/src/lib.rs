@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! oxidite = "1.0"
+//! oxidite = "2.1"
 //! tokio = { version = "1", features = ["full"] }
 //! serde = { version = "1", features = ["derive"] }
 //! ```
@@ -14,13 +14,14 @@
 //! ```rust,no_run
 //! use oxidite::prelude::*;
 //!
+//! async fn hello(_req: Request) -> Result<Response> {
+//!     Ok(Response::text("Hello, Oxidite!"))
+//! }
+//!
 //! #[tokio::main]
 //! async fn main() -> Result<()> {
 //!     let mut app = Router::new();
-//!     
-//!     app.get("/", |_req| async {
-//!         Ok(Response::text("Hello, Oxidite!"))
-//!     });
+//!     app.get("/", hello);
 //!     
 //!     Server::new(app)
 //!         .listen("127.0.0.1:3000".parse().unwrap())

@@ -46,7 +46,12 @@ where
     fn call(&mut self, req: hyper::Request<hyper::body::Incoming>) -> Self::Future {
         let req = req.map(|b| b.map_err(|e| e.into()).boxed());
         fn map_response(res: std::result::Result<OxiditeResponse, Error>) -> std::result::Result<hyper::Response<crate::types::BoxBody>, Error> {
-            res.map(|r| r.into())
+            match res {
+                Ok(response) => Ok(response.into()),
+                // Convert framework/service errors into proper HTTP responses
+                // so connections are not aborted for expected handler errors.
+                Err(error) => Ok(OxiditeResponse::from(error).into()),
+            }
         }
         self.0.call(req).map(map_response)
     }

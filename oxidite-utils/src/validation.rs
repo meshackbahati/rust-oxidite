@@ -1,23 +1,43 @@
 //! Validation utilities
 
 use regex::Regex;
+use std::sync::OnceLock;
+
+fn email_regex() -> &'static Regex {
+    static EMAIL: OnceLock<Regex> = OnceLock::new();
+    EMAIL.get_or_init(|| {
+        Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+            .expect("email regex must compile")
+    })
+}
+
+fn url_regex() -> &'static Regex {
+    static URL: OnceLock<Regex> = OnceLock::new();
+    URL.get_or_init(|| {
+        Regex::new(r"^https?://[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)*(:\d+)?(/.*)?$")
+            .expect("url regex must compile")
+    })
+}
+
+fn phone_regex() -> &'static Regex {
+    static PHONE: OnceLock<Regex> = OnceLock::new();
+    PHONE
+        .get_or_init(|| Regex::new(r"^\+?[0-9]{10,15}$").expect("phone regex must compile"))
+}
 
 /// Check if a string is a valid email address
 pub fn is_email(s: &str) -> bool {
-    let re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-    re.is_match(s)
+    email_regex().is_match(s)
 }
 
 /// Check if a string is a valid URL
 pub fn is_url(s: &str) -> bool {
-    let re = Regex::new(r"^https?://[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)*(:\d+)?(/.*)?$").unwrap();
-    re.is_match(s)
+    url_regex().is_match(s)
 }
 
 /// Check if a string is a valid phone number (basic international format)
 pub fn is_phone(s: &str) -> bool {
-    let re = Regex::new(r"^\+?[0-9]{10,15}$").unwrap();
-    re.is_match(s.replace(['-', ' ', '(', ')'], "").as_str())
+    phone_regex().is_match(s.replace(['-', ' ', '(', ')'], "").as_str())
 }
 
 /// Check if a string is alphanumeric
@@ -27,7 +47,7 @@ pub fn is_alphanumeric(s: &str) -> bool {
 
 /// Check if a string is numeric
 pub fn is_numeric(s: &str) -> bool {
-    !s.is_empty() && s.chars().all(|c| c.is_numeric())
+    !s.is_empty() && s.chars().all(|c| c.is_ascii_digit())
 }
 
 /// Check if a string has minimum length
@@ -80,5 +100,11 @@ mod tests {
         assert!(max_length("hi", 5));
         assert!(!max_length("hello world", 5));
         assert!(length_between("hello", 3, 10));
+    }
+
+    #[test]
+    fn test_numeric_is_ascii_only() {
+        assert!(is_numeric("12345"));
+        assert!(!is_numeric("١٢٣"));
     }
 }

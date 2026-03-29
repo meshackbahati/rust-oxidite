@@ -1,18 +1,18 @@
 [book]
 authors = ["Meshack Bahati Ouma"]
 language = "en"
-multilingual = false
 src = "."
-title = "The Oxidite Web Framework Book"
+title = "The Oxidite Book"
 
 [build]
-build-dir = "book-output"
+build-dir = "../../doc/book/book"
 
 [output.html]
-theme = "src/theme"
 default-theme = "light"
 git-repository-url = "https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book"
 edit-url-template = "https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/{path}"
+site-url = "/doc/book/book/"
+additional-css = ["custom.css"]
 
 [output.html.playground]
 editable = true

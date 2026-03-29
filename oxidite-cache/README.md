@@ -1,71 +1,58 @@
 # oxidite-cache
 
-Caching backends (Memory, Redis) for the Oxidite web framework.
+Caching backends for Oxidite with in-memory and Redis implementations.
 
 ## Installation
 
 ```toml
 [dependencies]
-oxidite-cache = "0.1"
+oxidite-cache = "2.1.0"
 ```
 
-## Usage
+## Backends
 
-### Memory Cache
+- `MemoryCache`: process-local in-memory cache with TTL support
+- `RedisCache`: shared cache backed by Redis
+
+## Basic Usage
 
 ```rust
-use oxidite_cache::*;
+use std::time::Duration;
+use oxidite_cache::{Cache, MemoryCache};
 
-let cache = MemoryCache::new();
+#[tokio::main]
+async fn main() -> Result<(), oxidite_cache::CacheError> {
+    let cache = MemoryCache::new();
 
-// Set value
-cache.set("key", "value", Some(Duration::from_secs(3600))).await?;
+    cache.set("user:1", &"Alice", Some(Duration::from_secs(60))).await?;
+    let user: Option<String> = cache.get("user:1").await?;
+    assert_eq!(user.as_deref(), Some("Alice"));
 
-// Get value
-if let Some(value) = cache.get::<String>("key").await? {
-    println!("Value: {}", value);
+    Ok(())
 }
-
-// Delete
-cache.delete("key").await?;
 ```
 
-### Redis Cache
+## Remember Pattern
 
 ```rust
-let cache = RedisCache::new("redis://127.0.0.1")?;
+use std::time::Duration;
+use oxidite_cache::MemoryCache;
 
-cache.set("key", "value", Some(Duration::from_secs(3600))).await?;
+# #[tokio::main]
+# async fn main() -> Result<(), oxidite_cache::CacheError> {
+let cache = MemoryCache::new();
+let value: String = cache
+    .remember("expensive:key", Duration::from_secs(30), || async {
+        Ok("computed".to_string())
+    })
+    .await?;
+assert_eq!(value, "computed");
+# Ok(())
+# }
 ```
 
-### Remember Pattern
+## Notes
 
-```rust
-let value = cache.remember("expensive-key", Duration::from_secs(3600), || async {
-    // Expensive computation
-    calculate_something().await
-}).await?;
-```
-
-### Tagged Cache
-
-```rust
-// Set with tags
-cache.set_tagged("user:1", data, vec!["users"], None).await?;
-
-// Invalidate by tag
-cache.invalidate_tag("users").await?;
-```
-
-## Features
-
-- Memory backend (LRU)
-- Redis backend
-- TTL support
-- Remember pattern
-- Tagged cache invalidation
-- Async/await
-
-## License
-
-MIT
+- Cache keys must be non-empty and free of control characters.
+- TTL values must be greater than zero when provided.
+- This crate currently does not implement tagged cache invalidation.

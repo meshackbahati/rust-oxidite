@@ -2,7 +2,7 @@ use crate::{Message, Result, MailError};
 use async_trait::async_trait;
 use lettre::{
     AsyncSmtpTransport, AsyncTransport, Tokio1Executor,
-    message::{header::ContentType, Mailbox, MultiPart, SinglePart},
+    message::{header::ContentType, Attachment as LettreAttachment, Mailbox, MultiPart, SinglePart},
 };
 use lettre::transport::smtp::authentication::Credentials;
 
@@ -63,6 +63,11 @@ impl SmtpTransport {
     pub fn from_config(config: SmtpConfig) -> Result<Self> {
         let transport = Self::build_transport(&config)?;
         Ok(Self { config, transport })
+    }
+
+    /// Access the active SMTP transport configuration.
+    pub fn config(&self) -> &SmtpConfig {
+        &self.config
     }
 
     fn build_transport(config: &SmtpConfig) -> Result<AsyncSmtpTransport<Tokio1Executor>> {
@@ -129,14 +134,27 @@ impl SmtpTransport {
 
             for attachment in &message.attachments {
                 let content_type = if let Some(ct) = &attachment.content_type {
-                    ContentType::parse(ct).unwrap_or(ContentType::TEXT_PLAIN)
+                    ContentType::parse(ct)
+                        .map_err(|_| MailError::Attachment(format!("Invalid content type: {ct}")))?
                 } else {
                     ContentType::TEXT_PLAIN
                 };
 
-                let part = SinglePart::builder()
-                    .header(content_type)
-                    .body(attachment.content.clone());
+                let part = if attachment.inline {
+                    if let Some(cid) = &attachment.content_id {
+                        LettreAttachment::new_inline_with_name(cid.clone(), attachment.filename.clone())
+                            .body(attachment.content.clone(), content_type)
+                    } else {
+                        LettreAttachment::new_inline_with_name(
+                            attachment.filename.clone(),
+                            attachment.filename.clone(),
+                        )
+                        .body(attachment.content.clone(), content_type)
+                    }
+                } else {
+                    LettreAttachment::new(attachment.filename.clone())
+                        .body(attachment.content.clone(), content_type)
+                };
 
                 multipart = multipart.singlepart(part);
             }
@@ -146,6 +164,11 @@ impl SmtpTransport {
 
         let email = email_builder.multipart(body)?;
         Ok(email)
+    }
+
+    /// Build a lettre message without sending it (useful for preflight tests).
+    pub fn try_build(&self, message: Message) -> Result<lettre::Message> {
+        self.build_email(message)
     }
 }
 
@@ -161,5 +184,40 @@ impl Transport for SmtpTransport {
         self.transport.test_connection().await
             .map_err(|e| MailError::Smtp(e.to_string()))?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SmtpTransport;
+    use crate::{Attachment, Message};
+
+    #[tokio::test]
+    async fn build_email_rejects_invalid_attachment_content_type() {
+        let transport = SmtpTransport::new("localhost", 1025).expect("transport init");
+        let message = Message::new()
+            .from("sender@example.com")
+            .to("recipient@example.com")
+            .subject("subject")
+            .text("body")
+            .attach(
+                Attachment::new("file.bin")
+                    .content(vec![1, 2, 3])
+                    .content_type("not/a valid mime"),
+            );
+
+        let result = transport.build_email(message);
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn try_build_valid_message() {
+        let transport = SmtpTransport::new("localhost", 1025).expect("transport init");
+        let message = Message::new()
+            .from("sender@example.com")
+            .to("recipient@example.com")
+            .subject("subject")
+            .text("body");
+        assert!(transport.try_build(message).is_ok());
     }
 }
