@@ -1,5 +1,10 @@
 (() => {
-  const root = typeof window.path_to_root === "string" ? window.path_to_root : "";
+  let root = "";
+  if (typeof path_to_root !== "undefined") {
+    root = path_to_root;
+  } else if (typeof window.path_to_root === "string") {
+    root = window.path_to_root;
+  }
 
   function addBrand() {
     const leftButtons = document.querySelector("#mdbook-menu-bar .left-buttons");
