@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>/index.html</loc></url>
-  <url><loc>/installation.html</loc></url>
-  <url><loc>/hello-world.html</loc></url>
-  <url><loc>/routing.html</loc></url>
-  <url><loc>/database.html</loc></url>
-  <url><loc>/authentication.html</loc></url>
-  <url><loc>/cli.html</loc></url>
-  <url><loc>/production.html</loc></url>
-  <url><loc>/performance.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/index.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/installation.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/hello-world.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/routing.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/database.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/authentication.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/cli.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/production.html</loc></url>
+  <url><loc>https://oxidite.g24sec.space/performance.html</loc></url>
 </urlset>
