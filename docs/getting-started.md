@@ -440,8 +440,8 @@ async fn main() -> Result<()> {
         .layer(AddExtensionLayer::new(state))
         .service(router);
     
-    println!("🚀 User API server starting on http://127.0.0.1:3000");
-    println!("📋 Available endpoints:");
+    println!("User API server starting on http://127.0.0.1:3000");
+    println!("Available endpoints:");
     println!("   GET    /users          - List all users");
     println!("   POST   /users          - Create a new user");
     println!("   GET    /users/:id      - Get user by ID");

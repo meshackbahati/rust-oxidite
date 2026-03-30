@@ -1,0 +1,1499 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>GraphQL - Oxidite Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="custom-b48cbb74.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-e08cec6f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-0584e8c7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Oxidite Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/./graphql.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="graphql-integration"><a class="header" href="#graphql-integration">GraphQL Integration</a></h1>
+<p>GraphQL provides a powerful alternative to REST APIs, allowing clients to request exactly the data they need. This chapter covers how to integrate GraphQL into your Oxidite applications.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>Oxidite’s GraphQL integration includes:</p>
+<ul>
+<li>Schema definition with Rust types</li>
+<li>Query and mutation resolvers</li>
+<li>Subscription support</li>
+<li>Integration with Oxidite’s routing system</li>
+<li>Type safety with Juniper integration</li>
+<li>Real-time subscriptions</li>
+</ul>
+<h2 id="basic-graphql-setup"><a class="header" href="#basic-graphql-setup">Basic GraphQL Setup</a></h2>
+<p>Set up a basic GraphQL endpoint:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use juniper::{EmptyMutation, EmptySubscription, RootNode};
+
+// Define a simple user object
+#[derive(juniper::GraphQLObject)]
+#[graphql(description = "A user in the system")]
+struct User {
+    id: juniper::ID,
+    name: String,
+    email: String,
+    created_at: String,
+}
+
+// Define the query root
+struct QueryRoot;
+
+#[juniper::graphql_object]
+impl QueryRoot {
+    /// Get a user by ID
+    async fn user(id: juniper::ID) -&gt; Option&lt;User&gt; {
+        // In a real app, fetch from database
+        if id == juniper::ID::from("1") {
+            Some(User {
+                id: id.clone(),
+                name: "John Doe".to_string(),
+                email: "john@example.com".to_string(),
+                created_at: chrono::Utc::now().to_rfc3339(),
+            })
+        } else {
+            None
+        }
+    }
+    
+    /// Get all users
+    async fn users() -&gt; Vec&lt;User&gt; {
+        vec![
+            User {
+                id: juniper::ID::from("1"),
+                name: "John Doe".to_string(),
+                email: "john@example.com".to_string(),
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+            User {
+                id: juniper::ID::from("2"),
+                name: "Jane Smith".to_string(),
+                email: "jane@example.com".to_string(),
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+        ]
+    }
+}
+
+// Create the schema
+type Schema = juniper::RootNode&lt;'static, QueryRoot, EmptyMutation, EmptySubscription&gt;;
+
+fn create_schema() -&gt; Schema {
+    Schema::new(QueryRoot, EmptyMutation::new(), EmptySubscription::new())
+}
+
+// GraphQL endpoint handler
+async fn graphql_handler(
+    mut req: Request,
+    State(schema): State&lt;Schema&gt;
+) -&gt; Result&lt;Response&gt; {
+    // Collect the request body
+    use http_body_util::BodyExt;
+    let body_bytes = req
+        .body_mut()
+        .collect()
+        .await
+        .map_err(|e| Error::InternalServerError(e.to_string()))?
+        .to_bytes();
+    
+    let body_str = String::from_utf8_lossy(&amp;body_bytes);
+    
+    // Parse GraphQL request
+    let gql_request: juniper::http::GraphQLRequest = 
+        serde_json::from_str(&amp;body_str)
+            .map_err(|e| Error::BadRequest(format!("Invalid GraphQL request: {}", e)))?;
+    
+    // Execute the request
+    let context = DatabaseContext {}; // Context for resolvers
+    let response = gql_request.execute(&amp;schema, &amp;context).await;
+    
+    // Return response
+    let json_response = serde_json::to_string(&amp;response)
+        .map_err(|e| Error::InternalServerError(format!("Serialization error: {}", e)))?;
+    
+    Ok(Response::json(serde_json::Value::from(response)))
+}
+
+// Context for GraphQL resolvers
+struct DatabaseContext;
+
+// In a real app, implement your database access here</code></pre>
+<h2 id="advanced-schema-definition"><a class="header" href="#advanced-schema-definition">Advanced Schema Definition</a></h2>
+<p>Define more complex schemas with mutations and relationships:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use juniper::{FieldResult, GraphQLInputObject};
+
+// Enhanced user with more fields
+#[derive(juniper::GraphQLObject, Clone)]
+#[graphql(description = "A user in the system")]
+struct User {
+    id: juniper::ID,
+    name: String,
+    email: String,
+    age: i32,
+    posts: Vec&lt;Post&gt;,
+    created_at: String,
+}
+
+// Post object
+#[derive(juniper::GraphQLObject, Clone)]
+#[graphql(description = "A blog post")]
+struct Post {
+    id: juniper::ID,
+    title: String,
+    content: String,
+    author: User,
+    published: bool,
+    created_at: String,
+}
+
+// Input object for mutations
+#[derive(GraphQLInputObject)]
+#[graphql(description = "Properties for creating a new user")]
+struct NewUser {
+    name: String,
+    email: String,
+    age: i32,
+}
+
+// Input object for creating a post
+#[derive(GraphQLInputObject)]
+#[graphql(description = "Properties for creating a new post")]
+struct NewPost {
+    title: String,
+    content: String,
+    author_id: juniper::ID,
+}
+
+// Enhanced query root
+struct QueryRoot;
+
+#[juniper::graphql_object]
+impl QueryRoot {
+    /// Get a user by ID
+    async fn user(id: juniper::ID, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;User&gt;&gt; {
+        // In a real app, fetch from database
+        Ok(Some(User {
+            id: id.clone(),
+            name: "John Doe".to_string(),
+            email: "john@example.com".to_string(),
+            age: 30,
+            posts: vec![],
+            created_at: chrono::Utc::now().to_rfc3339(),
+        }))
+    }
+    
+    /// Get all users
+    async fn users(context: &amp;DatabaseContext) -&gt; FieldResult&lt;Vec&lt;User&gt;&gt; {
+        Ok(vec![
+            User {
+                id: juniper::ID::from("1"),
+                name: "John Doe".to_string(),
+                email: "john@example.com".to_string(),
+                age: 30,
+                posts: vec![],
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+            User {
+                id: juniper::ID::from("2"),
+                name: "Jane Smith".to_string(),
+                email: "jane@example.com".to_string(),
+                age: 25,
+                posts: vec![],
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+        ])
+    }
+    
+    /// Get a post by ID
+    async fn post(id: juniper::ID, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;Post&gt;&gt; {
+        Ok(Some(Post {
+            id: id.clone(),
+            title: "Sample Post".to_string(),
+            content: "This is a sample post content.".to_string(),
+            author: User {
+                id: juniper::ID::from("1"),
+                name: "John Doe".to_string(),
+                email: "john@example.com".to_string(),
+                age: 30,
+                posts: vec![],
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+            published: true,
+            created_at: chrono::Utc::now().to_rfc3339(),
+        }))
+    }
+    
+    /// Get all posts
+    async fn posts(context: &amp;DatabaseContext) -&gt; FieldResult&lt;Vec&lt;Post&gt;&gt; {
+        Ok(vec![
+            Post {
+                id: juniper::ID::from("1"),
+                title: "First Post".to_string(),
+                content: "Content of the first post.".to_string(),
+                author: User {
+                    id: juniper::ID::from("1"),
+                    name: "John Doe".to_string(),
+                    email: "john@example.com".to_string(),
+                    age: 30,
+                    posts: vec![],
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                },
+                published: true,
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+        ])
+    }
+}
+
+// Mutation root
+struct MutationRoot;
+
+#[juniper::graphql_object]
+impl MutationRoot {
+    /// Create a new user
+    async fn create_user(
+        new_user: NewUser,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;User&gt; {
+        // In a real app, save to database
+        Ok(User {
+            id: juniper::ID::from(uuid::Uuid::new_v4().to_string()),
+            name: new_user.name,
+            email: new_user.email,
+            age: new_user.age,
+            posts: vec![],
+            created_at: chrono::Utc::now().to_rfc3339(),
+        })
+    }
+    
+    /// Create a new post
+    async fn create_post(
+        new_post: NewPost,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;Post&gt; {
+        // In a real app, save to database
+        Ok(Post {
+            id: juniper::ID::from(uuid::Uuid::new_v4().to_string()),
+            title: new_post.title,
+            content: new_post.content,
+            author: User {
+                id: new_post.author_id,
+                name: "Author Name".to_string(),
+                email: "author@example.com".to_string(),
+                age: 30,
+                posts: vec![],
+                created_at: chrono::Utc::now().to_rfc3339(),
+            },
+            published: false,
+            created_at: chrono::Utc::now().to_rfc3339(),
+        })
+    }
+    
+    /// Update a user
+    async fn update_user(
+        id: juniper::ID,
+        name: Option&lt;String&gt;,
+        email: Option&lt;String&gt;,
+        age: Option&lt;i32&gt;,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;Option&lt;User&gt;&gt; {
+        // In a real app, update in database
+        Ok(Some(User {
+            id,
+            name: name.unwrap_or_else(|| "John Doe".to_string()),
+            email: email.unwrap_or_else(|| "john@example.com".to_string()),
+            age: age.unwrap_or(30),
+            posts: vec![],
+            created_at: chrono::Utc::now().to_rfc3339(),
+        }))
+    }
+    
+    /// Delete a user
+    async fn delete_user(
+        id: juniper::ID,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;bool&gt; {
+        // In a real app, delete from database
+        Ok(true) // Simulate successful deletion
+    }
+}
+
+type Schema = juniper::RootNode&lt;'static, QueryRoot, MutationRoot, EmptySubscription&gt;;
+
+fn create_advanced_schema() -&gt; Schema {
+    Schema::new(QueryRoot, MutationRoot, EmptySubscription::new())
+}</code></pre>
+<h2 id="integration-with-oxidite-routing"><a class="header" href="#integration-with-oxidite-routing">Integration with Oxidite Routing</a></h2>
+<p>Integrate GraphQL with Oxidite’s routing system:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+
+// Enhanced GraphQL handler with proper request/response handling
+async fn graphql_endpoint(
+    mut req: Request,
+    State(schema): State&lt;Arc&lt;Schema&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    match req.method().as_str() {
+        "GET" =&gt; {
+            // Serve GraphQL Playground/GraphiQL in development
+            serve_graphql_playground()
+        }
+        "POST" =&gt; {
+            // Handle GraphQL query
+            handle_graphql_request(req, schema.as_ref()).await
+        }
+        _ =&gt; Err(Error::MethodNotAllowed),
+    }
+}
+
+async fn handle_graphql_request(req: Request, schema: &amp;Schema) -&gt; Result&lt;Response&gt; {
+    use http_body_util::BodyExt;
+    
+    // Collect the request body
+    let body_bytes = req
+        .into_body()
+        .collect()
+        .await
+        .map_err(|e| Error::InternalServerError(e.to_string()))?
+        .to_bytes();
+    
+    let body_str = String::from_utf8_lossy(&amp;body_bytes);
+    
+    // Parse GraphQL request
+    let gql_request: juniper::http::GraphQLRequest = 
+        serde_json::from_str(&amp;body_str)
+            .map_err(|e| Error::BadRequest(format!("Invalid GraphQL request: {}", e)))?;
+    
+    // Execute the request
+    let context = DatabaseContext {};
+    let response = gql_request.execute(schema, &amp;context).await;
+    
+    // Create response
+    let json_response = serde_json::Value::from(response);
+    
+    if json_response.get("errors").is_some() {
+        Ok(Response::json(json_response))
+    } else {
+        Ok(Response::json(json_response))
+    }
+}
+
+fn serve_graphql_playground() -&gt; Result&lt;Response&gt; {
+    let html = r#"
+    &lt;!DOCTYPE html&gt;
+    &lt;html&gt;
+    &lt;head&gt;
+        &lt;meta charset=utf-8/&gt;
+        &lt;title&gt;GraphQL Playground&lt;/title&gt;
+        &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphql-playground-react/build/static/css/index.css" /&gt;
+        &lt;link rel="shortcut icon" href="https://cdn.jsdelivr.net/npm/graphql-playground-react/build/favicon.png" /&gt;
+        &lt;script src="https://cdn.jsdelivr.net/npm/graphql-playground-react/build/static/js/middleware.js"&gt;&lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id="root"&gt;
+            &lt;style&gt;
+                body {
+                    background-color: rgb(23, 42, 58);
+                    font-family: 'Open Sans', sans-serif;
+                    height: 90vh;
+                    margin: 0;
+                    overflow: hidden;
+                    width: 100vw;
+                }
+                #root {
+                    height: 100%;
+                    width: 100%;
+                }
+                .loading {
+                    align-items: center;
+                    display: flex;
+                    justify-content: center;
+                    height: 100%;
+                    width: 100%;
+                }
+                .loading img {
+                    animation: loadingAnimation 1s infinite alternate;
+                }
+                @keyframes loadingAnimation {
+                    0% { opacity: 0.3; }
+                    100% { opacity: 1; }
+                }
+            &lt;/style&gt;
+            &lt;div class="loading"&gt;
+                &lt;img src='https://cdn.jsdelivr.net/npm/graphql-playground-react/build/logo.png' alt=''&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;script&gt;
+            window.addEventListener('load', function (event) {
+                const root = document.getElementById('root');
+                const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+                GraphQLPlayground.init(root, {
+                    endpoint: location.href,
+                    subscriptionsEndpoint: `${wsProto}//${location.host}${location.pathname}`
+                });
+            });
+        &lt;/script&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
+    "#;
+    
+    Ok(Response::html(html.to_string()))
+}
+
+// Initialize the application with GraphQL
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let schema = Arc::new(create_advanced_schema());
+    
+    let mut router = Router::new();
+    
+    // Add GraphQL endpoint
+    router.post("/graphql")
+        .with_state(schema.clone())
+        .handler(graphql_endpoint);
+    
+    router.get("/graphql")
+        .with_state(schema)
+        .handler(graphql_endpoint);
+    
+    Server::new(router)
+        .listen("127.0.0.1:3000".parse()?)
+        .await
+}</code></pre>
+<h2 id="database-integration"><a class="header" href="#database-integration">Database Integration</a></h2>
+<p>Connect GraphQL resolvers to your database:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use oxidite_db::Model;
+use serde::{Deserialize, Serialize};
+
+// Define models that match your GraphQL types
+#[derive(Model, Serialize, Deserialize, juniper::GraphQLObject)]
+#[model(table = "graphql_users")]
+#[graphql(description = "A user in the system")]
+pub struct GraphqlUser {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(not_null)]
+    pub name: String,
+    #[model(unique, not_null)]
+    pub email: String,
+    pub age: i32,
+    #[model(created_at)]
+    pub created_at: String,
+}
+
+#[derive(Model, Serialize, Deserialize, juniper::GraphQLObject)]
+#[model(table = "graphql_posts")]
+#[graphql(description = "A blog post")]
+pub struct GraphqlPost {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(not_null)]
+    pub title: String,
+    #[model(not_null)]
+    pub content: String,
+    pub author_id: i32,
+    pub published: bool,
+    #[model(created_at)]
+    pub created_at: String,
+}
+
+// Enhanced context with database access
+struct DatabaseContext {
+    // In a real app, this would contain database connection
+}
+
+// Query resolvers that use the database
+struct DbQueryRoot;
+
+#[juniper::graphql_object(Context = DatabaseContext)]
+impl DbQueryRoot {
+    /// Get a user by ID
+    async fn user(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
+        // In a real app, fetch from database
+        let user = GraphqlUser::find_by_id(id).await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        
+        Ok(user)
+    }
+    
+    /// Get all users
+    async fn users(context: &amp;DatabaseContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
+        let users = GraphqlUser::find_all().await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        
+        Ok(users)
+    }
+    
+    /// Get a post by ID
+    async fn post(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
+        let post = GraphqlPost::find_by_id(id).await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        
+        Ok(post)
+    }
+    
+    /// Get posts by author
+    async fn posts_by_author(
+        author_id: i32,
+        context: &amp;DatabaseContext
+    ) -&gt; FieldResult&lt;Vec&lt;GraphqlPost&gt;&gt; {
+        let posts = GraphqlPost::find_where(&amp;format!("author_id = {}", author_id)).await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        
+        Ok(posts)
+    }
+}
+
+// Mutation resolvers that modify the database
+struct DbMutationRoot;
+
+#[juniper::graphql_object(Context = DatabaseContext)]
+impl DbMutationRoot {
+    /// Create a new user
+    async fn create_user(
+        name: String,
+        email: String,
+        age: i32,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;GraphqlUser&gt; {
+        let user = GraphqlUser {
+            id: 0, // Will be auto-generated
+            name,
+            email,
+            age,
+            created_at: chrono::Utc::now().to_rfc3339(),
+        };
+        
+        let saved_user = user.save().await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        
+        Ok(saved_user)
+    }
+    
+    /// Update a user
+    async fn update_user(
+        id: i32,
+        name: Option&lt;String&gt;,
+        email: Option&lt;String&gt;,
+        age: Option&lt;i32&gt;,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
+        if let Some(mut user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+            juniper::FieldError::new(e.to_string(), juniper::Value::null())
+        })? {
+            if let Some(new_name) = name {
+                user.name = new_name;
+            }
+            if let Some(new_email) = email {
+                user.email = new_email;
+            }
+            if let Some(new_age) = age {
+                user.age = new_age;
+            }
+            
+            let updated_user = user.save().await
+                .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+            
+            Ok(Some(updated_user))
+        } else {
+            Ok(None)
+        }
+    }
+    
+    /// Delete a user
+    async fn delete_user(
+        id: i32,
+        context: &amp;DatabaseContext,
+    ) -&gt; FieldResult&lt;bool&gt; {
+        if let Some(user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+            juniper::FieldError::new(e.to_string(), juniper::Value::null())
+        })? {
+            user.delete().await
+                .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    }
+}
+
+type DbSchema = juniper::RootNode&lt;'static, DbQueryRoot, DbMutationRoot, EmptySubscription&gt;;
+
+fn create_db_schema() -&gt; DbSchema {
+    DbSchema::new(DbQueryRoot, DbMutationRoot, EmptySubscription::new())
+}</code></pre>
+<h2 id="authentication-and-authorization"><a class="header" href="#authentication-and-authorization">Authentication and Authorization</a></h2>
+<p>Secure your GraphQL endpoints:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Context with authentication info
+struct AuthenticatedContext {
+    user: Option&lt;GraphqlUser&gt;,
+}
+
+// Secured query root
+struct SecuredQueryRoot;
+
+#[juniper::graphql_object(Context = AuthenticatedContext)]
+impl SecuredQueryRoot {
+    /// Get current user (requires authentication)
+    async fn me(context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
+        match &amp;context.user {
+            Some(user) =&gt; Ok(Some(user.clone())),
+            None =&gt; Err(juniper::FieldError::new(
+                "Authentication required",
+                juniper::Value::null()
+            )),
+        }
+    }
+    
+    /// Get users (requires admin role)
+    async fn users(context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
+        match &amp;context.user {
+            Some(user) if is_admin_user(user) =&gt; {
+                GraphqlUser::find_all().await
+                    .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
+            }
+            Some(_) =&gt; Err(juniper::FieldError::new(
+                "Admin role required",
+                juniper::Value::null()
+            )),
+            None =&gt; Err(juniper::FieldError::new(
+                "Authentication required",
+                juniper::Value::null()
+            )),
+        }
+    }
+    
+    /// Get user by ID (public endpoint)
+    async fn user(id: i32, context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
+        // Anyone can view user profiles
+        GraphqlUser::find_by_id(id).await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
+    }
+}
+
+// Secured mutation root
+struct SecuredMutationRoot;
+
+#[juniper::graphql_object(Context = AuthenticatedContext)]
+impl SecuredMutationRoot {
+    /// Create post (authenticated users only)
+    async fn create_post(
+        title: String,
+        content: String,
+        context: &amp;AuthenticatedContext,
+    ) -&gt; FieldResult&lt;GraphqlPost&gt; {
+        match &amp;context.user {
+            Some(user) =&gt; {
+                let post = GraphqlPost {
+                    id: 0,
+                    title,
+                    content,
+                    author_id: user.id,
+                    published: false,
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                };
+                
+                post.save().await
+                    .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
+            }
+            None =&gt; Err(juniper::FieldError::new(
+                "Authentication required to create posts",
+                juniper::Value::null()
+            )),
+        }
+    }
+    
+    /// Update own post (must be the author)
+    async fn update_post(
+        id: i32,
+        title: Option&lt;String&gt;,
+        content: Option&lt;String&gt;,
+        published: Option&lt;bool&gt;,
+        context: &amp;AuthenticatedContext,
+    ) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
+        match &amp;context.user {
+            Some(current_user) =&gt; {
+                if let Some(mut post) = GraphqlPost::find_by_id(id).await
+                    .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?
+                {
+                    // Check if current user is the author
+                    if post.author_id != current_user.id {
+                        return Err(juniper::FieldError::new(
+                            "Only the author can update this post",
+                            juniper::Value::null()
+                        ));
+                    }
+                    
+                    if let Some(new_title) = title {
+                        post.title = new_title;
+                    }
+                    if let Some(new_content) = content {
+                        post.content = new_content;
+                    }
+                    if let Some(new_published) = published {
+                        post.published = new_published;
+                    }
+                    
+                    let updated_post = post.save().await
+                        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+                    
+                    Ok(Some(updated_post))
+                } else {
+                    Ok(None)
+                }
+            }
+            None =&gt; Err(juniper::FieldError::new(
+                "Authentication required to update posts",
+                juniper::Value::null()
+            )),
+        }
+    }
+}
+
+// Authentication middleware for GraphQL
+async fn graphql_auth_middleware(
+    mut req: Request,
+    next: Next,
+) -&gt; Result&lt;Response&gt; {
+    // Extract authentication token from headers
+    let auth_header = req.headers()
+        .get("authorization")
+        .and_then(|hv| hv.to_str().ok());
+    
+    let mut context = AuthenticatedContext { user: None };
+    
+    if let Some(auth) = auth_header {
+        if auth.starts_with("Bearer ") {
+            let token = auth.trim_start_matches("Bearer ").trim();
+            
+            // Verify token and get user
+            if let Ok(user_id) = verify_jwt_token(token).await {
+                // Fetch user from database
+                if let Ok(Some(user)) = GraphqlUser::find_by_id(user_id).await {
+                    context.user = Some(user);
+                }
+            }
+        }
+    }
+    
+    // Add context to request extensions for GraphQL handler
+    req.extensions_mut().insert(context);
+    
+    next.run(req).await
+}
+
+async fn verify_jwt_token(_token: &amp;str) -&gt; Result&lt;i32, String&gt; {
+    // In a real app, verify the JWT token and return user ID
+    // This is a placeholder implementation
+    Ok(1)
+}
+
+fn is_admin_user(user: &amp;GraphqlUser) -&gt; bool {
+    // In a real app, check user roles from database
+    user.email == "admin@example.com"
+}
+
+type SecuredSchema = juniper::RootNode&lt;'static, SecuredQueryRoot, SecuredMutationRoot, EmptySubscription&gt;;
+
+fn create_secured_schema() -&gt; SecuredSchema {
+    SecuredSchema::new(SecuredQueryRoot, SecuredMutationRoot, EmptySubscription::new())
+}</code></pre>
+<h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
+<p>Implement real-time GraphQL subscriptions:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use juniper::http::GraphQLRequest;
+use futures::stream::Stream;
+use tokio_stream::wrappers::UnboundedReceiverStream;
+use serde::{Deserialize, Serialize};
+
+// Define subscription types
+#[derive(juniper::GraphQLObject)]
+#[graphql(description = "A notification")]
+struct Notification {
+    id: juniper::ID,
+    message: String,
+    user_id: juniper::ID,
+    created_at: String,
+}
+
+// Subscription root
+struct SubscriptionRoot;
+
+#[juniper::graphql_subscription]
+impl SubscriptionRoot {
+    /// Subscribe to notifications for a specific user
+    async fn notifications(
+        &amp;self,
+        user_id: juniper::ID,
+    ) -&gt; impl Stream&lt;Item = Notification&gt; {
+        use tokio_stream::StreamExt;
+        
+        // Create a channel for sending notifications
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::&lt;Notification&gt;();
+        
+        // Simulate sending notifications
+        let user_id_clone = user_id.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
+            
+            for i in 1..=10 {
+                interval.tick().await;
+                
+                let notification = Notification {
+                    id: juniper::ID::from(format!("notif_{}", i)),
+                    message: format!("Notification {} for user {}", i, user_id_clone),
+                    user_id: user_id_clone.clone(),
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                };
+                
+                if tx.send(notification).is_err() {
+                    break; // Channel closed
+                }
+            }
+        });
+        
+        UnboundedReceiverStream::new(rx)
+    }
+}
+
+type SubscriptionSchema = juniper::RootNode&lt;'static, SecuredQueryRoot, SecuredMutationRoot, SubscriptionRoot&gt;;
+
+fn create_subscription_schema() -&gt; SubscriptionSchema {
+    SubscriptionSchema::new(
+        SecuredQueryRoot,
+        SecuredMutationRoot,
+        SubscriptionRoot,
+    )
+}
+
+// WebSocket handler for subscriptions
+async fn websocket_graphql_handler(
+    ws: oxidite_realtime::websocket::WebSocket
+) -&gt; Result&lt;()&gt; {
+    ws.on_message(|msg| async move {
+        match msg {
+            oxidite_realtime::websocket::Message::Text(text) =&gt; {
+                // Parse GraphQL subscription message
+                match serde_json::from_str::&lt;SubscriptionMessage&gt;(&amp;text) {
+                    Ok(sub_msg) =&gt; {
+                        match sub_msg.r#type.as_str() {
+                            "connection_init" =&gt; {
+                                // Initialize connection
+                                Ok(oxidite_realtime::websocket::Message::Text(
+                                    r#"{"type":"connection_ack"}"#.to_string()
+                                ))
+                            }
+                            "subscribe" =&gt; {
+                                // Handle subscription request
+                                // This would typically involve setting up a subscription
+                                Ok(oxidite_realtime::websocket::Message::Text(
+                                    r#"{"type":"next","id":"1","payload":{"data":{"hello":"world"}}}"#.to_string()
+                                ))
+                            }
+                            "unsubscribe" =&gt; {
+                                // Handle unsubscribe
+                                Ok(oxidite_realtime::websocket::Message::Text(
+                                    r#"{"type":"complete","id":"1"}"#.to_string()
+                                ))
+                            }
+                            _ =&gt; Ok(oxidite_realtime::websocket::Message::Text(
+                                r#"{"type":"error","payload":"Unknown message type"}"#.to_string()
+                            ))
+                        }
+                    }
+                    Err(_) =&gt; Ok(oxidite_realtime::websocket::Message::Text(
+                        r#"{"type":"error","payload":"Invalid message format"}"#.to_string()
+                    )),
+                }
+            }
+            _ =&gt; Ok(msg), // Return other messages as-is
+        }
+    }).await?;
+    
+    Ok(())
+}
+
+#[derive(Deserialize, Serialize)]
+struct SubscriptionMessage {
+    r#type: String,
+    id: Option&lt;String&gt;,
+    payload: Option&lt;serde_json::Value&gt;,
+}</code></pre>
+<h2 id="performance-optimization"><a class="header" href="#performance-optimization">Performance Optimization</a></h2>
+<p>Optimize GraphQL performance:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+// DataLoader pattern for efficient database access
+struct DataLoader&lt;T&gt; {
+    cache: Arc&lt;RwLock&lt;HashMap&lt;i32, T&gt;&gt;&gt;,
+    batch_loader: Arc&lt;dyn Fn(Vec&lt;i32&gt;) -&gt; BoxFuture&lt;Vec&lt;T&gt;&gt; + Send + Sync&gt;,
+}
+
+type BoxFuture&lt;T&gt; = std::pin::Pin&lt;Box&lt;dyn futures::Future&lt;Output = T&gt; + Send&gt;&gt;;
+
+impl&lt;T: Clone + Send + Sync + 'static&gt; DataLoader&lt;T&gt; {
+    fn new&lt;F, Fut&gt;(loader: F) -&gt; Self
+    where
+        F: Fn(Vec&lt;i32&gt;) -&gt; Fut + Send + Sync + 'static,
+        Fut: futures::Future&lt;Output = Vec&lt;T&gt;&gt; + Send + 'static,
+    {
+        Self {
+            cache: Arc::new(RwLock::new(HashMap::new())),
+            batch_loader: Arc::new(move |keys| {
+                let loader = loader.clone();
+                Box::pin(loader(keys))
+            }),
+        }
+    }
+    
+    async fn load(&amp;self, key: i32) -&gt; Option&lt;T&gt; {
+        // Check cache first
+        {
+            let cache = self.cache.read().await;
+            if let Some(item) = cache.get(&amp;key) {
+                return Some(item.clone());
+            }
+        }
+        
+        // Load in batch (simplified for example)
+        let items = (self.batch_loader)(vec![key]).await;
+        let item = items.into_iter().find(|_| true); // Simplified
+        
+        // Cache the result
+        if let Some(ref item) = item {
+            let mut cache = self.cache.write().await;
+            cache.insert(key, item.clone());
+        }
+        
+        item
+    }
+    
+    async fn load_many(&amp;self, keys: Vec&lt;i32&gt;) -&gt; Vec&lt;T&gt; {
+        let mut uncached_keys = Vec::new();
+        let mut results = Vec::new();
+        
+        // Check cache for each key
+        {
+            let cache = self.cache.read().await;
+            for key in &amp;keys {
+                if let Some(item) = cache.get(key) {
+                    results.push(item.clone());
+                } else {
+                    uncached_keys.push(*key);
+                }
+            }
+        }
+        
+        // Load uncached items in batch
+        if !uncached_keys.is_empty() {
+            let loaded_items = (self.batch_loader)(uncached_keys.clone()).await;
+            
+            // Add to cache and results
+            let mut cache = self.cache.write().await;
+            for (i, key) in uncached_keys.iter().enumerate() {
+                if i &lt; loaded_items.len() {
+                    let item = loaded_items[i].clone();
+                    cache.insert(*key, item.clone());
+                    results.push(item);
+                }
+            }
+        }
+        
+        results
+    }
+}
+
+// Context with data loaders
+struct OptimizedContext {
+    user_loader: DataLoader&lt;GraphqlUser&gt;,
+    post_loader: DataLoader&lt;GraphqlPost&gt;,
+}
+
+// Query root using data loaders
+struct OptimizedQueryRoot;
+
+#[juniper::graphql_object(Context = OptimizedContext)]
+impl OptimizedQueryRoot {
+    /// Get user with optimized loading
+    async fn user(id: i32, context: &amp;OptimizedContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
+        let user = context.user_loader.load(id).await;
+        Ok(user)
+    }
+    
+    /// Get multiple users efficiently
+    async fn users(ids: Vec&lt;i32&gt;, context: &amp;OptimizedContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
+        let users = context.user_loader.load_many(ids).await;
+        Ok(users)
+    }
+    
+    /// Get posts by author with optimized loading
+    async fn posts_by_author(
+        author_id: i32,
+        context: &amp;OptimizedContext
+    ) -&gt; FieldResult&lt;Vec&lt;GraphqlPost&gt;&gt; {
+        // In a real app, you'd have a specialized loader for this
+        // For now, just return empty to satisfy the example
+        Ok(vec![])
+    }
+}
+
+// Schema with optimizations
+type OptimizedSchema = juniper::RootNode&lt;'static, OptimizedQueryRoot, SecuredMutationRoot, SubscriptionRoot&gt;;
+
+fn create_optimized_schema() -&gt; OptimizedSchema {
+    let user_loader = DataLoader::new(|ids| {
+        Box::pin(async move {
+            // In a real app, batch fetch users from database
+            ids.into_iter()
+                .map(|id| GraphqlUser {
+                    id,
+                    name: format!("User {}", id),
+                    email: format!("user{}@example.com", id),
+                    age: 25,
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                })
+                .collect()
+        })
+    });
+    
+    let post_loader = DataLoader::new(|ids| {
+        Box::pin(async move {
+            // In a real app, batch fetch posts from database
+            ids.into_iter()
+                .map(|id| GraphqlPost {
+                    id,
+                    title: format!("Post {}", id),
+                    content: format!("Content of post {}", id),
+                    author_id: 1,
+                    published: true,
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                })
+                .collect()
+        })
+    });
+    
+    let context = OptimizedContext {
+        user_loader,
+        post_loader,
+    };
+    
+    OptimizedSchema::new(
+        OptimizedQueryRoot,
+        SecuredMutationRoot,
+        SubscriptionRoot,
+    )
+}</code></pre>
+<h2 id="testing-graphql"><a class="header" href="#testing-graphql">Testing GraphQL</a></h2>
+<p>Test your GraphQL endpoints:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use oxidite_testing::TestServer;
+
+#[cfg(test)]
+mod graphql_tests {
+    use super::*;
+    
+    #[tokio::test]
+    async fn test_graphql_query() {
+        let schema = Arc::new(create_advanced_schema());
+        let server = TestServer::new(move |router| {
+            router.post("/graphql")
+                .with_state(schema.clone())
+                .handler(graphql_endpoint);
+        }).await;
+        
+        let query = r#"
+        {
+            users {
+                id
+                name
+                email
+            }
+        }
+        "#;
+        
+        let response = server
+            .post("/graphql")
+            .json(&amp;serde_json::json!({
+                "query": query
+            }))
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert!(json["data"]["users"].is_array());
+    }
+    
+    #[tokio::test]
+    async fn test_graphql_mutation() {
+        let schema = Arc::new(create_advanced_schema());
+        let server = TestServer::new(move |router| {
+            router.post("/graphql")
+                .with_state(schema.clone())
+                .handler(graphql_endpoint);
+        }).await;
+        
+        let mutation = r#"
+        mutation {
+            createUser(newUser: {name: "Test User", email: "test@example.com", age: 30}) {
+                id
+                name
+                email
+                age
+            }
+        }
+        "#;
+        
+        let response = server
+            .post("/graphql")
+            .json(&amp;serde_json::json!({
+                "query": mutation
+            }))
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert!(json["data"]["createUser"]["id"].is_string());
+        assert_eq!(json["data"]["createUser"]["name"], "Test User");
+    }
+    
+    #[tokio::test]
+    async fn test_graphql_error_handling() {
+        let schema = Arc::new(create_advanced_schema());
+        let server = TestServer::new(move |router| {
+            router.post("/graphql")
+                .with_state(schema.clone())
+                .handler(graphql_endpoint);
+        }).await;
+        
+        let invalid_query = r#"
+        {
+            invalidField
+        }
+        "#;
+        
+        let response = server
+            .post("/graphql")
+            .json(&amp;serde_json::json!({
+                "query": invalid_query
+            }))
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200); // GraphQL returns 200 even with errors
+        
+        let json: serde_json::Value = response.json().await;
+        assert!(json["errors"].is_array());
+        assert!(json["errors"].as_array().unwrap().len() &gt; 0);
+    }
+    
+    #[tokio::test]
+    async fn test_graphql_authentication() {
+        // Test authenticated GraphQL endpoint
+        let schema = Arc::new(create_secured_schema());
+        let server = TestServer::new(move |router| {
+            router.post("/graphql")
+                .middleware(graphql_auth_middleware)
+                .with_state(schema.clone())
+                .handler(graphql_endpoint);
+        }).await;
+        
+        let query = r#"
+        {
+            me {
+                id
+                name
+                email
+            }
+        }
+        "#;
+        
+        // Request without authentication should fail
+        let response = server
+            .post("/graphql")
+            .json(&amp;serde_json::json!({
+                "query": query
+            }))
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        // Should have an error about authentication being required
+        if let Some(errors) = json["errors"].as_array() {
+            assert!(!errors.is_empty());
+        }
+        
+        // Request with authentication should succeed
+        let response = server
+            .post("/graphql")
+            .header("Authorization", "Bearer valid_token")
+            .json(&amp;serde_json::json!({
+                "query": query
+            }))
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200);
+    }
+}</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>GraphQL integration in Oxidite provides:</p>
+<ul>
+<li><strong>Schema Definition</strong>: Define types and operations with Rust structs</li>
+<li><strong>Query and Mutation Support</strong>: Handle data fetching and modifications</li>
+<li><strong>Database Integration</strong>: Connect resolvers to your data models</li>
+<li><strong>Authentication</strong>: Secure your GraphQL endpoints</li>
+<li><strong>Subscriptions</strong>: Real-time data updates via WebSockets</li>
+<li><strong>Performance Optimization</strong>: DataLoader pattern and caching</li>
+<li><strong>Testing</strong>: Comprehensive testing utilities</li>
+<li><strong>Error Handling</strong>: Proper GraphQL error responses</li>
+</ul>
+<p>GraphQL offers a flexible alternative to REST APIs, allowing clients to request exactly the data they need while maintaining strong typing and introspection capabilities.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="plugins.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="subcrates/overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="plugins.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="subcrates/overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="ace-2a3cd908.js"></script>
+        <script src="mode-rust-2c9d5c9a.js"></script>
+        <script src="editor-16ca416c.js"></script>
+        <script src="theme-dawn-4493f9c8.js"></script>
+        <script src="theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="branding-4ab4c57d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

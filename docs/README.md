@@ -33,7 +33,7 @@ The generated HTML documentation will be available in the `book-output` director
 Alternatively, you can use the provided script:
 
 ```bash
-./docs/generate_book.sh
+cd docs/book && mdbook build
 ```
 
 ### Serving Documentation Locally

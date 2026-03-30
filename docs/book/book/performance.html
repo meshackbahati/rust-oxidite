@@ -1,0 +1,1436 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Performance - Oxidite Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="custom-b48cbb74.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-e08cec6f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-0584e8c7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Oxidite Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/./performance.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="performance"><a class="header" href="#performance">Performance</a></h1>
+<p>Performance optimization is crucial for delivering fast, responsive Oxidite applications. This chapter covers various techniques and strategies to optimize your application’s performance.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>Performance optimization includes:</p>
+<ul>
+<li>Request handling optimization</li>
+<li>Database query optimization</li>
+<li>Caching strategies</li>
+<li>Memory management</li>
+<li>Concurrency and parallelism</li>
+<li>Network optimizations</li>
+<li>Profiling and monitoring</li>
+</ul>
+<h2 id="request-handling-optimization"><a class="header" href="#request-handling-optimization">Request Handling Optimization</a></h2>
+<p>Optimize how your application handles incoming requests:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+
+// Efficient request handler with minimal allocations
+async fn optimized_handler(req: Request) -&gt; Result&lt;Response&gt; {
+    // Pre-allocate response data structures
+    let mut response_data = String::with_capacity(1024);
+    
+    // Use efficient string operations
+    response_data.push_str("{\"message\":\"Hello, World!\",\"timestamp\":\"");
+    response_data.push_str(&amp;chrono::Utc::now().to_rfc3339());
+    response_data.push_str("\"}");
+    
+    Ok(Response::json(serde_json::Value::String(response_data)))
+}
+
+// Lazy evaluation for expensive operations
+async fn lazy_evaluation_handler(req: Request) -&gt; Result&lt;Response&gt; {
+    // Only perform expensive operation if needed
+    let include_details = req.uri().query()
+        .map(|q| q.contains("details=true"))
+        .unwrap_or(false);
+    
+    let mut response = serde_json::json!({
+        "simple": "data"
+    });
+    
+    if include_details {
+        // Only execute expensive operation when necessary
+        let expensive_data = expensive_computation().await;
+        response["expensive_data"] = expensive_data;
+    }
+    
+    Ok(Response::json(response))
+}
+
+async fn expensive_computation() -&gt; serde_json::Value {
+    // Simulate expensive computation
+    tokio::time::sleep(tokio::time::Duration::from_millis(10)).await;
+    serde_json::json!({ "computed": true, "value": 42 })
+}
+
+// Request preprocessing middleware
+async fn preprocessing_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    // Parse and validate request early
+    if req.method() == http::Method::POST || req.method() == http::Method::PUT {
+        // Check content length before processing
+        if let Some(content_length) = req.headers().get("content-length") {
+            if let Ok(length_str) = content_length.to_str() {
+                if let Ok(length) = length_str.parse::&lt;usize&gt;() {
+                    const MAX_SIZE: usize = 10 * 1024 * 1024; // 10MB
+                    
+                    if length &gt; MAX_SIZE {
+                        return Err(Error::PayloadTooLarge);
+                    }
+                }
+            }
+        }
+    }
+    
+    next.run(req).await
+}</code></pre>
+<h2 id="database-query-optimization"><a class="header" href="#database-query-optimization">Database Query Optimization</a></h2>
+<p>Optimize database interactions:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use serde::{Deserialize, Serialize};
+
+// Optimized model with proper indexing hints
+#[derive(Model, Serialize, Deserialize)]
+#[model(table = "optimized_users")]
+pub struct OptimizedUser {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(unique, not_null, indexed)]  // Add index hint
+    pub email: String,
+    #[model(not_null, indexed)]         // Add index hint
+    pub name: String,
+    #[model(indexed)]                   // Add index hint
+    pub created_at: String,
+}
+
+// Batch operations for better performance
+impl OptimizedUser {
+    pub async fn create_batch(users: Vec&lt;Self&gt;) -&gt; Result&lt;Vec&lt;Self&gt;&gt; {
+        // In a real implementation, this would use bulk insert
+        let mut results = Vec::with_capacity(users.len());
+        
+        for mut user in users {
+            // Simulate batch insert
+            user.id = rand::random::&lt;i32&gt;(); // Simulate auto-increment
+            results.push(user);
+        }
+        
+        Ok(results)
+    }
+    
+    pub async fn find_by_ids(ids: &amp;[i32]) -&gt; Result&lt;Vec&lt;Self&gt;&gt; {
+        // Use IN clause instead of multiple individual queries
+        let id_list: String = ids.iter()
+            .map(|id| id.to_string())
+            .collect::&lt;Vec&lt;_&gt;&gt;()
+            .join(",");
+        
+        // In a real implementation, this would execute: 
+        // SELECT * FROM optimized_users WHERE id IN (...)
+        Ok(vec![]) // Placeholder
+    }
+    
+    pub async fn find_with_pagination(page: u32, per_page: u32) -&gt; Result&lt;(Vec&lt;Self&gt;, u32)&gt; {
+        // Implement efficient pagination
+        let offset = (page - 1) * per_page;
+        
+        // In a real implementation, this would execute:
+        // SELECT * FROM optimized_users LIMIT per_page OFFSET offset
+        let users = vec![]; // Placeholder
+        let total_count = 100; // Placeholder
+        
+        Ok((users, total_count))
+    }
+    
+    pub async fn update_batch(updates: Vec&lt;(i32, String)&gt;) -&gt; Result&lt;u32&gt; {
+        // Batch update implementation
+        let mut affected_rows = 0;
+        
+        for (id, name) in updates {
+            // In a real implementation, this would execute:
+            // UPDATE optimized_users SET name = ? WHERE id = ?
+            affected_rows += 1; // Placeholder
+        }
+        
+        Ok(affected_rows)
+    }
+}
+
+// Connection pooling optimization
+use std::sync::Arc;
+use tokio::sync::Semaphore;
+
+#[derive(Clone)]
+pub struct OptimizedDbPool {
+    semaphore: Arc&lt;Semaphore&gt;,
+    connections: Vec&lt;Arc&lt;dyn DatabaseConnection&gt;&gt;,
+}
+
+pub trait DatabaseConnection: Send + Sync {
+    fn execute(&amp;self, query: &amp;str) -&gt; Result&lt;()&gt;;
+    fn query(&amp;self, query: &amp;str) -&gt; Result&lt;Vec&lt;serde_json::Value&gt;&gt;;
+}
+
+impl OptimizedDbPool {
+    pub fn new(max_connections: usize) -&gt; Self {
+        Self {
+            semaphore: Arc::new(Semaphore::new(max_connections)),
+            connections: Vec::new(), // In a real implementation, populate with actual connections
+        }
+    }
+    
+    pub async fn with_connection&lt;F, R&gt;(&amp;self, operation: F) -&gt; Result&lt;R&gt;
+    where
+        F: FnOnce(&amp;dyn DatabaseConnection) -&gt; Result&lt;R&gt;,
+    {
+        let _permit = self.semaphore.acquire().await
+            .map_err(|_| Error::InternalServerError("Connection pool error".to_string()))?;
+        
+        // In a real implementation, lease a connection and execute the operation
+        // This is a simplified example
+        let conn = self.get_connection()?;
+        operation(conn.as_ref())
+    }
+    
+    fn get_connection(&amp;self) -&gt; Result&lt;Arc&lt;dyn DatabaseConnection&gt;&gt; {
+        // In a real implementation, return an available connection
+        Err(Error::InternalServerError("Not implemented".to_string()))
+    }
+}
+
+// Query optimization with prepared statements
+pub struct PreparedStatement {
+    query: String,
+    param_types: Vec&lt;DbType&gt;,
+}
+
+#[derive(Debug)]
+pub enum DbType {
+    Integer,
+    Text,
+    Boolean,
+    Timestamp,
+}
+
+impl PreparedStatement {
+    pub fn new(query: &amp;str) -&gt; Self {
+        // Parse query to identify parameter types
+        Self {
+            query: query.to_string(),
+            param_types: vec![], // In a real implementation, parse parameter types
+        }
+    }
+    
+    pub async fn execute(&amp;self, params: &amp;[&amp;dyn ToSql]) -&gt; Result&lt;()&gt; {
+        // Execute prepared statement with parameters
+        // This would use the actual database driver
+        Ok(())
+    }
+}
+
+pub trait ToSql {
+    fn to_sql(&amp;self) -&gt; String;
+}</code></pre>
+<h2 id="caching-strategies"><a class="header" href="#caching-strategies">Caching Strategies</a></h2>
+<p>Implement effective caching:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::{RwLock, Mutex};
+use std::time::{Duration, Instant};
+
+// In-memory cache with TTL
+#[derive(Clone)]
+pub struct InMemoryCache {
+    store: Arc&lt;RwLock&lt;HashMap&lt;String, CacheEntry&gt;&gt;&gt;,
+    capacity: usize,
+    default_ttl: Duration,
+}
+
+#[derive(Clone)]
+struct CacheEntry {
+    value: String,
+    timestamp: Instant,
+    ttl: Duration,
+}
+
+impl InMemoryCache {
+    pub fn new(capacity: usize, default_ttl: Duration) -&gt; Self {
+        Self {
+            store: Arc::new(RwLock::new(HashMap::new())),
+            capacity,
+            default_ttl,
+        }
+    }
+    
+    pub async fn get(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt; {
+        let store = self.store.read().await;
+        if let Some(entry) = store.get(key) {
+            if entry.timestamp.elapsed() &lt; entry.ttl {
+                Some(entry.value.clone())
+            } else {
+                // Entry expired, will be cleaned up later
+                None
+            }
+        } else {
+            None
+        }
+    }
+    
+    pub async fn set(&amp;self, key: String, value: String, ttl: Option&lt;Duration&gt;) -&gt; Result&lt;()&gt; {
+        let ttl = ttl.unwrap_or(self.default_ttl);
+        
+        let mut store = self.store.write().await;
+        
+        // Clean up expired entries if capacity is exceeded
+        if store.len() &gt;= self.capacity {
+            store.retain(|_, entry| entry.timestamp.elapsed() &lt; entry.ttl);
+        }
+        
+        store.insert(key, CacheEntry {
+            value,
+            timestamp: Instant::now(),
+            ttl,
+        });
+        
+        Ok(())
+    }
+    
+    pub async fn delete(&amp;self, key: &amp;str) -&gt; Result&lt;bool&gt; {
+        let mut store = self.store.write().await;
+        Ok(store.remove(key).is_some())
+    }
+    
+    pub async fn clear_expired(&amp;self) -&gt; Result&lt;usize&gt; {
+        let mut store = self.store.write().await;
+        let mut removed_count = 0;
+        
+        store.retain(|_, entry| {
+            if entry.timestamp.elapsed() &gt;= entry.ttl {
+                removed_count += 1;
+                false
+            } else {
+                true
+            }
+        });
+        
+        Ok(removed_count)
+    }
+}
+
+// Redis-like cache implementation
+pub struct RedisCache {
+    client: Arc&lt;MockRedisClient&gt;, // In a real implementation, use actual Redis client
+}
+
+struct MockRedisClient;
+
+impl MockRedisClient {
+    pub async fn get(&amp;self, _key: &amp;str) -&gt; Option&lt;String&gt; {
+        Some("cached_value".to_string()) // Placeholder
+    }
+    
+    pub async fn set(&amp;self, _key: &amp;str, _value: &amp;str, _ttl: Duration) -&gt; Result&lt;()&gt; {
+        Ok(()) // Placeholder
+    }
+    
+    pub async fn del(&amp;self, _key: &amp;str) -&gt; Result&lt;bool&gt; {
+        Ok(true) // Placeholder
+    }
+}
+
+impl RedisCache {
+    pub fn new() -&gt; Self {
+        Self {
+            client: Arc::new(MockRedisClient),
+        }
+    }
+    
+    pub async fn get(&amp;self, key: &amp;str) -&gt; Result&lt;Option&lt;String&gt;&gt; {
+        Ok(self.client.get(key).await)
+    }
+    
+    pub async fn set(&amp;self, key: &amp;str, value: &amp;str, ttl: Duration) -&gt; Result&lt;()&gt; {
+        self.client.set(key, value, ttl).await
+    }
+    
+    pub async fn delete(&amp;self, key: &amp;str) -&gt; Result&lt;bool&gt; {
+        self.client.del(key).await
+    }
+}
+
+// Cache middleware
+async fn caching_middleware(
+    req: Request,
+    next: Next,
+    State(cache): State&lt;Arc&lt;InMemoryCache&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    if req.method() != http::Method::GET {
+        // Only cache GET requests
+        return next.run(req).await;
+    }
+    
+    let cache_key = format!("response_{}_{}", req.method(), req.uri());
+    
+    // Try to get from cache
+    if let Some(cached_response) = cache.get(&amp;cache_key).await {
+        return Ok(Response::html(cached_response));
+    }
+    
+    // Execute request
+    let response = next.run(req).await?;
+    
+    // Cache successful responses
+    if response.status().is_success() {
+        let response_clone = response.clone(); // In a real implementation, serialize response
+        cache.set(cache_key, "cached_response".to_string(), Some(Duration::from_secs(300))).await?;
+    }
+    
+    Ok(response)
+}
+
+// Cache-aside pattern implementation
+pub struct CachedRepository {
+    cache: Arc&lt;InMemoryCache&gt;,
+    db_pool: OptimizedDbPool,
+}
+
+impl CachedRepository {
+    pub fn new(cache: Arc&lt;InMemoryCache&gt;, db_pool: OptimizedDbPool) -&gt; Self {
+        Self { cache, db_pool }
+    }
+    
+    pub async fn get_user(&amp;self, id: i32) -&gt; Result&lt;Option&lt;OptimizedUser&gt;&gt; {
+        let cache_key = format!("user_{}", id);
+        
+        // Try cache first
+        if let Some(cached) = self.cache.get(&amp;cache_key).await {
+            return Ok(serde_json::from_str(&amp;cached).ok());
+        }
+        
+        // Cache miss, query database
+        let user = self.db_pool.with_connection(|conn| {
+            // Execute SELECT * FROM users WHERE id = ?
+            Ok(None::&lt;OptimizedUser&gt;) // Placeholder
+        }).await?;
+        
+        // Cache the result if found
+        if let Some(ref user) = user {
+            if let Ok(serialized) = serde_json::to_string(user) {
+                self.cache.set(cache_key, serialized, Some(Duration::from_secs(600))).await?;
+            }
+        }
+        
+        Ok(user)
+    }
+    
+    pub async fn invalidate_user_cache(&amp;self, id: i32) -&gt; Result&lt;()&gt; {
+        let cache_key = format!("user_{}", id);
+        self.cache.delete(&amp;cache_key).await?;
+        Ok(())
+    }
+}</code></pre>
+<h2 id="memory-management"><a class="header" href="#memory-management">Memory Management</a></h2>
+<p>Optimize memory usage:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+
+// Efficient data structures
+pub struct EfficientDataStructures;
+
+impl EfficientDataStructures {
+    // Use SmallVec for small collections that may grow
+    pub fn use_small_collections() -&gt; Result&lt;()&gt; {
+        use smallvec::SmallVec;
+        
+        // Stack-allocated for small arrays, heap-allocated for larger ones
+        let mut small_vec: SmallVec&lt;[u32; 4]&gt; = SmallVec::new();
+        small_vec.push(1);
+        small_vec.push(2);
+        small_vec.push(3);
+        small_vec.push(4);
+        // If we add a 5th element, it moves to heap allocation
+        
+        Ok(())
+    }
+    
+    // Use String instead of &amp;str when ownership is needed
+    pub fn efficient_string_handling() -&gt; Result&lt;()&gt; {
+        let mut buffer = String::with_capacity(1024); // Pre-allocate
+        
+        // Efficient string building
+        buffer.push_str("Hello");
+        buffer.push(' ');
+        buffer.push_str("World");
+        
+        // Avoid unnecessary clones
+        let shared_string = Arc::new(buffer);
+        
+        Ok(())
+    }
+    
+    // Use Cow (Clone on Write) for flexible string handling
+    pub fn cow_example(input: &amp;str) -&gt; std::borrow::Cow&lt;str&gt; {
+        if input.contains("transform") {
+            std::borrow::Cow::Owned(input.replace("transform", "optimized"))
+        } else {
+            std::borrow::Cow::Borrowed(input)
+        }
+    }
+    
+    // Use interned strings for repeated values
+    pub fn interned_strings_example() -&gt; Result&lt;()&gt; {
+        use std::collections::HashMap;
+        
+        // For repeated string values, consider interning
+        let mut string_interner = HashMap::new();
+        string_interner.insert("status_active", 1);
+        string_interner.insert("status_inactive", 2);
+        
+        Ok(())
+    }
+}
+
+// Memory pool for frequently allocated objects
+pub struct ObjectPool&lt;T&gt; {
+    objects: Arc&lt;Mutex&lt;Vec&lt;T&gt;&gt;&gt;,
+    factory: Box&lt;dyn Fn() -&gt; T + Send + Sync&gt;,
+}
+
+impl&lt;T: Send + 'static&gt; ObjectPool&lt;T&gt; {
+    pub fn new(factory: Box&lt;dyn Fn() -&gt; T + Send + Sync&gt;, initial_size: usize) -&gt; Self {
+        let mut objects = Vec::with_capacity(initial_size);
+        for _ in 0..initial_size {
+            objects.push(factory());
+        }
+        
+        Self {
+            objects: Arc::new(Mutex::new(objects)),
+            factory,
+        }
+    }
+    
+    pub async fn get(&amp;self) -&gt; PooledObject&lt;T&gt; {
+        let mut objects = self.objects.lock().await;
+        
+        if let Some(obj) = objects.pop() {
+            PooledObject {
+                obj: Some(obj),
+                pool: self.objects.clone(),
+            }
+        } else {
+            // Create new object if pool is empty
+            PooledObject {
+                obj: Some((self.factory)()),
+                pool: self.objects.clone(),
+            }
+        }
+    }
+}
+
+pub struct PooledObject&lt;T&gt; {
+    obj: Option&lt;T&gt;,
+    pool: Arc&lt;Mutex&lt;Vec&lt;T&gt;&gt;&gt;,
+}
+
+impl&lt;T&gt; std::ops::Deref for PooledObject&lt;T&gt; {
+    type Target = T;
+    
+    fn deref(&amp;self) -&gt; &amp;Self::Target {
+        self.obj.as_ref().unwrap()
+    }
+}
+
+impl&lt;T&gt; std::ops::DerefMut for PooledObject&lt;T&gt; {
+    fn deref_mut(&amp;mut self) -&gt; &amp;mut Self::Target {
+        self.obj.as_mut().unwrap()
+    }
+}
+
+impl&lt;T&gt; Drop for PooledObject&lt;T&gt; {
+    fn drop(&amp;mut self) {
+        if let Some(obj) = self.obj.take() {
+            // Return object to pool
+            let mut pool = self.pool.blocking_lock();
+            pool.push(obj);
+        }
+    }
+}
+
+// Memory-efficient JSON handling
+use serde_json;
+
+pub struct EfficientJsonHandler;
+
+impl EfficientJsonHandler {
+    pub async fn handle_large_json(req: Request) -&gt; Result&lt;Response&gt; {
+        use bytes::Bytes;
+        
+        // For large JSON payloads, process incrementally
+        let body_bytes = hyper::body::to_bytes(req.into_body()).await
+            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+        
+        // Parse JSON efficiently
+        let parsed: serde_json::Value = serde_json::from_slice(&amp;body_bytes)
+            .map_err(|e| Error::BadRequest(e.to_string()))?;
+        
+        // Process only needed fields to avoid memory overhead
+        let result = process_needed_fields(&amp;parsed);
+        
+        Ok(Response::json(result))
+    }
+    
+    pub fn process_needed_fields(value: &amp;serde_json::Value) -&gt; serde_json::Value {
+        match value {
+            serde_json::Value::Object(map) =&gt; {
+                // Only extract needed fields
+                let mut result = serde_json::Map::new();
+                
+                if let Some(id) = map.get("id") {
+                    result.insert("id".to_string(), id.clone());
+                }
+                
+                if let Some(name) = map.get("name") {
+                    result.insert("name".to_string(), name.clone());
+                }
+                
+                serde_json::Value::Object(result)
+            }
+            _ =&gt; value.clone(),
+        }
+    }
+}</code></pre>
+<h2 id="concurrency-and-parallelism"><a class="header" href="#concurrency-and-parallelism">Concurrency and Parallelism</a></h2>
+<p>Optimize concurrent operations:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use tokio::task;
+use std::sync::Arc;
+
+// Parallel request processing
+pub struct ParallelProcessor;
+
+impl ParallelProcessor {
+    pub async fn process_requests_in_parallel(requests: Vec&lt;Request&gt;) -&gt; Result&lt;Vec&lt;Response&gt;&gt; {
+        let mut handles = Vec::new();
+        
+        for request in requests {
+            let handle = task::spawn(async move {
+                // Process each request in parallel
+                process_single_request(request).await
+            });
+            
+            handles.push(handle);
+        }
+        
+        let mut responses = Vec::with_capacity(handles.len());
+        
+        for handle in handles {
+            match handle.await {
+                Ok(response_result) =&gt; {
+                    if let Ok(response) = response_result {
+                        responses.push(response);
+                    }
+                }
+                Err(e) =&gt; {
+                    // Handle task panic
+                    eprintln!("Task failed: {}", e);
+                }
+            }
+        }
+        
+        Ok(responses)
+    }
+    
+    pub async fn process_data_streams(data_chunks: Vec&lt;Vec&lt;u8&gt;&gt;) -&gt; Result&lt;Vec&lt;Vec&lt;u8&gt;&gt;&gt; {
+        // Process data chunks in parallel
+        let handles: Vec&lt;_&gt; = data_chunks
+            .into_iter()
+            .map(|chunk| {
+                task::spawn(async move {
+                    process_chunk(chunk).await
+                })
+            })
+            .collect();
+        
+        let mut results = Vec::new();
+        
+        for handle in handles {
+            if let Ok(processed_chunk) = handle.await {
+                if let Ok(chunk) = processed_chunk {
+                    results.push(chunk);
+                }
+            }
+        }
+        
+        Ok(results)
+    }
+}
+
+async fn process_single_request(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Simulate request processing
+    Ok(Response::ok())
+}
+
+async fn process_chunk(chunk: Vec&lt;u8&gt;) -&gt; Result&lt;Vec&lt;u8&gt;&gt; {
+    // Simulate chunk processing
+    Ok(chunk)
+}
+
+// Semaphore for controlling concurrent operations
+use tokio::sync::Semaphore;
+
+pub struct RateLimitedProcessor {
+    semaphore: Arc&lt;Semaphore&gt;,
+}
+
+impl RateLimitedProcessor {
+    pub fn new(concurrent_limit: usize) -&gt; Self {
+        Self {
+            semaphore: Arc::new(Semaphore::new(concurrent_limit)),
+        }
+    }
+    
+    pub async fn process_with_limit&lt;F, R&gt;(&amp;self, operation: F) -&gt; Result&lt;R&gt;
+    where
+        F: std::future::Future&lt;Output = Result&lt;R&gt;&gt;,
+    {
+        let _permit = self.semaphore.acquire().await
+            .map_err(|_| Error::InternalServerError("Semaphore error".to_string()))?;
+        
+        operation.await
+    }
+    
+    pub async fn process_batch_with_limit&lt;T, F, R&gt;(
+        &amp;self,
+        items: Vec&lt;T&gt;,
+        processor: impl Fn(T) -&gt; F,
+    ) -&gt; Result&lt;Vec&lt;R&gt;&gt;
+    where
+        F: std::future::Future&lt;Output = Result&lt;R&gt;&gt;,
+    {
+        let mut handles = Vec::new();
+        
+        for item in items {
+            let semaphore = self.semaphore.clone();
+            let future = async move {
+                let _permit = semaphore.acquire().await
+                    .map_err(|_| Error::InternalServerError("Semaphore error".to_string()))?;
+                
+                processor(item).await
+            };
+            
+            handles.push(task::spawn(future));
+        }
+        
+        let mut results = Vec::new();
+        
+        for handle in handles {
+            match handle.await {
+                Ok(result) =&gt; {
+                    if let Ok(val) = result {
+                        results.push(val);
+                    }
+                }
+                Err(e) =&gt; {
+                    eprintln!("Task failed: {}", e);
+                }
+            }
+        }
+        
+        Ok(results)
+    }
+}
+
+// Async/await best practices
+pub struct AsyncBestPractices;
+
+impl AsyncBestPractices {
+    // Use join! for independent operations
+    pub async fn parallel_independent_operations() -&gt; Result&lt;()&gt; {
+        use tokio::join;
+        
+        let user_future = fetch_user_data();
+        let product_future = fetch_product_data();
+        let order_future = fetch_order_data();
+        
+        let (user_result, product_result, order_result) = join!(user_future, product_future, order_future);
+        
+        // Process results
+        let _user = user_result?;
+        let _product = product_result?;
+        let _order = order_result?;
+        
+        Ok(())
+    }
+    
+    // Use select! for racing operations
+    pub async fn racing_operations() -&gt; Result&lt;String&gt; {
+        use tokio::select;
+        
+        select! {
+            result = fetch_from_primary_db() =&gt; {
+                Ok(result?)
+            }
+            result = fetch_from_backup_db() =&gt; {
+                eprintln!("Primary DB failed, using backup");
+                Ok(result?)
+            }
+            _ = tokio::time::sleep(tokio::time::Duration::from_secs(5)) =&gt; {
+                Err(Error::Timeout)
+            }
+        }
+    }
+    
+    // Use spawn_blocking for CPU-intensive work
+    pub async fn cpu_intensive_work() -&gt; Result&lt;()&gt; {
+        let result = task::spawn_blocking(|| {
+            // CPU-intensive work that shouldn't block the async runtime
+            perform_cpu_intensive_calculation()
+        }).await
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
+        
+        // Process result
+        let _processed = result;
+        
+        Ok(())
+    }
+}
+
+fn perform_cpu_intensive_calculation() -&gt; String {
+    // Simulate CPU-intensive work
+    (0..1000).fold(0, |acc, x| acc + x * x).to_string()
+}
+
+async fn fetch_user_data() -&gt; Result&lt;String&gt; { Ok("user_data".to_string()) }
+async fn fetch_product_data() -&gt; Result&lt;String&gt; { Ok("product_data".to_string()) }
+async fn fetch_order_data() -&gt; Result&lt;String&gt; { Ok("order_data".to_string()) }
+async fn fetch_from_primary_db() -&gt; Result&lt;String&gt; { Ok("primary_data".to_string()) }
+async fn fetch_from_backup_db() -&gt; Result&lt;String&gt; { Ok("backup_data".to_string()) }</code></pre>
+<h2 id="network-optimizations"><a class="header" href="#network-optimizations">Network Optimizations</a></h2>
+<p>Optimize network performance:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// HTTP/2 and HTTP/3 optimizations
+pub struct HttpOptimizations;
+
+impl HttpOptimizations {
+    // Enable HTTP/2 server push (when available)
+    pub fn configure_http2_server() -&gt; Result&lt;()&gt; {
+        // In a real implementation, configure HTTP/2 settings
+        // Enable server push, header compression, multiplexing
+        
+        Ok(())
+    }
+    
+    // Connection reuse and keep-alive
+    pub fn configure_keep_alive() -&gt; Result&lt;()&gt; {
+        // In a real implementation, configure connection pooling
+        // Set appropriate keep-alive timeouts
+        
+        Ok(())
+    }
+    
+    // Enable compression
+    pub fn enable_compression() -&gt; Result&lt;()&gt; {
+        // In a real implementation, enable gzip/brotli compression
+        // Set appropriate compression levels
+        
+        Ok(())
+    }
+}
+
+// Response streaming for large data
+async fn stream_large_data(_req: Request) -&gt; Result&lt;Response&gt; {
+    use futures::stream::{self, StreamExt};
+    use tokio_util::codec::{FramedWrite, LinesCodec};
+    use tokio_util::io::StreamReader;
+    
+    // Create a stream of data chunks
+    let chunks: Vec&lt;Result&lt;bytes::Bytes, std::io::Error&gt;&gt; = vec![
+        Ok(bytes::Bytes::from("Line 1\n")),
+        Ok(bytes::Bytes::from("Line 2\n")),
+        Ok(bytes::Bytes::from("Line 3\n")),
+    ];
+    
+    let stream = stream::iter(chunks);
+    
+    // Convert stream to response
+    // In a real implementation, this would create a streaming response
+    Ok(Response::text("Streaming response".to_string()))
+}
+
+// Chunked transfer encoding for large responses
+async fn chunked_response(_req: Request) -&gt; Result&lt;Response&gt; {
+    // For responses that are built incrementally
+    let mut response_builder = Response::builder();
+    
+    // Set chunked encoding header
+    response_builder.header("Transfer-Encoding", "chunked");
+    
+    // In a real implementation, this would return a chunked response
+    Ok(Response::text("Chunked response content".to_string()))
+}
+
+// CDN-friendly headers
+async fn cdn_optimized_response(_req: Request) -&gt; Result&lt;Response&gt; {
+    let mut response = Response::html("&lt;h1&gt;Hello World&lt;/h1&gt;");
+    
+    // Add CDN-friendly headers
+    response.headers_mut().insert(
+        "Cache-Control",
+        "public, max-age=3600".parse().unwrap() // Cache for 1 hour
+    );
+    
+    response.headers_mut().insert(
+        "Vary",
+        "Accept-Encoding".parse().unwrap() // Important for compression
+    );
+    
+    // Add ETag for validation
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update("&lt;h1&gt;Hello World&lt;/h1&gt;");
+    let hash = format!("{:x}", hasher.finalize());
+    response.headers_mut().insert(
+        "ETag",
+        format!("\"{}\"", hash).parse().unwrap()
+    );
+    
+    Ok(response)
+}
+
+// Optimized static file serving
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
+
+async fn optimized_static_file_handler(Path(file_path): Path&lt;String&gt;) -&gt; Result&lt;Response&gt; {
+    // Validate path to prevent directory traversal
+    if file_path.contains("..") || file_path.starts_with('/') {
+        return Err(Error::BadRequest("Invalid file path".to_string()));
+    }
+    
+    let full_path = format!("public/{}", file_path);
+    
+    // Check if file exists
+    if !std::path::Path::new(&amp;full_path).exists() {
+        return Err(Error::NotFound);
+    }
+    
+    // Open file
+    let mut file = File::open(&amp;full_path).await
+        .map_err(|e| Error::InternalServerError(format!("Failed to open file: {}", e)))?;
+    
+    // Get file metadata
+    let metadata = file.metadata().await
+        .map_err(|e| Error::InternalServerError(format!("Failed to get metadata: {}", e)))?;
+    
+    // Read file content
+    let mut contents = vec![0; metadata.len() as usize];
+    file.read_exact(&amp;mut contents).await
+        .map_err(|e| Error::InternalServerError(format!("Failed to read file: {}", e)))?;
+    
+    // Set appropriate content type
+    let content_type = get_content_type(&amp;file_path);
+    
+    let mut response = Response::html(String::from_utf8_lossy(&amp;contents).to_string());
+    response.headers_mut().insert(
+        "Content-Type",
+        content_type.parse().unwrap()
+    );
+    
+    // Add caching headers
+    response.headers_mut().insert(
+        "Cache-Control",
+        "public, max-age=31536000".parse().unwrap() // 1 year
+    );
+    
+    // Add ETag
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update(&amp;contents);
+    let hash = format!("{:x}", hasher.finalize());
+    response.headers_mut().insert(
+        "ETag",
+        format!("\"{}\"", hash).parse().unwrap()
+    );
+    
+    Ok(response)
+}
+
+fn get_content_type(path: &amp;str) -&gt; &amp;'static str {
+    match std::path::Path::new(path).extension().and_then(|ext| ext.to_str()) {
+        Some("html") =&gt; "text/html",
+        Some("css") =&gt; "text/css",
+        Some("js") =&gt; "application/javascript",
+        Some("json") =&gt; "application/json",
+        Some("png") =&gt; "image/png",
+        Some("jpg") | Some("jpeg") =&gt; "image/jpeg",
+        Some("gif") =&gt; "image/gif",
+        Some("svg") =&gt; "image/svg+xml",
+        Some("ico") =&gt; "image/x-icon",
+        Some("woff") =&gt; "font/woff",
+        Some("woff2") =&gt; "font/woff2",
+        Some("ttf") =&gt; "font/ttf",
+        Some("eot") =&gt; "application/vnd.ms-fontobject",
+        _ =&gt; "application/octet-stream",
+    }
+}</code></pre>
+<h2 id="profiling-and-monitoring"><a class="header" href="#profiling-and-monitoring">Profiling and Monitoring</a></h2>
+<p>Monitor and profile your application:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+use tokio::time::{Duration, Instant};
+
+// Performance monitoring middleware
+async fn performance_monitoring_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    let start_time = Instant::now();
+    let method = req.method().clone();
+    let uri = req.uri().clone();
+    
+    let response = next.run(req).await;
+    let elapsed = start_time.elapsed();
+    
+    // Log performance metrics
+    log_performance_metrics(&amp;method, &amp;uri, elapsed, response.as_ref().map(|r| r.status().as_u16()).unwrap_or(500));
+    
+    response
+}
+
+fn log_performance_metrics(method: &amp;http::Method, uri: &amp;http::Uri, elapsed: Duration, status_code: u16) {
+    println!(
+        "PERFORMANCE - {} {} - {}ms - Status: {}",
+        method,
+        uri.path(),
+        elapsed.as_millis(),
+        status_code
+    );
+    
+    // In a real implementation, send to metrics collection system
+    // like Prometheus, DataDog, etc.
+}
+
+// Request tracing middleware
+async fn request_tracing_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    let trace_id = uuid::Uuid::new_v4().to_string();
+    let span_id = uuid::Uuid::new_v4().to_string();
+    
+    // Add trace headers to response
+    let mut response = next.run(req).await?;
+    response.headers_mut().insert(
+        "X-Trace-ID",
+        trace_id.parse().unwrap()
+    );
+    response.headers_mut().insert(
+        "X-Span-ID",
+        span_id.parse().unwrap()
+    );
+    
+    Ok(response)
+}
+
+// Memory usage monitoring
+use sysinfo::{System, SystemExt, ProcessExt};
+
+pub struct MemoryMonitor;
+
+impl MemoryMonitor {
+    pub fn get_memory_usage() -&gt; MemoryUsage {
+        let mut system = System::new_all();
+        system.refresh_all();
+        
+        MemoryUsage {
+            total_memory: system.total_memory(),
+            used_memory: system.used_memory(),
+            free_memory: system.free_memory(),
+        }
+    }
+    
+    pub fn get_process_memory_usage() -&gt; ProcessMemoryUsage {
+        let mut system = System::new_all();
+        system.refresh_processes();
+        
+        if let Some(process) = system.process(sysinfo::get_current_pid().expect("Failed to get PID")) {
+            ProcessMemoryUsage {
+                memory: process.memory(),
+                virtual_memory: process.virtual_memory(),
+            }
+        } else {
+            ProcessMemoryUsage {
+                memory: 0,
+                virtual_memory: 0,
+            }
+        }
+    }
+}
+
+pub struct MemoryUsage {
+    pub total_memory: u64,
+    pub used_memory: u64,
+    pub free_memory: u64,
+}
+
+pub struct ProcessMemoryUsage {
+    pub memory: u64,
+    pub virtual_memory: u64,
+}
+
+// Performance metrics endpoint
+async fn performance_metrics_endpoint(_req: Request) -&gt; Result&lt;Response&gt; {
+    let memory_usage = MemoryMonitor::get_memory_usage();
+    let process_memory = MemoryMonitor::get_process_memory_usage();
+    
+    let metrics = serde_json::json!({
+        "memory": {
+            "total": memory_usage.total_memory,
+            "used": memory_usage.used_memory,
+            "free": memory_usage.free_memory,
+            "process_used": process_memory.memory,
+            "process_virtual": process_memory.virtual_memory
+        },
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    });
+    
+    Ok(Response::json(metrics))
+}
+
+// Slow query detection
+pub struct QueryProfiler {
+    slow_query_threshold: Duration,
+}
+
+impl QueryProfiler {
+    pub fn new(slow_query_threshold_ms: u64) -&gt; Self {
+        Self {
+            slow_query_threshold: Duration::from_millis(slow_query_threshold_ms),
+        }
+    }
+    
+    pub async fn execute_with_profiling&lt;F, R&gt;(&amp;self, query_name: &amp;str, operation: F) -&gt; Result&lt;R&gt;
+    where
+        F: std::future::Future&lt;Output = Result&lt;R&gt;&gt;,
+    {
+        let start = Instant::now();
+        let result = operation.await;
+        let elapsed = start.elapsed();
+        
+        if elapsed &gt; self.slow_query_threshold {
+            eprintln!(
+                "SLOW QUERY WARNING - {}: {:?}ms",
+                query_name,
+                elapsed.as_millis()
+            );
+        }
+        
+        result
+    }
+}
+
+// Benchmark utilities
+pub struct Benchmarker;
+
+impl Benchmarker {
+    pub async fn benchmark&lt;F, R&gt;(name: &amp;str, iterations: usize, operation: F) -&gt; BenchmarkResult
+    where
+        F: Fn() -&gt; R + Copy,
+    {
+        let start = Instant::now();
+        
+        for _ in 0..iterations {
+            let _result = operation();
+        }
+        
+        let elapsed = start.elapsed();
+        let avg_time = elapsed / iterations as u32;
+        
+        println!(
+            "BENCHMARK - {}: {} iterations in {:?} (avg: {:?} per iteration)",
+            name, iterations, elapsed, avg_time
+        );
+        
+        BenchmarkResult {
+            name: name.to_string(),
+            iterations,
+            total_time: elapsed,
+            avg_time,
+        }
+    }
+}
+
+pub struct BenchmarkResult {
+    pub name: String,
+    pub iterations: usize,
+    pub total_time: Duration,
+    pub avg_time: Duration,
+}
+
+// Example benchmark usage
+async fn run_benchmarks() -&gt; Result&lt;()&gt; {
+    // Benchmark different operations
+    Benchmarker::benchmark("string_concatenation", 10000, || {
+        let mut s = String::new();
+        s.push_str("hello");
+        s.push(' ');
+        s.push_str("world");
+        s
+    }).await;
+    
+    Benchmarker::benchmark("vector_creation", 10000, || {
+        let mut v = Vec::with_capacity(10);
+        for i in 0..10 {
+            v.push(i);
+        }
+        v
+    }).await;
+    
+    Ok(())
+}</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Performance optimization in Oxidite applications involves:</p>
+<ul>
+<li><strong>Request Handling</strong>: Efficient request processing and middleware</li>
+<li><strong>Database Optimization</strong>: Query optimization, connection pooling, batching</li>
+<li><strong>Caching</strong>: In-memory and distributed caching strategies</li>
+<li><strong>Memory Management</strong>: Efficient data structures and allocation</li>
+<li><strong>Concurrency</strong>: Proper use of async/await and parallel processing</li>
+<li><strong>Network Optimization</strong>: HTTP/2, compression, and streaming</li>
+<li><strong>Profiling</strong>: Monitoring and measuring performance metrics</li>
+</ul>
+<p>Following these optimization techniques will help you build fast, efficient Oxidite applications that can handle high loads while maintaining responsiveness.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="docker-deployment.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="pdf-export.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="docker-deployment.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="pdf-export.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="ace-2a3cd908.js"></script>
+        <script src="mode-rust-2c9d5c9a.js"></script>
+        <script src="editor-16ca416c.js"></script>
+        <script src="theme-dawn-4493f9c8.js"></script>
+        <script src="theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="branding-4ab4c57d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

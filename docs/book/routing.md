@@ -294,11 +294,11 @@ async fn main() -> Result<()> {
 Register more specific routes before general ones:
 
 ```rust,ignore
-// ✅ Correct order
+// Correct order
 router.get("/users/:id", get_user);
 router.get("/users/list", list_users); // More specific than /users/:id
 
-// ❌ Wrong order - this would never be reached
+// Wrong order - this would never be reached
 // router.get("/users/list", list_users);
 // router.get("/users/:id", get_user);  // Would match /users/list first
 ```

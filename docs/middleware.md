@@ -364,7 +364,7 @@ async fn protected_handler(_req: OxiditeRequest) -> Result<OxiditeResponse> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    println!("🚀 Starting Oxidite server with middleware...");
+    println!("Starting Oxidite server with middleware...");
 
     let mut router = Router::new();
     router.get("/", handler);
@@ -377,10 +377,10 @@ async fn main() -> Result<()> {
         .layer(CompressionLayer::new())              // Compress responses
         .service(router);
     
-    println!("📡 Server listening on http://127.0.0.1:3000");
-    println!("📋 Middleware applied: Logger, CORS, Compression");
-    println!("🔗 Try: curl http://localhost:3000/");
-    println!("🔒 Try: curl http://localhost:3000/protected -H \"Authorization: Bearer token\"");
+    println!("Server listening on http://127.0.0.1:3000");
+    println!("Middleware applied: Logger, CORS, Compression");
+    println!("Try: curl http://localhost:3000/");
+    println!("Try: curl http://localhost:3000/protected -H \"Authorization: Bearer token\"");
     
     Server::new(service)
         .listen("127.0.0.1:3000".parse().unwrap())

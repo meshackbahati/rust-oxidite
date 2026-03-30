@@ -1,0 +1,1237 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Testing - Oxidite Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="custom-b48cbb74.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-e08cec6f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-0584e8c7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Oxidite Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/./testing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="testing"><a class="header" href="#testing">Testing</a></h1>
+<p>Testing is a crucial part of the Oxidite framework, providing comprehensive tools for unit testing, integration testing, and end-to-end testing. This chapter covers all aspects of testing in Oxidite applications.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>Oxidite provides:</p>
+<ul>
+<li>Unit testing for individual components</li>
+<li>Integration testing for routes and middleware</li>
+<li>End-to-end testing with simulated HTTP requests</li>
+<li>Test utilities for mocking dependencies</li>
+<li>Test fixtures and factories</li>
+<li>Property-based testing support</li>
+</ul>
+<h2 id="setting-up-tests"><a class="header" href="#setting-up-tests">Setting Up Tests</a></h2>
+<p>Basic test setup in your project:</p>
+<pre><code class="language-rust ignore">// In your Cargo.toml
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full"] }
+oxidite-testing = "2.0.0"
+serial_test = "3.0"
+
+// In your src/lib.rs or src/main.rs
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use oxidite_testing::TestServer;
+    
+    #[tokio::test]
+    async fn test_basic_functionality() {
+        assert_eq!(2 + 2, 4);
+    }
+}</code></pre>
+<h2 id="unit-testing"><a class="header" href="#unit-testing">Unit Testing</a></h2>
+<p>Test individual functions and components:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Function to test
+pub fn calculate_discount(price: f64, discount_percent: f64) -&gt; f64 {
+    if discount_percent &lt;= 0.0 || discount_percent &gt; 100.0 {
+        return price;
+    }
+    
+    price * (1.0 - discount_percent / 100.0)
+}
+
+pub fn is_valid_email(email: &amp;str) -&gt; bool {
+    email.contains('@') &amp;&amp; email.contains('.') &amp;&amp; email.len() &gt; 5
+}
+
+#[cfg(test)]
+mod unit_tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_discount() {
+        assert_eq!(calculate_discount(100.0, 10.0), 90.0);
+        assert_eq!(calculate_discount(50.0, 20.0), 40.0);
+        assert_eq!(calculate_discount(100.0, 0.0), 100.0);
+        assert_eq!(calculate_discount(100.0, 100.0), 0.0);
+    }
+
+    #[test]
+    fn test_calculate_discount_edge_cases() {
+        assert_eq!(calculate_discount(100.0, -10.0), 100.0); // Invalid discount
+        assert_eq!(calculate_discount(100.0, 150.0), 100.0); // Too high discount
+        assert_eq!(calculate_discount(0.0, 50.0), 0.0); // Zero price
+    }
+
+    #[test]
+    fn test_is_valid_email() {
+        assert!(is_valid_email("user@example.com"));
+        assert!(is_valid_email("test.user@domain.co.uk"));
+        assert!(!is_valid_email("invalid-email"));
+        assert!(!is_valid_email("missing@dot"));
+        assert!(!is_valid_email("short@x"));
+    }
+}</code></pre>
+<h2 id="integration-testing"><a class="header" href="#integration-testing">Integration Testing</a></h2>
+<p>Test routes and middleware integration:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use oxidite_testing::{TestServer, RequestBuilder};
+
+// Sample route handler
+async fn hello_handler(_req: Request) -&gt; Result&lt;Response&gt; {
+    Ok(Response::json(serde_json::json!({
+        "message": "Hello, World!",
+        "status": "success"
+    })))
+}
+
+async fn user_handler(Path(user_id): Path&lt;u32&gt;) -&gt; Result&lt;Response&gt; {
+    Ok(Response::json(serde_json::json!({
+        "id": user_id,
+        "name": format!("User {}", user_id),
+        "email": format!("user{}@example.com", user_id)
+    })))
+}
+
+#[cfg(test)]
+mod integration_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_hello_endpoint() {
+        let server = TestServer::new(|router| {
+            router.get("/hello", hello_handler);
+        }).await;
+
+        let response = server.get("/hello").send().await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert_eq!(json["message"], "Hello, World!");
+        assert_eq!(json["status"], "success");
+    }
+
+    #[tokio::test]
+    async fn test_user_endpoint() {
+        let server = TestServer::new(|router| {
+            router.get("/users/:id", user_handler);
+        }).await;
+
+        let response = server.get("/users/123").send().await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert_eq!(json["id"], 123);
+        assert_eq!(json["name"], "User 123");
+        assert_eq!(json["email"], "user123@example.com");
+    }
+
+    #[tokio::test]
+    async fn test_not_found() {
+        let server = TestServer::new(|router| {
+            router.get("/hello", hello_handler);
+        }).await;
+
+        let response = server.get("/nonexistent").send().await;
+        
+        assert_eq!(response.status(), 404);
+    }
+}</code></pre>
+<h2 id="testing-with-state-and-dependencies"><a class="header" href="#testing-with-state-and-dependencies">Testing with State and Dependencies</a></h2>
+<p>Test routes that use application state:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+
+#[derive(Clone)]
+struct AppState {
+    app_name: String,
+    version: String,
+}
+
+async fn stateful_handler(
+    _req: Request,
+    State(state): State&lt;Arc&lt;AppState&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    Ok(Response::json(serde_json::json!({
+        "app_name": state.app_name,
+        "version": state.version
+    })))
+}
+
+#[cfg(test)]
+mod state_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_stateful_handler() {
+        let app_state = Arc::new(AppState {
+            app_name: "Test App".to_string(),
+            version: "1.0.0".to_string(),
+        });
+
+        let server = TestServer::new(move |router| {
+            let state_clone = app_state.clone();
+            router.with_state(state_clone);
+            router.get("/info", stateful_handler);
+        }).await;
+
+        let response = server.get("/info").send().await;
+        
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert_eq!(json["app_name"], "Test App");
+        assert_eq!(json["version"], "1.0.0");
+    }
+}</code></pre>
+<h2 id="testing-middleware"><a class="header" href="#testing-middleware">Testing Middleware</a></h2>
+<p>Test middleware functionality:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+async fn logging_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    println!("Request: {} {}", req.method(), req.uri());
+    let response = next.run(req).await?;
+    println!("Response: {}", response.status());
+    Ok(response)
+}
+
+async fn auth_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    // Check for auth header
+    let auth_header = req.headers()
+        .get("authorization")
+        .and_then(|hv| hv.to_str().ok());
+    
+    if auth_header.is_none() {
+        return Err(Error::Unauthorized("Missing authorization header".to_string()));
+    }
+    
+    next.run(req).await
+}
+
+#[cfg(test)]
+mod middleware_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_auth_middleware_success() {
+        let server = TestServer::new(|router| {
+            router.get("/protected")
+                .middleware(auth_middleware)
+                .handler(|_req| async { Ok(Response::text("Protected content".to_string())) });
+        }).await;
+
+        let response = server
+            .get("/protected")
+            .header("Authorization", "Bearer token123")
+            .send()
+            .await;
+        
+        assert_eq!(response.status(), 200);
+        assert_eq!(response.text().await, "Protected content");
+    }
+
+    #[tokio::test]
+    async fn test_auth_middleware_failure() {
+        let server = TestServer::new(|router| {
+            router.get("/protected")
+                .middleware(auth_middleware)
+                .handler(|_req| async { Ok(Response::text("Protected content".to_string())) });
+        }).await;
+
+        let response = server.get("/protected").send().await;
+        
+        assert_eq!(response.status(), 401);
+    }
+}</code></pre>
+<h2 id="database-testing"><a class="header" href="#database-testing">Database Testing</a></h2>
+<p>Test database operations with test databases:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Model, Serialize, Deserialize)]
+#[model(table = "test_users")]
+pub struct TestUser {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(unique, not_null)]
+    pub email: String,
+    #[model(not_null)]
+    pub name: String,
+}
+
+#[cfg(test)]
+mod database_tests {
+    use super::*;
+
+    async fn setup_test_db() -&gt; Result&lt;()&gt; {
+        // Create test database schema
+        // This would typically run migrations or create tables
+        Ok(())
+    }
+
+    async fn teardown_test_db() -&gt; Result&lt;()&gt; {
+        // Clean up test database
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_user_crud_operations() {
+        setup_test_db().await.unwrap();
+
+        // Test create
+        let user = TestUser {
+            id: 0,
+            email: "test@example.com".to_string(),
+            name: "Test User".to_string(),
+        };
+
+        let saved_user = user.save().await.unwrap();
+        assert!(!saved_user.id == 0);
+
+        // Test read
+        let found_user = TestUser::find_by_id(saved_user.id).await.unwrap().unwrap();
+        assert_eq!(found_user.email, "test@example.com");
+        assert_eq!(found_user.name, "Test User");
+
+        // Test update
+        let mut updated_user = found_user;
+        updated_user.name = "Updated Name".to_string();
+        let updated_user = updated_user.save().await.unwrap();
+        assert_eq!(updated_user.name, "Updated Name");
+
+        // Test delete
+        updated_user.delete().await.unwrap();
+        let deleted_user = TestUser::find_by_id(updated_user.id).await.unwrap();
+        assert!(deleted_user.is_none());
+
+        teardown_test_db().await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_duplicate_email_fails() {
+        setup_test_db().await.unwrap();
+
+        let user1 = TestUser {
+            id: 0,
+            email: "duplicate@example.com".to_string(),
+            name: "User 1".to_string(),
+        };
+        user1.save().await.unwrap();
+
+        let user2 = TestUser {
+            id: 0,
+            email: "duplicate@example.com".to_string(), // Same email
+            name: "User 2".to_string(),
+        };
+        
+        // This should fail due to unique constraint
+        let result = user2.save().await;
+        assert!(result.is_err());
+
+        teardown_test_db().await.unwrap();
+    }
+}</code></pre>
+<h2 id="mocking-and-test-doubles"><a class="header" href="#mocking-and-test-doubles">Mocking and Test Doubles</a></h2>
+<p>Create mocks for external dependencies:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Service to be mocked
+pub trait EmailService: Send + Sync {
+    async fn send_email(&amp;self, to: &amp;str, subject: &amp;str, body: &amp;str) -&gt; Result&lt;(), String&gt;;
+}
+
+pub struct RealEmailService;
+
+impl EmailService for RealEmailService {
+    async fn send_email(&amp;self, to: &amp;str, subject: &amp;str, body: &amp;str) -&gt; Result&lt;(), String&gt; {
+        // Actually send email
+        println!("Sending email to: {}, subject: {}, body: {}", to, subject, body);
+        Ok(())
+    }
+}
+
+// Handler that uses the service
+async fn contact_handler(
+    Json(payload): Json&lt;ContactRequest&gt;,
+    State(email_service): State&lt;Arc&lt;dyn EmailService&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    email_service
+        .send_email(&amp;payload.email, &amp;payload.subject, &amp;payload.message)
+        .await
+        .map_err(|e| Error::InternalServerError(e))?;
+
+    Ok(Response::json(serde_json::json!({
+        "status": "sent",
+        "message": "Email sent successfully"
+    })))
+}
+
+#[derive(serde::Deserialize)]
+struct ContactRequest {
+    email: String,
+    subject: String,
+    message: String,
+}
+
+// Mock implementation for testing
+pub struct MockEmailService {
+    pub sent_emails: std::sync::Arc&lt;tokio::sync::Mutex&lt;Vec&lt;SentEmail&gt;&gt;&gt;,
+}
+
+#[derive(Clone)]
+pub struct SentEmail {
+    pub to: String,
+    pub subject: String,
+    pub body: String,
+}
+
+impl MockEmailService {
+    pub fn new() -&gt; Self {
+        Self {
+            sent_emails: std::sync::Arc::new(tokio::sync::Mutex::new(Vec::new())),
+        }
+    }
+    
+    pub async fn get_sent_emails(&amp;self) -&gt; Vec&lt;SentEmail&gt; {
+        self.sent_emails.lock().await.clone()
+    }
+}
+
+#[async_trait::async_trait]
+impl EmailService for MockEmailService {
+    async fn send_email(&amp;self, to: &amp;str, subject: &amp;str, body: &amp;str) -&gt; Result&lt;(), String&gt; {
+        let mut emails = self.sent_emails.lock().await;
+        emails.push(SentEmail {
+            to: to.to_string(),
+            subject: subject.to_string(),
+            body: body.to_string(),
+        });
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod mock_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_contact_handler_with_mock() {
+        let mock_service = std::sync::Arc::new(MockEmailService::new());
+        let service_clone = mock_service.clone();
+
+        let server = TestServer::new(move |router| {
+            router.post("/contact")
+                .with_state(service_clone.clone() as Arc&lt;dyn EmailService&gt;)
+                .handler(contact_handler);
+        }).await;
+
+        let response = server
+            .post("/contact")
+            .json(&amp;serde_json::json!({
+                "email": "user@example.com",
+                "subject": "Test Subject",
+                "message": "Test message"
+            }))
+            .send()
+            .await;
+
+        assert_eq!(response.status(), 200);
+        
+        let json: serde_json::Value = response.json().await;
+        assert_eq!(json["status"], "sent");
+
+        // Verify email was sent via mock
+        let sent_emails = mock_service.get_sent_emails().await;
+        assert_eq!(sent_emails.len(), 1);
+        assert_eq!(sent_emails[0].to, "user@example.com");
+        assert_eq!(sent_emails[0].subject, "Test Subject");
+        assert_eq!(sent_emails[0].body, "Test message");
+    }
+}</code></pre>
+<h2 id="property-based-testing"><a class="header" href="#property-based-testing">Property-Based Testing</a></h2>
+<p>Use property-based testing for comprehensive validation:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Function to test with property-based testing
+pub fn reverse_string(s: &amp;str) -&gt; String {
+    s.chars().rev().collect()
+}
+
+pub fn is_palindrome(s: &amp;str) -&gt; bool {
+    let cleaned: String = s.chars()
+        .filter(|c| c.is_alphanumeric())
+        .map(|c| c.to_lowercase().next().unwrap())
+        .collect();
+    
+    cleaned == reverse_string(&amp;cleaned)
+}
+
+#[cfg(test)]
+mod property_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    // Test that reversing a string twice gives the original
+    proptest! {
+        #[test]
+        fn test_reverse_twice_is_identity(s in ".*") {
+            let reversed_once = reverse_string(&amp;s);
+            let reversed_twice = reverse_string(&amp;reversed_once);
+            prop_assert_eq!(s, reversed_twice);
+        }
+    }
+
+    // Test palindrome properties
+    proptest! {
+        #[test]
+        fn test_palindromes(s in "[a-zA-Z]{1,10}") {
+            // A string concatenated with its reverse should be a palindrome
+            let reversed = reverse_string(&amp;s);
+            let palindrome = format!("{}{}", s, reversed);
+            prop_assert!(is_palindrome(&amp;palindrome));
+        }
+    }
+}</code></pre>
+<h2 id="test-fixtures-and-factories"><a class="header" href="#test-fixtures-and-factories">Test Fixtures and Factories</a></h2>
+<p>Create reusable test data:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Model, Serialize, Deserialize, Clone)]
+#[model(table = "test_posts")]
+pub struct TestPost {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(not_null)]
+    pub title: String,
+    #[model(not_null)]
+    pub content: String,
+    pub user_id: i32,
+}
+
+#[derive(Model, Serialize, Deserialize, Clone)]
+#[model(table = "test_comments")]
+pub struct TestComment {
+    #[model(primary_key)]
+    pub id: i32,
+    #[model(not_null)]
+    pub content: String,
+    pub post_id: i32,
+    pub user_id: i32,
+}
+
+// Test factory for creating test data
+pub struct TestFactory;
+
+impl TestFactory {
+    pub fn create_user(email: &amp;str, name: &amp;str) -&gt; TestUser {
+        TestUser {
+            id: 0,
+            email: email.to_string(),
+            name: name.to_string(),
+        }
+    }
+
+    pub fn create_post(title: &amp;str, content: &amp;str, user_id: i32) -&gt; TestPost {
+        TestPost {
+            id: 0,
+            title: title.to_string(),
+            content: content.to_string(),
+            user_id,
+        }
+    }
+
+    pub fn create_comment(content: &amp;str, post_id: i32, user_id: i32) -&gt; TestComment {
+        TestComment {
+            id: 0,
+            content: content.to_string(),
+            post_id,
+            user_id,
+        }
+    }
+}
+
+#[cfg(test)]
+mod fixture_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_blog_post_with_comments() {
+        setup_test_db().await.unwrap();
+
+        // Create test data using factory
+        let user = TestFactory::create_user("author@example.com", "Author Name");
+        let saved_user = user.save().await.unwrap();
+
+        let post = TestFactory::create_post("Test Post", "Post content", saved_user.id);
+        let saved_post = post.save().await.unwrap();
+
+        let comment = TestFactory::create_comment("Great post!", saved_post.id, saved_user.id);
+        let saved_comment = comment.save().await.unwrap();
+
+        // Verify relationships
+        assert_eq!(saved_comment.post_id, saved_post.id);
+        assert_eq!(saved_comment.user_id, saved_user.id);
+
+        // Clean up
+        saved_comment.delete().await.unwrap();
+        saved_post.delete().await.unwrap();
+        saved_user.delete().await.unwrap();
+
+        teardown_test_db().await.unwrap();
+    }
+}</code></pre>
+<h2 id="test-configuration"><a class="header" href="#test-configuration">Test Configuration</a></h2>
+<p>Configure test-specific settings:</p>
+<pre><code class="language-rust ignore">// In your Cargo.toml
+[features]
+test_utils = []
+
+// Test utilities module
+#[cfg(any(test, feature = "test_utils"))]
+pub mod test_utils {
+    use oxidite::prelude::*;
+    use std::sync::Arc;
+    use tokio::sync::Mutex;
+
+    #[derive(Clone)]
+    pub struct TestContext {
+        pub db_url: String,
+        pub temp_dir: tempfile::TempDir,
+        pub cleanup_hooks: Arc&lt;Mutex&lt;Vec&lt;Box&lt;dyn FnMut() -&gt; () + Send&gt;&gt;&gt;&gt;,
+    }
+
+    impl TestContext {
+        pub async fn new() -&gt; Self {
+            let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+            Self {
+                db_url: format!("sqlite://{}/test.db", temp_dir.path().display()),
+                temp_dir,
+                cleanup_hooks: Arc::new(Mutex::new(Vec::new())),
+            }
+        }
+
+        pub async fn add_cleanup_hook&lt;F&gt;(&amp;self, hook: F) 
+        where 
+            F: FnMut() -&gt; () + Send + 'static 
+        {
+            let mut hooks = self.cleanup_hooks.lock().await;
+            hooks.push(Box::new(hook));
+        }
+
+        pub async fn run_cleanup(&amp;self) {
+            let mut hooks = self.cleanup_hooks.lock().await;
+            for hook in hooks.iter_mut() {
+                hook();
+            }
+        }
+    }
+
+    // Test server wrapper with context
+    pub struct TestServerWithContext {
+        pub server: TestServer,
+        pub context: TestContext,
+    }
+
+    impl TestServerWithContext {
+        pub async fn new&lt;F&gt;(setup_fn: F) -&gt; Self 
+        where 
+            F: FnOnce(&amp;mut Router, TestContext) + Send + 'static 
+        {
+            let context = TestContext::new().await;
+            let context_clone = context.clone();
+            
+            let server = TestServer::new(move |router| {
+                setup_fn(router, context_clone);
+            }).await;
+
+            Self { server, context }
+        }
+    }
+}
+
+#[cfg(test)]
+mod configured_tests {
+    use super::*;
+    use test_utils::*;
+
+    #[tokio::test]
+    async fn test_with_context() {
+        let test_server = TestServerWithContext::new(|router, _ctx| {
+            router.get("/test", |_req| async { 
+                Ok(Response::text("Test response".to_string())) 
+            });
+        }).await;
+
+        let response = test_server.server.get("/test").send().await;
+        assert_eq!(response.status(), 200);
+        assert_eq!(response.text().await, "Test response");
+
+        test_server.context.run_cleanup().await;
+    }
+}</code></pre>
+<h2 id="parallel-test-execution"><a class="header" href="#parallel-test-execution">Parallel Test Execution</a></h2>
+<p>Handle parallel test execution safely:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use serial_test::serial;
+
+// Use serial_test attribute for tests that can't run in parallel
+#[tokio::test]
+#[serial]
+async fn test_shared_resource() {
+    // This test accesses a shared resource and must run serially
+    // For example, a test that modifies global configuration
+    println!("Running serial test");
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+}
+
+#[tokio::test]
+async fn test_independent_functionality() {
+    // This test can run in parallel with others
+    assert_eq!(2 + 2, 4);
+}
+
+// Test isolation utilities
+pub mod test_isolation {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static TEST_COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+    pub fn get_unique_test_id() -&gt; String {
+        let id = TEST_COUNTER.fetch_add(1, Ordering::SeqCst);
+        format!("test_{}", id)
+    }
+
+    pub fn get_unique_table_name() -&gt; String {
+        format!("test_table_{}", get_unique_test_id())
+    }
+
+    pub fn get_unique_db_name() -&gt; String {
+        format!("test_db_{}.db", get_unique_test_id())
+    }
+}
+
+#[cfg(test)]
+mod isolated_tests {
+    use super::*;
+    use test_isolation::*;
+
+    #[tokio::test]
+    async fn test_with_unique_resources() {
+        let unique_id = get_unique_test_id();
+        let table_name = get_unique_table_name();
+        
+        println!("Using unique resources: {} - {}", unique_id, table_name);
+        
+        // Test using isolated resources
+        assert!(table_name.starts_with("test_table_test_"));
+    }
+}</code></pre>
+<h2 id="test-coverage"><a class="header" href="#test-coverage">Test Coverage</a></h2>
+<p>Measure and improve test coverage:</p>
+<pre><code class="language-rust ignore">// In your .cargo/config.toml
+// [target.'cfg(coverage)']
+// rustflags = ["-Zinstrument-coverage"]
+
+use oxidite::prelude::*;
+
+// Complex function to test thoroughly
+pub fn process_order(
+    amount: f64,
+    tax_rate: f64,
+    discount_percent: f64,
+    shipping_cost: f64,
+    is_international: bool
+) -&gt; Result&lt;OrderSummary, String&gt; {
+    if amount &lt;= 0.0 {
+        return Err("Amount must be positive".to_string());
+    }
+    
+    if tax_rate &lt; 0.0 || tax_rate &gt; 1.0 {
+        return Err("Tax rate must be between 0 and 1".to_string());
+    }
+    
+    if discount_percent &lt; 0.0 || discount_percent &gt; 100.0 {
+        return Err("Discount percent must be between 0 and 100".to_string());
+    }
+    
+    let discount_amount = amount * (discount_percent / 100.0);
+    let subtotal = amount - discount_amount;
+    let tax_amount = subtotal * tax_rate;
+    let total = subtotal + tax_amount + shipping_cost;
+    
+    let international_fee = if is_international { total * 0.05 } else { 0.0 };
+    let final_total = total + international_fee;
+
+    Ok(OrderSummary {
+        subtotal,
+        tax_amount,
+        shipping_cost,
+        discount_amount,
+        international_fee,
+        total: final_total,
+    })
+}
+
+#[derive(Debug, PartialEq)]
+pub struct OrderSummary {
+    pub subtotal: f64,
+    pub tax_amount: f64,
+    pub shipping_cost: f64,
+    pub discount_amount: f64,
+    pub international_fee: f64,
+    pub total: f64,
+}
+
+#[cfg(test)]
+mod coverage_tests {
+    use super::*;
+
+    #[test]
+    fn test_process_order_normal_case() {
+        let result = process_order(100.0, 0.1, 10.0, 5.0, false).unwrap();
+        
+        assert_eq!(result.subtotal, 90.0); // 100 - 10% discount
+        assert_eq!(result.tax_amount, 9.0); // 90 * 10% tax
+        assert_eq!(result.shipping_cost, 5.0);
+        assert_eq!(result.discount_amount, 10.0);
+        assert_eq!(result.international_fee, 0.0);
+        assert_eq!(result.total, 104.0); // 90 + 9 + 5 + 0
+    }
+
+    #[test]
+    fn test_process_order_international() {
+        let result = process_order(100.0, 0.1, 0.0, 5.0, true).unwrap();
+        
+        assert_eq!(result.subtotal, 100.0);
+        assert_eq!(result.tax_amount, 10.0);
+        assert_eq!(result.international_fee, 5.75); // (100 + 10 + 5) * 5%
+        assert_eq!(result.total, 120.75);
+    }
+
+    #[test]
+    fn test_process_order_zero_values() {
+        let result = process_order(100.0, 0.0, 0.0, 0.0, false).unwrap();
+        
+        assert_eq!(result.subtotal, 100.0);
+        assert_eq!(result.tax_amount, 0.0);
+        assert_eq!(result.total, 100.0);
+    }
+
+    #[test]
+    fn test_process_order_edge_cases() {
+        // Test with very small values
+        let result = process_order(0.01, 0.01, 0.01, 0.01, false).unwrap();
+        assert!(result.total &gt; 0.0);
+        
+        // Test maximum values within bounds
+        let result = process_order(1000000.0, 0.99, 99.99, 1000.0, true).unwrap();
+        assert!(result.total &gt; 0.0);
+    }
+
+    #[test]
+    fn test_process_order_errors() {
+        // Test negative amount
+        assert!(process_order(-1.0, 0.1, 10.0, 5.0, false).is_err());
+        
+        // Test invalid tax rate
+        assert!(process_order(100.0, -0.1, 10.0, 5.0, false).is_err());
+        assert!(process_order(100.0, 1.5, 10.0, 5.0, false).is_err());
+        
+        // Test invalid discount percent
+        assert!(process_order(100.0, 0.1, -1.0, 5.0, false).is_err());
+        assert!(process_order(100.0, 0.1, 101.0, 5.0, false).is_err());
+    }
+}</code></pre>
+<h2 id="test-reporting"><a class="header" href="#test-reporting">Test Reporting</a></h2>
+<p>Generate test reports and summaries:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Test result aggregator
+#[derive(Default)]
+pub struct TestResults {
+    pub passed: usize,
+    pub failed: usize,
+    pub ignored: usize,
+    pub measured: usize,
+}
+
+impl TestResults {
+    pub fn add_result(&amp;mut self, result: TestResult) {
+        match result.status {
+            TestStatus::Passed =&gt; self.passed += 1,
+            TestStatus::Failed =&gt; self.failed += 1,
+            TestStatus::Ignored =&gt; self.ignored += 1,
+            TestStatus::Measured =&gt; self.measured += 1,
+        }
+    }
+    
+    pub fn total(&amp;self) -&gt; usize {
+        self.passed + self.failed + self.ignored + self.measured
+    }
+    
+    pub fn success_rate(&amp;self) -&gt; f64 {
+        if self.total() == 0 {
+            0.0
+        } else {
+            (self.passed as f64 / self.total() as f64) * 100.0
+        }
+    }
+    
+    pub fn print_summary(&amp;self) {
+        println!("Test Results Summary:");
+        println!("  Total: {}", self.total());
+        println!("  Passed: {} ({:.1}%)", self.passed, self.success_rate());
+        println!("  Failed: {}", self.failed);
+        println!("  Ignored: {}", self.ignored);
+        println!("  Measured: {}", self.measured);
+    }
+}
+
+pub struct TestResult {
+    pub name: String,
+    pub status: TestStatus,
+    pub duration: std::time::Duration,
+    pub error: Option&lt;String&gt;,
+}
+
+pub enum TestStatus {
+    Passed,
+    Failed,
+    Ignored,
+    Measured,
+}
+
+// Example of integrating with a test runner
+pub struct TestRunner {
+    pub results: TestResults,
+}
+
+impl TestRunner {
+    pub fn new() -&gt; Self {
+        Self {
+            results: TestResults::default(),
+        }
+    }
+    
+    pub async fn run_test&lt;F&gt;(&amp;mut self, name: &amp;str, test_fn: F) 
+    where 
+        F: std::future::Future&lt;Output = Result&lt;(), String&gt;&gt; 
+    {
+        let start = std::time::Instant::now();
+        
+        match test_fn.await {
+            Ok(()) =&gt; {
+                let result = TestResult {
+                    name: name.to_string(),
+                    status: TestStatus::Passed,
+                    duration: start.elapsed(),
+                    error: None,
+                };
+                self.results.add_result(result);
+            }
+            Err(error) =&gt; {
+                let result = TestResult {
+                    name: name.to_string(),
+                    status: TestStatus::Failed,
+                    duration: start.elapsed(),
+                    error: Some(error),
+                };
+                self.results.add_result(result);
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod runner_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_runner_functionality() {
+        let mut runner = TestRunner::new();
+        
+        // Run a passing test
+        runner.run_test("passing_test", async { Ok(()) }).await;
+        
+        // Run a failing test
+        runner.run_test("failing_test", async { 
+            Err("Test failed intentionally".to_string()) 
+        }).await;
+        
+        // Run another passing test
+        runner.run_test("another_passing_test", async { Ok(()) }).await;
+        
+        assert_eq!(runner.results.passed, 2);
+        assert_eq!(runner.results.failed, 1);
+        assert_eq!(runner.results.total(), 3);
+        
+        let success_rate = runner.results.success_rate();
+        assert_eq!(success_rate, 66.66666666666666);
+    }
+}</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Testing in Oxidite provides comprehensive tools for:</p>
+<ul>
+<li><strong>Unit Testing</strong>: Individual function and component testing</li>
+<li><strong>Integration Testing</strong>: Route and middleware integration</li>
+<li><strong>Database Testing</strong>: ORM and database operation testing</li>
+<li><strong>Mocking</strong>: External dependency simulation</li>
+<li><strong>Property-Based Testing</strong>: Comprehensive validation</li>
+<li><strong>Fixtures</strong>: Reusable test data creation</li>
+<li><strong>Parallel Execution</strong>: Safe concurrent test running</li>
+<li><strong>Coverage Analysis</strong>: Thorough testing measurement</li>
+<li><strong>Reporting</strong>: Detailed test results and summaries</li>
+</ul>
+<p>Following testing best practices ensures reliable, maintainable Oxidite applications with high quality and confidence in code changes.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="cli.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="plugins.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="cli.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="plugins.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="ace-2a3cd908.js"></script>
+        <script src="mode-rust-2c9d5c9a.js"></script>
+        <script src="editor-16ca416c.js"></script>
+        <script src="theme-dawn-4493f9c8.js"></script>
+        <script src="theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="branding-4ab4c57d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

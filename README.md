@@ -12,7 +12,7 @@ A modern, high-performance web framework for Rust, inspired by FastAPI, Express.
 [![Stability](https://img.shields.io/badge/stability-beta-2ea043.svg)](ROADMAP.md)
 [![Roadmap](https://img.shields.io/badge/roadmap-public-0a66c2.svg)](ROADMAP.md)
 
-Built with ❤️ by [Meshack Bahati Ouma](https://github.com/meshackbahati)
+Built by [Meshack Bahati Ouma](https://github.com/meshackbahati)
 
 </div>
 
@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
     router.get("/", hello);
 
     let server = Server::new(router);
-    println!("🚀 Server running on http://127.0.0.1:3000");
+    println!("Server running on http://127.0.0.1:3000");
     server.listen("127.0.0.1:3000".parse()?).await
 }
 ```
@@ -131,13 +131,26 @@ Oxidite is composed of modular crates:
 
 | Crate | Description |
 |-------|-------------|
+| `oxidite` | Top-level facade crate and prelude |
 | `oxidite-core` | HTTP server, routing |
-| `oxidite-cli` | Command-line tools |
-| `oxidite-auth` | Authentication & OAuth2 |
-| `oxidite-db` | Database abstraction |
-| `oxidite-template` | Template engine |
-| `oxidite-realtime` | WebSockets & SSE |
-| ...and more | |
+| `oxidite-macros` | Procedural macros and route/model derives |
+| `oxidite-config` | Configuration loading and environment support |
+| `oxidite-middleware` | Common middleware (logging, CORS, auth, etc.) |
+| `oxidite-utils` | Shared helpers and utilities |
+| `oxidite-template` | Template engine integration and SSR helpers |
+| `oxidite-db` | ORM and database abstraction |
+| `oxidite-auth` | Authentication, JWT/OAuth2, RBAC/PBAC primitives |
+| `oxidite-cache` | Caching abstraction and adapters |
+| `oxidite-queue` | Job queue and background processing APIs |
+| `oxidite-realtime` | WebSockets/SSE and realtime integration |
+| `oxidite-mail` | Mailer abstraction and providers |
+| `oxidite-storage` | File/object storage abstractions |
+| `oxidite-security` | Security utilities and hardening helpers |
+| `oxidite-cli` | CLI scaffolding, dev workflow, and generators |
+| `oxidite-testing` | Test helpers and integration testing utilities |
+| `oxidite-openapi` | OpenAPI schema generation and docs support |
+| `oxidite-graphql` | GraphQL integration |
+| `oxidite-plugin` | Plugin system and extension APIs |
 
 ## Community & Support
 

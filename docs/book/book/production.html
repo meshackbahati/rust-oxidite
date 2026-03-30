@@ -1,0 +1,1407 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Production Setup - Oxidite Documentation</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="custom-b48cbb74.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-e08cec6f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-0584e8c7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Oxidite Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/./production.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="production-setup"><a class="header" href="#production-setup">Production Setup</a></h1>
+<p>Deploying Oxidite applications to production requires careful consideration of performance, security, monitoring, and reliability. This chapter covers everything you need to know to run Oxidite applications in production.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>Production setup includes:</p>
+<ul>
+<li>Environment configuration</li>
+<li>Security hardening</li>
+<li>Performance optimization</li>
+<li>Monitoring and logging</li>
+<li>Deployment strategies</li>
+<li>Scaling considerations</li>
+<li>Backup and disaster recovery</li>
+</ul>
+<h2 id="environment-configuration"><a class="header" href="#environment-configuration">Environment Configuration</a></h2>
+<p>Configure your application for production environments:</p>
+<pre><code class="language-toml"># config/production.toml
+[server]
+host = "0.0.0.0"
+port = 80
+workers = 4
+timeout = 30
+keep_alive = 75
+tcp_nodelay = true
+
+[database]
+url = "${DATABASE_URL}"
+pool_size = 20
+timeout = 30
+max_lifetime = 1800
+idle_timeout = 600
+
+[logging]
+level = "info"
+format = "json"
+output = "stdout"
+sentry_dsn = "${SENTRY_DSN}"
+
+[cache]
+backend = "redis"
+url = "${REDIS_URL}"
+ttl = 3600
+
+[security]
+cors_enabled = true
+allowed_origins = ["https://yourdomain.com", "https://www.yourdomain.com"]
+csrf_enabled = true
+hsts_enabled = true
+content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline'"
+rate_limiting = true
+max_requests_per_minute = 100
+
+[ssl]
+enabled = true
+cert_path = "/etc/ssl/certs/cert.pem"
+key_path = "/etc/ssl/private/key.pem"
+</code></pre>
+<h3 id="environment-variables"><a class="header" href="#environment-variables">Environment Variables</a></h3>
+<p>Use environment variables for sensitive configuration:</p>
+<pre><code class="language-bash"># Production environment variables
+export DATABASE_URL="postgresql://user:pass@prod-db:5432/app_prod"
+export REDIS_URL="redis://prod-redis:6379"
+export JWT_SECRET="long-random-string-here"
+export ENCRYPTION_KEY="32-byte-encryption-key-here"
+export SENTRY_DSN="https://key@sentry.io/project"
+export SMTP_HOST="smtp.gmail.com"
+export SMTP_USER="noreply@yourdomain.com"
+export SMTP_PASS="smtp-password"
+export AWS_ACCESS_KEY_ID="your-access-key"
+export AWS_SECRET_ACCESS_KEY="your-secret-key"
+</code></pre>
+<h3 id="configuration-loading"><a class="header" href="#configuration-loading">Configuration Loading</a></h3>
+<p>Load configuration dynamically:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use config::{Config, ConfigError, Environment, File};
+
+#[derive(serde::Deserialize, Clone)]
+pub struct AppConfig {
+    pub server: ServerConfig,
+    pub database: DatabaseConfig,
+    pub logging: LoggingConfig,
+    pub security: SecurityConfig,
+    pub cache: CacheConfig,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+    pub workers: usize,
+    pub timeout: u64,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct DatabaseConfig {
+    pub url: String,
+    pub pool_size: u32,
+    pub timeout: u64,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct LoggingConfig {
+    pub level: String,
+    pub format: String,
+    pub sentry_dsn: Option&lt;String&gt;,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct SecurityConfig {
+    pub cors_enabled: bool,
+    pub allowed_origins: Vec&lt;String&gt;,
+    pub csrf_enabled: bool,
+    pub rate_limiting: bool,
+    pub max_requests_per_minute: u32,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct CacheConfig {
+    pub backend: String,
+    pub url: String,
+    pub ttl: u64,
+}
+
+impl AppConfig {
+    pub fn from_env() -&gt; Result&lt;Self, ConfigError&gt; {
+        let mut cfg = Config::builder()
+            .add_source(File::with_name("config/default"))
+            .add_source(File::with_name(&amp;format!("config/{}", 
+                std::env::var("APP_ENV").unwrap_or_else(|_| "development".to_string())
+            )).required(false))
+            .add_source(Environment::with_prefix("APP"));
+
+        // Override with specific environment if set
+        if let Ok(env) = std::env::var("APP_ENV") {
+            cfg = cfg.add_source(File::with_name(&amp;format!("config/{}", env)).required(false));
+        }
+
+        cfg.build()?.try_deserialize()
+    }
+}
+
+// Initialize application with configuration
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let config = AppConfig::from_env()
+        .map_err(|e| Error::InternalServerError(format!("Configuration error: {}", e)))?;
+    
+    // Initialize logging
+    init_logging(&amp;config.logging).await?;
+    
+    // Initialize database
+    init_database(&amp;config.database).await?;
+    
+    // Initialize cache
+    init_cache(&amp;config.cache).await?;
+    
+    // Create and run server
+    let router = create_routes(&amp;config).await?;
+    let server = Server::new(router);
+    
+    server.listen(format!("{}:{}", config.server.host, config.server.port).parse()?).await
+}
+
+async fn init_logging(config: &amp;LoggingConfig) -&gt; Result&lt;()&gt; {
+    // Initialize logging based on configuration
+    match config.level.as_str() {
+        "debug" =&gt; std::env::set_var("RUST_LOG", "debug"),
+        "info" =&gt; std::env::set_var("RUST_LOG", "info"),
+        "warn" =&gt; std::env::set_var("RUST_LOG", "warn"),
+        "error" =&gt; std::env::set_var("RUST_LOG", "error"),
+        _ =&gt; std::env::set_var("RUST_LOG", "info"),
+    }
+    
+    // Initialize tracing subscriber
+    use tracing_subscriber::{EnvFilter, fmt};
+    let filter = EnvFilter::try_from_default_env()
+        .unwrap_or(EnvFilter::new(&amp;config.level));
+    
+    let subscriber = fmt()
+        .with_env_filter(filter)
+        .json();
+    
+    tracing::subscriber::set_global_default(subscriber)
+        .map_err(|e| Error::InternalServerError(format!("Logging setup error: {}", e)))?;
+    
+    Ok(())
+}
+
+async fn init_database(config: &amp;DatabaseConfig) -&gt; Result&lt;()&gt; {
+    // Initialize database connection pool
+    println!("Connecting to database: {}", config.url);
+    Ok(())
+}
+
+async fn init_cache(config: &amp;CacheConfig) -&gt; Result&lt;()&gt; {
+    // Initialize cache backend
+    println!("Connecting to cache: {} ({})", config.url, config.backend);
+    Ok(())
+}
+
+async fn create_routes(_config: &amp;AppConfig) -&gt; Result&lt;Router&gt; {
+    let mut router = Router::new();
+    
+    // Add routes
+    router.get("/", |_req| async { Ok(Response::text("Hello from production!".to_string())) });
+    
+    Ok(router)
+}</code></pre>
+<h2 id="security-hardening"><a class="header" href="#security-hardening">Security Hardening</a></h2>
+<p>Implement security best practices:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Security middleware
+async fn security_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    // Add security headers
+    let mut response = next.run(req).await?;
+    
+    // HTTP Strict Transport Security
+    response.headers_mut().insert(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains; preload".parse().unwrap()
+    );
+    
+    // X-Frame-Options
+    response.headers_mut().insert(
+        "X-Frame-Options",
+        "SAMEORIGIN".parse().unwrap()
+    );
+    
+    // X-Content-Type-Options
+    response.headers_mut().insert(
+        "X-Content-Type-Options",
+        "nosniff".parse().unwrap()
+    );
+    
+    // X-XSS-Protection
+    response.headers_mut().insert(
+        "X-XSS-Protection",
+        "1; mode=block".parse().unwrap()
+    );
+    
+    // Content Security Policy
+    response.headers_mut().insert(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https://*.sentry.io".parse().unwrap()
+    );
+    
+    // Referrer Policy
+    response.headers_mut().insert(
+        "Referrer-Policy",
+        "strict-origin-when-cross-origin".parse().unwrap()
+    );
+    
+    Ok(response)
+}
+
+// Input validation middleware
+async fn input_validation_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    // Validate content length
+    if let Some(content_length) = req.headers().get("content-length") {
+        if let Ok(length_str) = content_length.to_str() {
+            if let Ok(length) = length_str.parse::&lt;usize&gt;() {
+                const MAX_BODY_SIZE: usize = 10 * 1024 * 1024; // 10MB
+                if length &gt; MAX_BODY_SIZE {
+                    return Err(Error::PayloadTooLarge);
+                }
+            }
+        }
+    }
+    
+    // Sanitize input (simplified)
+    let mut req = req;
+    validate_request_body(&amp;mut req).await?;
+    
+    next.run(req).await
+}
+
+async fn validate_request_body(req: &amp;mut Request) -&gt; Result&lt;()&gt; {
+    // In a real implementation, this would validate and sanitize the request body
+    // Check for SQL injection patterns, XSS attempts, etc.
+    Ok(())
+}
+
+// Rate limiting middleware
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use std::time::{Duration, Instant};
+
+#[derive(Clone)]
+pub struct RateLimiter {
+    limits: Arc&lt;RwLock&lt;HashMap&lt;String, Vec&lt;Instant&gt;&gt;&gt;&gt;,
+    max_requests: u32,
+    window_duration: Duration,
+}
+
+impl RateLimiter {
+    pub fn new(max_requests: u32, window_seconds: u64) -&gt; Self {
+        Self {
+            limits: Arc::new(RwLock::new(HashMap::new())),
+            max_requests,
+            window_duration: Duration::from_secs(window_seconds),
+        }
+    }
+    
+    pub async fn is_allowed(&amp;self, identifier: &amp;str) -&gt; bool {
+        let now = Instant::now();
+        let window_start = now - self.window_duration;
+        
+        let mut limits = self.limits.write().await;
+        
+        // Clean old requests
+        if let Some(times) = limits.get_mut(identifier) {
+            times.retain(|time| *time &gt; window_start);
+        }
+        
+        // Check limit
+        let count = limits
+            .entry(identifier.to_string())
+            .or_insert_with(Vec::new)
+            .len();
+        
+        if count &lt; self.max_requests as usize {
+            limits.get_mut(identifier).unwrap().push(now);
+            true
+        } else {
+            false
+        }
+    }
+}
+
+async fn rate_limiting_middleware(
+    req: Request,
+    next: Next,
+    State(rate_limiter): State&lt;Arc&lt;RateLimiter&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    let client_ip = req.headers()
+        .get("x-forwarded-for")
+        .and_then(|hv| hv.to_str().ok())
+        .unwrap_or("unknown")
+        .to_string();
+    
+    if !rate_limiter.is_allowed(&amp;client_ip).await {
+        return Err(Error::TooManyRequests);
+    }
+    
+    next.run(req).await
+}</code></pre>
+<h2 id="performance-optimization"><a class="header" href="#performance-optimization">Performance Optimization</a></h2>
+<p>Optimize your application for production performance:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use std::sync::Arc;
+
+// Connection pooling configuration
+pub struct ConnectionPoolConfig {
+    pub min_connections: u32,
+    pub max_connections: u32,
+    pub acquire_timeout: std::time::Duration,
+    pub idle_timeout: std::time::Duration,
+    pub max_lifetime: std::time::Duration,
+}
+
+impl ConnectionPoolConfig {
+    pub fn production() -&gt; Self {
+        Self {
+            min_connections: 5,
+            max_connections: 20,
+            acquire_timeout: std::time::Duration::from_secs(30),
+            idle_timeout: std::time::Duration::from_secs(600),
+            max_lifetime: std::time::Duration::from_secs(1800),
+        }
+    }
+}
+
+// Caching middleware
+use std::collections::HashMap;
+use tokio::sync::RwLock;
+
+#[derive(Clone)]
+pub struct CacheLayer {
+    store: Arc&lt;RwLock&lt;HashMap&lt;String, CachedResponse&gt;&gt;&gt;,
+    ttl: std::time::Duration,
+}
+
+#[derive(Clone)]
+struct CachedResponse {
+    response: Response,
+    timestamp: std::time::Instant,
+}
+
+impl CacheLayer {
+    pub fn new(ttl_seconds: u64) -&gt; Self {
+        Self {
+            store: Arc::new(RwLock::new(HashMap::new())),
+            ttl: std::time::Duration::from_secs(ttl_seconds),
+        }
+    }
+    
+    pub async fn get(&amp;self, key: &amp;str) -&gt; Option&lt;Response&gt; {
+        let cache = self.store.read().await;
+        if let Some(cached) = cache.get(key) {
+            if cached.timestamp.elapsed() &lt; self.ttl {
+                Some(cached.response.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+    
+    pub async fn set(&amp;self, key: String, response: Response) {
+        let mut cache = self.store.write().await;
+        cache.insert(key, CachedResponse {
+            response,
+            timestamp: std::time::Instant::now(),
+        });
+    }
+}
+
+// Caching middleware for GET requests
+async fn caching_middleware(
+    req: Request,
+    next: Next,
+    State(cache): State&lt;Arc&lt;CacheLayer&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    if req.method() == http::Method::GET {
+        let cache_key = format!("{}:{}", req.method(), req.uri());
+        
+        // Try to get from cache
+        if let Some(cached_response) = cache.get(&amp;cache_key).await {
+            return Ok(cached_response);
+        }
+        
+        // Execute request
+        let response = next.run(req).await?;
+        
+        // Cache the response if appropriate
+        if response.status().is_success() {
+            cache.set(cache_key, response.clone()).await;
+        }
+        
+        Ok(response)
+    } else {
+        // For non-GET requests, bypass cache
+        next.run(req).await
+    }
+}
+
+// Compression middleware
+use brotli::enc::backward_references::BrotliEncoderParams;
+use flate2::write::{GzEncoder, DeflateEncoder};
+use flate2::Compression;
+
+async fn compression_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    let accept_encoding = req.headers()
+        .get("accept-encoding")
+        .and_then(|hv| hv.to_str().ok())
+        .unwrap_or("");
+    
+    let response = next.run(req).await?;
+    
+    // Only compress if response is large enough and client accepts compression
+    let body_size = get_body_size(&amp;response);
+    if body_size &gt; 1024 &amp;&amp; response.status().is_success() {
+        let mut response = response;
+        
+        if accept_encoding.contains("br") {
+            // Brotli compression
+            compress_response_br(&amp;mut response).await?;
+        } else if accept_encoding.contains("gzip") {
+            // Gzip compression
+            compress_response_gzip(&amp;mut response).await?;
+        } else if accept_encoding.contains("deflate") {
+            // Deflate compression
+            compress_response_deflate(&amp;mut response).await?;
+        }
+    }
+    
+    Ok(response)
+}
+
+fn get_body_size(response: &amp;Response) -&gt; usize {
+    // Get the size of the response body
+    // This is a simplified implementation
+    0
+}
+
+async fn compress_response_br(response: &amp;mut Response) -&gt; Result&lt;()&gt; {
+    // Brotli compression implementation
+    response.headers_mut().insert(
+        "Content-Encoding",
+        "br".parse().unwrap()
+    );
+    Ok(())
+}
+
+async fn compress_response_gzip(response: &amp;mut Response) -&gt; Result&lt;()&gt; {
+    // Gzip compression implementation
+    response.headers_mut().insert(
+        "Content-Encoding",
+        "gzip".parse().unwrap()
+    );
+    Ok(())
+}
+
+async fn compress_response_deflate(response: &amp;mut Response) -&gt; Result&lt;()&gt; {
+    // Deflate compression implementation
+    response.headers_mut().insert(
+        "Content-Encoding",
+        "deflate".parse().unwrap()
+    );
+    Ok(())
+}
+
+// Static file serving with caching
+use std::path::Path;
+use tokio::fs;
+
+async fn static_file_handler(Path(file_path): Path&lt;String&gt;) -&gt; Result&lt;Response&gt; {
+    // Validate path to prevent directory traversal
+    if file_path.contains("..") || file_path.starts_with('/') {
+        return Err(Error::BadRequest("Invalid file path".to_string()));
+    }
+    
+    let full_path = format!("public/{}", file_path);
+    
+    // Check if file exists
+    if !Path::new(&amp;full_path).exists() {
+        return Err(Error::NotFound);
+    }
+    
+    // Read file
+    let contents = fs::read(&amp;full_path).await
+        .map_err(|e| Error::InternalServerError(format!("Failed to read file: {}", e)))?;
+    
+    // Set appropriate content type
+    let content_type = get_content_type(&amp;file_path);
+    
+    let mut response = Response::html(String::from_utf8_lossy(&amp;contents).to_string());
+    response.headers_mut().insert(
+        "Content-Type",
+        content_type.parse().unwrap()
+    );
+    
+    // Add caching headers
+    response.headers_mut().insert(
+        "Cache-Control",
+        "public, max-age=31536000".parse().unwrap() // 1 year
+    );
+    
+    // Add ETag for cache validation
+    use sha2::{Sha256, Digest};
+    let mut hasher = Sha256::new();
+    hasher.update(&amp;contents);
+    let hash = format!("{:x}", hasher.finalize());
+    response.headers_mut().insert(
+        "ETag",
+        format!("\"{}\"", hash).parse().unwrap()
+    );
+    
+    Ok(response)
+}
+
+fn get_content_type(path: &amp;str) -&gt; &amp;'static str {
+    match std::path::Path::new(path).extension().and_then(|ext| ext.to_str()) {
+        Some("html") =&gt; "text/html",
+        Some("css") =&gt; "text/css",
+        Some("js") =&gt; "application/javascript",
+        Some("json") =&gt; "application/json",
+        Some("png") =&gt; "image/png",
+        Some("jpg") | Some("jpeg") =&gt; "image/jpeg",
+        Some("gif") =&gt; "image/gif",
+        Some("svg") =&gt; "image/svg+xml",
+        Some("ico") =&gt; "image/x-icon",
+        Some("woff") =&gt; "font/woff",
+        Some("woff2") =&gt; "font/woff2",
+        Some("ttf") =&gt; "font/ttf",
+        Some("eot") =&gt; "application/vnd.ms-fontobject",
+        _ =&gt; "application/octet-stream",
+    }
+}</code></pre>
+<h2 id="monitoring-and-logging"><a class="header" href="#monitoring-and-logging">Monitoring and Logging</a></h2>
+<p>Implement comprehensive monitoring:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use serde_json::json;
+
+// Structured logging middleware
+async fn logging_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    let start = std::time::Instant::now();
+    let method = req.method().clone();
+    let uri = req.uri().clone();
+    let user_agent = req.headers()
+        .get("user-agent")
+        .and_then(|hv| hv.to_str().ok())
+        .unwrap_or("unknown")
+        .to_string();
+    
+    let remote_addr = req.headers()
+        .get("x-forwarded-for")
+        .and_then(|hv| hv.to_str().ok())
+        .unwrap_or("unknown")
+        .to_string();
+    
+    let response = next.run(req).await;
+    let duration = start.elapsed();
+    
+    let log_entry = json!({
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "level": "info",
+        "event": "http_request",
+        "method": method.to_string(),
+        "uri": uri.to_string(),
+        "user_agent": user_agent,
+        "remote_addr": remote_addr,
+        "status": response.as_ref().map(|r| r.status().as_u16()).unwrap_or(500),
+        "duration_ms": duration.as_millis(),
+        "service": "oxidite-app"
+    });
+    
+    // Log to stdout in JSON format
+    println!("{}", log_entry);
+    
+    response
+}
+
+// Error logging middleware
+async fn error_logging_middleware(req: Request, next: Next) -&gt; Result&lt;Response&gt; {
+    match next.run(req).await {
+        Ok(response) =&gt; Ok(response),
+        Err(error) =&gt; {
+            let error_log = json!({
+                "timestamp": chrono::Utc::now().to_rfc3339(),
+                "level": "error",
+                "event": "http_error",
+                "error": error.to_string(),
+                "error_type": error_type_name(&amp;error),
+                "method": req.method().to_string(),
+                "uri": req.uri().to_string(),
+                "service": "oxidite-app"
+            });
+            
+            eprintln!("{}", error_log);
+            
+            Err(error)
+        }
+    }
+}
+
+fn error_type_name(error: &amp;Error) -&gt; &amp;'static str {
+    match error {
+        Error::NotFound =&gt; "NotFound",
+        Error::BadRequest(_) =&gt; "BadRequest",
+        Error::Unauthorized(_) =&gt; "Unauthorized",
+        Error::Forbidden =&gt; "Forbidden",
+        Error::TooManyRequests =&gt; "TooManyRequests",
+        Error::InternalServerError =&gt; "InternalServerError",
+        Error::InternalServerError(_) =&gt; "Server",
+        Error::Validation(_) =&gt; "Validation",
+        Error::RateLimited =&gt; "RateLimited",
+        _ =&gt; "Unknown",
+    }
+}
+
+// Metrics collection
+use std::sync::atomic::{AtomicU64, Ordering};
+
+pub struct RequestMetrics {
+    pub total_requests: AtomicU64,
+    pub total_errors: AtomicU64,
+    pub total_2xx: AtomicU64,
+    pub total_3xx: AtomicU64,
+    pub total_4xx: AtomicU64,
+    pub total_5xx: AtomicU64,
+}
+
+impl RequestMetrics {
+    pub fn new() -&gt; Self {
+        Self {
+            total_requests: AtomicU64::new(0),
+            total_errors: AtomicU64::new(0),
+            total_2xx: AtomicU64::new(0),
+            total_3xx: AtomicU64::new(0),
+            total_4xx: AtomicU64::new(0),
+            total_5xx: AtomicU64::new(0),
+        }
+    }
+    
+    pub fn increment_request(&amp;self, status_code: u16) {
+        self.total_requests.fetch_add(1, Ordering::SeqCst);
+        
+        match status_code {
+            200..=299 =&gt; {
+                self.total_2xx.fetch_add(1, Ordering::SeqCst);
+            }
+            300..=399 =&gt; {
+                self.total_3xx.fetch_add(1, Ordering::SeqCst);
+            }
+            400..=499 =&gt; {
+                self.total_4xx.fetch_add(1, Ordering::SeqCst);
+            }
+            500..=599 =&gt; {
+                self.total_5xx.fetch_add(1, Ordering::SeqCst);
+                self.total_errors.fetch_add(1, Ordering::SeqCst);
+            }
+            _ =&gt; {}
+        }
+    }
+    
+    pub fn get_stats(&amp;self) -&gt; MetricsSnapshot {
+        MetricsSnapshot {
+            total_requests: self.total_requests.load(Ordering::SeqCst),
+            total_errors: self.total_errors.load(Ordering::SeqCst),
+            total_2xx: self.total_2xx.load(Ordering::SeqCst),
+            total_3xx: self.total_3xx.load(Ordering::SeqCst),
+            total_4xx: self.total_4xx.load(Ordering::SeqCst),
+            total_5xx: self.total_5xx.load(Ordering::SeqCst),
+        }
+    }
+}
+
+pub struct MetricsSnapshot {
+    pub total_requests: u64,
+    pub total_errors: u64,
+    pub total_2xx: u64,
+    pub total_3xx: u64,
+    pub total_4xx: u64,
+    pub total_5xx: u64,
+}
+
+// Metrics endpoint
+async fn metrics_endpoint(State(metrics): State&lt;Arc&lt;RequestMetrics&gt;&gt;) -&gt; Result&lt;Response&gt; {
+    let stats = metrics.get_stats();
+    
+    let metrics_json = json!({
+        "uptime": get_uptime(),
+        "requests": {
+            "total": stats.total_requests,
+            "2xx": stats.total_2xx,
+            "3xx": stats.total_3xx,
+            "4xx": stats.total_4xx,
+            "5xx": stats.total_5xx,
+        },
+        "errors": {
+            "total": stats.total_errors,
+            "rate": if stats.total_requests &gt; 0 {
+                (stats.total_errors as f64 / stats.total_requests as f64) * 100.0
+            } else {
+                0.0
+            }
+        },
+        "health": "healthy"
+    });
+    
+    Ok(Response::json(metrics_json))
+}
+
+fn get_uptime() -&gt; String {
+    // Calculate application uptime
+    // This would typically be tracked from application start time
+    "0h 0m 0s".to_string()
+}</code></pre>
+<h2 id="deployment-strategies"><a class="header" href="#deployment-strategies">Deployment Strategies</a></h2>
+<p>Deploy your application with various strategies:</p>
+<pre><code class="language-bash"># Dockerfile for production deployment
+FROM rust:1.92 as builder
+
+WORKDIR /app
+COPY . .
+RUN cargo build --release
+
+FROM debian:bullseye-slim
+RUN apt-get update &amp;&amp; apt-get install -y ca-certificates &amp;&amp; rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/target/release/my_app /usr/local/bin/my_app
+EXPOSE 80
+CMD ["my_app"]
+
+# docker-compose.yml for production
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgresql://user:pass@db:5432/app_prod
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: app_prod
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+# Kubernetes deployment example
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oxidite-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: oxidite-app
+  template:
+    metadata:
+      labels:
+        app: oxidite-app
+    spec:
+      containers:
+      - name: app
+        image: my-org/oxidite-app:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oxidite-app-service
+spec:
+  selector:
+    app: oxidite-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+</code></pre>
+<h2 id="health-checks"><a class="header" href="#health-checks">Health Checks</a></h2>
+<p>Implement health check endpoints:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Health check endpoint
+async fn health_check(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Perform health checks
+    let db_healthy = check_database_health().await;
+    let cache_healthy = check_cache_health().await;
+    let disk_space_ok = check_disk_space().await;
+    
+    let healthy = db_healthy &amp;&amp; cache_healthy &amp;&amp; disk_space_ok;
+    
+    let status = if healthy { "healthy" } else { "unhealthy" };
+    
+    let health_response = serde_json::json!({
+        "status": status,
+        "checks": {
+            "database": db_healthy,
+            "cache": cache_healthy,
+            "disk_space": disk_space_ok
+        },
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    });
+    
+    if healthy {
+        Ok(Response::json(health_response))
+    } else {
+        Ok(Response::json(health_response)) // Still return 200 but with unhealthy status
+    }
+}
+
+async fn readiness_check(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Readiness check - is the app ready to serve traffic?
+    let ready = check_readiness_conditions().await;
+    
+    if ready {
+        Ok(Response::ok())
+    } else {
+        Err(Error::ServiceUnavailable("Application not ready".to_string()))
+    }
+}
+
+async fn liveness_check(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Liveness check - is the app alive?
+    // Usually just a simple response to indicate the process is running
+    Ok(Response::ok())
+}
+
+async fn check_database_health() -&gt; bool {
+    // Check database connectivity
+    // In a real app, this would make a simple query
+    true
+}
+
+async fn check_cache_health() -&gt; bool {
+    // Check cache connectivity
+    // In a real app, this would ping the cache
+    true
+}
+
+async fn check_disk_space() -&gt; bool {
+    // Check available disk space
+    // In a real app, this would check actual disk usage
+    true
+}
+
+async fn check_readiness_conditions() -&gt; bool {
+    // Check if all prerequisites are met
+    check_database_health().await &amp;&amp; check_cache_health().await
+}</code></pre>
+<h2 id="backup-and-recovery"><a class="header" href="#backup-and-recovery">Backup and Recovery</a></h2>
+<p>Implement backup strategies:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+use tokio::fs;
+use std::path::Path;
+
+// Backup handler
+async fn backup_handler(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Trigger a backup
+    let backup_result = create_backup().await;
+    
+    match backup_result {
+        Ok(backup_info) =&gt; Ok(Response::json(serde_json::json!({
+            "status": "success",
+            "backup": backup_info
+        }))),
+        Err(e) =&gt; Err(Error::InternalServerError(format!("Backup failed: {}", e))),
+    }
+}
+
+async fn create_backup() -&gt; Result&lt;BackupInfo&gt; {
+    // Create a database backup
+    let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
+    let backup_filename = format!("backup_{}.sql", timestamp);
+    let backup_path = format!("./backups/{}", backup_filename);
+    
+    // Ensure backup directory exists
+    fs::create_dir_all("./backups").await?;
+    
+    // In a real app, this would export the database
+    // For example: pg_dump for PostgreSQL
+    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await; // Simulate backup process
+    
+    // Create a dummy backup file for the example
+    fs::write(&amp;backup_path, "/* Database backup content */").await?;
+    
+    Ok(BackupInfo {
+        filename: backup_filename,
+        path: backup_path,
+        size: 1024, // Size in bytes
+        created_at: chrono::Utc::now().to_rfc3339(),
+    })
+}
+
+#[derive(serde::Serialize)]
+struct BackupInfo {
+    filename: String,
+    path: String,
+    size: u64,
+    created_at: String,
+}
+
+// Restore handler
+async fn restore_handler(
+    Path(backup_file): Path&lt;String&gt;,
+    _req: Request
+) -&gt; Result&lt;Response&gt; {
+    let backup_path = format!("./backups/{}", backup_file);
+    
+    if !Path::new(&amp;backup_path).exists() {
+        return Err(Error::NotFound);
+    }
+    
+    // In a real app, this would restore the database from the backup
+    let restore_result = restore_from_backup(&amp;backup_path).await;
+    
+    match restore_result {
+        Ok(_) =&gt; Ok(Response::json(serde_json::json!({
+            "status": "success",
+            "message": "Restore completed successfully"
+        }))),
+        Err(e) =&gt; Err(Error::InternalServerError(format!("Restore failed: {}", e))),
+    }
+}
+
+async fn restore_from_backup(_backup_path: &amp;str) -&gt; Result&lt;()&gt; {
+    // In a real app, this would restore the database
+    // For example: psql to import a PostgreSQL dump
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await; // Simulate restore process
+    Ok(())
+}
+
+// List backups
+async fn list_backups(_req: Request) -&gt; Result&lt;Response&gt; {
+    let mut backups = Vec::new();
+    
+    // Scan backup directory
+    let mut entries = fs::read_dir("./backups").await?;
+    
+    while let Some(entry) = entries.next_entry().await? {
+        let path = entry.path();
+        if path.extension().and_then(|ext| ext.to_str()) == Some("sql") {
+            if let Some(filename) = path.file_name().and_then(|name| name.to_str()) {
+                let metadata = entry.metadata().await?;
+                backups.push(serde_json::json!({
+                    "filename": filename,
+                    "size": metadata.len(),
+                    "created_at": format!("{:?}", metadata.created())
+                }));
+            }
+        }
+    }
+    
+    // Sort by creation time (newest first)
+    backups.sort_by(|a, b| {
+        b["created_at"].as_str().cmp(&amp;a["created_at"].as_str())
+    });
+    
+    Ok(Response::json(serde_json::json!({
+        "backups": backups,
+        "count": backups.len()
+    })))
+}</code></pre>
+<h2 id="scaling-considerations"><a class="header" href="#scaling-considerations">Scaling Considerations</a></h2>
+<p>Design for horizontal scaling:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Horizontal scaling considerations
+pub struct ScalableAppState {
+    pub app_id: String,
+    pub instance_id: String,
+    pub cluster_nodes: Vec&lt;String&gt;,
+    pub shared_cache: Arc&lt;dyn CacheProvider&gt;,
+    pub shared_database: Arc&lt;dyn DatabaseProvider&gt;,
+}
+
+// Cache provider trait for pluggable cache backends
+pub trait CacheProvider: Send + Sync {
+    fn get(&amp;self, key: &amp;str) -&gt; Option&lt;String&gt;;
+    fn set(&amp;self, key: String, value: String, ttl: std::time::Duration) -&gt; Result&lt;()&gt;;
+    fn delete(&amp;self, key: &amp;str) -&gt; Result&lt;()&gt;;
+    fn clear(&amp;self) -&gt; Result&lt;()&gt;;
+}
+
+// Database provider trait for pluggable database backends
+pub trait DatabaseProvider: Send + Sync {
+    fn query(&amp;self, sql: &amp;str) -&gt; Result&lt;Vec&lt;serde_json::Value&gt;&gt;;
+    fn execute(&amp;self, sql: &amp;str) -&gt; Result&lt;u64&gt;;
+    fn transaction&lt;F, R&gt;(&amp;self, f: F) -&gt; Result&lt;R&gt; 
+    where 
+        F: FnOnce(&amp;dyn Transaction) -&gt; Result&lt;R&gt;;
+}
+
+pub trait Transaction {
+    fn query(&amp;self, sql: &amp;str) -&gt; Result&lt;Vec&lt;serde_json::Value&gt;&gt;;
+    fn execute(&amp;self, sql: &amp;str) -&gt; Result&lt;u64&gt;;
+}
+
+// Distributed lock for coordination between instances
+pub trait DistributedLock: Send + Sync {
+    fn acquire(&amp;self, key: &amp;str, ttl: std::time::Duration) -&gt; Result&lt;LockGuard&gt;;
+}
+
+pub struct LockGuard;
+
+impl Drop for LockGuard {
+    fn drop(&amp;mut self) {
+        // Release lock automatically
+    }
+}
+
+// Example of scaling-aware handler
+async fn distributed_handler(
+    _req: Request,
+    State(app_state): State&lt;Arc&lt;ScalableAppState&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    // Use distributed locks for critical sections
+    let lock = app_state.shared_cache.acquire_lock("critical_section", 
+        std::time::Duration::from_secs(30)).await?;
+    
+    // Perform critical operation
+    let result = perform_critical_operation().await?;
+    
+    // Lock is automatically released when guard goes out of scope
+    drop(lock);
+    
+    Ok(Response::json(result))
+}
+
+async fn perform_critical_operation() -&gt; Result&lt;serde_json::Value&gt; {
+    // Critical operation that should only run on one instance at a time
+    Ok(serde_json::json!({ "status": "completed" }))
+}
+
+// Load balancing considerations
+async fn load_balancer_health_check(_req: Request) -&gt; Result&lt;Response&gt; {
+    // Return light-weight health check for load balancers
+    Ok(Response::text("OK".to_string()))
+}
+
+// Instance-specific information
+async fn instance_info(
+    State(app_state): State&lt;Arc&lt;ScalableAppState&gt;&gt;
+) -&gt; Result&lt;Response&gt; {
+    Ok(Response::json(serde_json::json!({
+        "instance_id": app_state.instance_id,
+        "app_id": app_state.app_id,
+        "cluster_size": app_state.cluster_nodes.len(),
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    })))
+}</code></pre>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Production setup for Oxidite applications requires attention to:</p>
+<ul>
+<li><strong>Environment Configuration</strong>: Proper configuration loading and environment variables</li>
+<li><strong>Security Hardening</strong>: Headers, validation, rate limiting, and input sanitization</li>
+<li><strong>Performance Optimization</strong>: Caching, compression, and connection pooling</li>
+<li><strong>Monitoring</strong>: Logging, metrics, and health checks</li>
+<li><strong>Deployment</strong>: Containerization, orchestration, and scaling</li>
+<li><strong>Backup and Recovery</strong>: Regular backups and restore procedures</li>
+<li><strong>Scaling</strong>: Horizontal scaling with shared resources</li>
+</ul>
+<p>Following these practices ensures your Oxidite applications are secure, performant, and reliable in production environments.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="migration-guides/kafka-idempotency.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="docker-deployment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="migration-guides/kafka-idempotency.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="docker-deployment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="ace-2a3cd908.js"></script>
+        <script src="mode-rust-2c9d5c9a.js"></script>
+        <script src="editor-16ca416c.js"></script>
+        <script src="theme-dawn-4493f9c8.js"></script>
+        <script src="theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="branding-4ab4c57d.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

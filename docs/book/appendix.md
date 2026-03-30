@@ -464,7 +464,7 @@ async fn perform_expensive_computation(_input: &str) -> serde_json::Value {
 
 ### Blocking Operations in Async Context
 
-❌ Don't do this:
+Don't do this:
 ```rust,ignore
 // BAD: This blocks the async runtime
 async fn bad_handler(_req: Request) -> Result<Response> {
@@ -473,7 +473,7 @@ async fn bad_handler(_req: Request) -> Result<Response> {
 }
 ```
 
-✅ Do this instead:
+Do this instead:
 ```rust,ignore
 // GOOD: Use spawn_blocking for CPU-intensive operations
 use tokio::task;
@@ -489,7 +489,7 @@ async fn good_handler(_req: Request) -> Result<Response> {
 
 ### Improper Error Handling
 
-❌ Don't do this:
+Don't do this:
 ```rust,ignore
 // BAD: Converting errors to strings loses context
 async fn bad_error_handling(_req: Request) -> Result<Response> {
@@ -498,7 +498,7 @@ async fn bad_error_handling(_req: Request) -> Result<Response> {
 }
 ```
 
-✅ Do this instead:
+Do this instead:
 ```rust,ignore
 // GOOD: Preserve error types when possible
 async fn good_error_handling(_req: Request) -> Result<Response> {

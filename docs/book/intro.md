@@ -4,7 +4,7 @@
   <img src="assets/oxidite.svg" alt="Oxidite Logo" width="180">
 </p>
 
-Welcome to the comprehensive guide to Oxidite, a modern, high-performance web framework for Rust. This book will take you from installation to advanced features, covering everything you need to build production-ready applications.
+Welcome to the comprehensive guide to Oxidite, a modern, high-performance web framework for Rust. This guide takes you from installation to advanced features, covering everything needed to build production-ready applications.
 
 ## What is Oxidite?
 
@@ -26,18 +26,18 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 
 Oxidite follows the philosophy of "convention over configuration" while maintaining the flexibility to build everything from simple APIs to complex full-stack applications. The framework provides sensible defaults while allowing customization where needed.
 
-## Who Should Read This Book?
+## Who Should Read This Guide?
 
-This book is designed for:
+This guide is designed for:
 
 - Rust developers looking to build web applications
 - Developers familiar with frameworks like Express.js, FastAPI, or Laravel who want to leverage Rust's performance
 - Teams building scalable web services
 - Anyone interested in modern web development patterns with type safety
 
-## How to Use This Book
+## How to Use This Guide
 
-This book is structured to take you from beginner to advanced concepts:
+This guide is structured to take you from beginner to advanced concepts:
 
 1. Start with the Getting Started section to learn the basics
 2. Move through Core Concepts to understand the fundamentals

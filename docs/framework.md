@@ -628,10 +628,10 @@ async fn main() -> Result<()> {
         .layer(AddExtensionLayer::new(app_state))
         .service(service);
     
-    println!("🚀 Advanced Oxidite app running on http://127.0.0.1:3000");
-    println!("📋 Features: Database ORM, JWT Authentication, Templates, Middleware");
-    println!("🔗 API: POST /api/users");
-    println!("🔗 Analytics: GET /analytics");
+    println!("Advanced Oxidite app running on http://127.0.0.1:3000");
+    println!("Features: Database ORM, JWT Authentication, Templates, Middleware");
+    println!("API: POST /api/users");
+    println!("Analytics: GET /analytics");
     
     Server::new(service_with_state)
         .listen("127.0.0.1:3000".parse().unwrap())

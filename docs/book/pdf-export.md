@@ -13,7 +13,7 @@ mdbook build docs/book
 Example with `wkhtmltopdf`:
 
 ```bash
-wkhtmltopdf doc/book/book/index.html Oxidite-Complete-Handbook.pdf
+wkhtmltopdf docs/book/book/index.html Oxidite-Complete-Handbook.pdf
 ```
 
 For full-book output quality, use print styles and combine chapters in order.
