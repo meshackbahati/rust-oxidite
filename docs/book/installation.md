@@ -18,14 +18,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## Installing the Oxidite CLI
 
-The easiest way to get started is to install the Oxidite CLI tool:
+Install the `oxidite-cli` package. It provides the `oxidite` executable:
 
 ```bash
 # Install from source (recommended for development)
 cargo install --path oxidite-cli
 
-# Or install from crates.io when published
+# Or install from crates.io
 cargo install oxidite-cli
+
+# Or pin this generated CLI build
+cargo install oxidite-cli --version 2.1.0-gen
 ```
 
 ## Creating Your First Project
@@ -35,6 +38,7 @@ Once you have the CLI installed, create a new project:
 ```bash
 oxidite new my-app
 cd my-app
+oxidite --version
 ```
 
 This will create a new Oxidite project with a basic structure and all necessary dependencies.

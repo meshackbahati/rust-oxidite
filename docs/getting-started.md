@@ -20,9 +20,14 @@ The easiest way to start is by installing the Oxidite CLI tool:
 # Install from the repository
 cargo install --path oxidite-cli
 
-# Or if you have the crate published
+# Or from crates.io
 cargo install oxidite-cli
+
+# Or pin this generated CLI build
+cargo install oxidite-cli --version 2.1.0-gen
 ```
+
+The installed executable is `oxidite`.
 
 ### Create a New Project
 
@@ -38,15 +43,24 @@ This creates a project with the following structure:
 ```
 my-awesome-app/
 ├── Cargo.toml
+├── README.md
+├── oxidite.toml
+├── migrations/
+├── seeds/
 ├── src/
 │   ├── main.rs
-│   ├── routes/
 │   ├── controllers/
-│   └── models/
+│   ├── events/
+│   ├── jobs/
+│   ├── middleware/
+│   ├── models/
+│   ├── policies/
+│   ├── routes/
+│   ├── services/
+│   └── validators/
 ├── templates/
 ├── public/
-├── migrations/
-└── README.md
+└── tests/
 ```
 
 ## Basic Application Structure
@@ -77,6 +91,9 @@ async fn main() -> Result<()> {
 ```bash
 # Start the development server
 oxidite dev
+
+# Override the app port
+oxidite dev --port 8080
 
 # Or build and run normally
 cargo run
@@ -474,9 +491,9 @@ cargo test -- --nocapture
 A typical development workflow:
 
 1. **Create project**: `oxidite new my-app`
-2. **Generate models**: `oxidite make model User`
+2. **Generate code**: `oxidite generate model User` or `oxidite generate controller UserController`
 3. **Create migrations**: `oxidite migrate create create_users_table`
-4. **Run migrations**: `oxidite migrate run`
+4. **Run migrations**: `oxidite migrate`
 5. **Start development server**: `oxidite dev`
 6. **Iterate on code**
 

@@ -1,4 +1,4 @@
-use crate::{Database, Model, Result, is_valid_identifier};
+use crate::{is_valid_identifier, Database, Model, Result};
 use sqlx::Row;
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -36,8 +36,10 @@ where
             C::table_name(),
             self.foreign_key,
         );
-        let rows = db.fetch_all(sqlx::query(&query).bind(self.parent_id)).await?;
-        
+        let rows = db
+            .fetch_all(sqlx::query(&query).bind(self.parent_id))
+            .await?;
+
         let mut models = Vec::new();
         for row in rows {
             models.push(C::from_row(&row)?);
@@ -128,8 +130,10 @@ where
             C::table_name(),
             self.foreign_key,
         );
-        let row = db.fetch_one(sqlx::query(&query).bind(self.parent_id)).await?;
-        
+        let row = db
+            .fetch_one(sqlx::query(&query).bind(self.parent_id))
+            .await?;
+
         match row {
             Some(row) => Ok(Some(C::from_row(&row)?)),
             None => Ok(None),

@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-cli"
-version = "2.1.0"
+version = "2.1.0-gen"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "CLI tool for the Oxidite web framework"
@@ -9,6 +9,10 @@ repository = "https://github.com/meshackbahati/rust-oxidite"
 keywords = ["cli", "web", "framework", "scaffolding", "generator"]
 categories = ["command-line-utilities", "development-tools"]
 exclude = ["tests/**", "/doc/**", "/docs/**", "/tmp/**", "/dist/**"]
+
+[[bin]]
+name = "oxidite"
+path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5.31", features = ["derive"] }

@@ -184,7 +184,7 @@
                         <h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <p>This chapter covers how to install Oxidite and set up your development environment.</p>
 <h2 id="prerequisites"><a class="header" href="#prerequisites">Prerequisites</a></h2>
-<p>Before installing Oxidite, you’ll need:</p>
+<p>Before installing Oxidite, you'll need:</p>
 <ul>
 <li>Rust 1.75 or higher</li>
 <li>Cargo (comes with Rust)</li>
@@ -194,19 +194,23 @@
 <pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 </code></pre>
 <h2 id="installing-the-oxidite-cli"><a class="header" href="#installing-the-oxidite-cli">Installing the Oxidite CLI</a></h2>
-<p>The easiest way to get started is to install the Oxidite CLI tool:</p>
+<p>Install the <code>oxidite-cli</code> package. It provides the <code>oxidite</code> executable:</p>
 <pre><code class="language-bash"># Install from source (recommended for development)
 cargo install --path oxidite-cli
 
-# Or install from crates.io when published
+# Or install from crates.io
 cargo install oxidite-cli
+
+# Or pin this generated CLI build
+cargo install oxidite-cli --version 2.1.0-gen
 </code></pre>
 <h2 id="creating-your-first-project"><a class="header" href="#creating-your-first-project">Creating Your First Project</a></h2>
 <p>Once you have the CLI installed, create a new project:</p>
 <pre><code class="language-bash">oxidite new my-app
 cd my-app
+oxidite --version
 </code></pre>
-<p>This will create a new Oxidite project with a basic structure and all necessary dependencies.</p>
+<p>This creates a new Oxidite project with the expected directories, configuration, and generator layout.</p>
 <h2 id="manual-installation"><a class="header" href="#manual-installation">Manual Installation</a></h2>
 <p>If you prefer to add Oxidite to an existing project manually, add it to your <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[dependencies]
@@ -247,7 +251,7 @@ async fn main() -&gt; Result&lt;()&gt; {
 <li>Ensure you have the latest version of Rust installed</li>
 <li>Make sure your Cargo is up to date</li>
 <li>Check that you have all required build tools for your platform</li>
-<li>Verify that you’re using the correct features for your use case</li>
+<li>Verify that you're using the correct features for your use case</li>
 </ol>
 <p>Common features include:</p>
 <ul>

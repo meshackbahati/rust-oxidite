@@ -1,5 +1,8 @@
-use sqlx::{any::{AnyPoolOptions, AnyRow}, AnyPool, Transaction};
-use std::{fmt::Debug, future::Future};
+use sqlx::{
+    any::{AnyPoolOptions, AnyRow},
+    AnyPool, Transaction,
+};
+use std::{fmt::Debug, future::Future, path::PathBuf};
 use thiserror::Error;
 
 pub use sqlx;
@@ -8,7 +11,7 @@ pub mod migrations;
 pub use migrations::{Migration, MigrationManager};
 
 pub mod relations;
-pub use relations::{HasMany, HasOne, BelongsTo};
+pub use relations::{BelongsTo, HasMany, HasOne};
 
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
 pub type OrmResult<T> = std::result::Result<T, OrmError>;
@@ -22,10 +25,7 @@ pub enum OrmError {
     #[error("model `{model}` with id `{id}` was not found")]
     NotFound { model: &'static str, id: i64 },
     #[error("invalid SQL identifier `{value}` for {kind}")]
-    InvalidIdentifier {
-        kind: &'static str,
-        value: String,
-    },
+    InvalidIdentifier { kind: &'static str, value: String },
     #[error("invalid pagination: {0}")]
     InvalidPagination(&'static str),
 }
@@ -49,7 +49,9 @@ impl Pagination {
             return Err(OrmError::InvalidPagination("page must be 1 or greater"));
         }
         if per_page == 0 {
-            return Err(OrmError::InvalidPagination("per_page must be greater than 0"));
+            return Err(OrmError::InvalidPagination(
+                "per_page must be greater than 0",
+            ));
         }
 
         Ok(Self {
@@ -59,11 +61,11 @@ impl Pagination {
     }
 }
 
-pub use oxidite_macros::Model;
 pub use async_trait::async_trait;
 pub use chrono;
-pub use regex;
 pub use once_cell;
+pub use oxidite_macros::Model;
+pub use regex;
 
 /// Database backend type
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -110,18 +112,27 @@ pub trait Database: Send + Sync + Debug {
 
     /// Check health
     async fn ping(&self) -> Result<()>;
-    
+
     /// Begin a transaction
     async fn begin_transaction(&self) -> Result<DbTransaction>;
 
     /// Execute a sqlx Query
-    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64>;
+    async fn execute_query<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<u64>;
 
     /// Fetch all from a sqlx Query
-    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>>;
+    async fn fetch_all<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Vec<AnyRow>>;
 
     /// Fetch one from a sqlx Query
-    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>>;
+    async fn fetch_one<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Option<AnyRow>>;
 }
 
 /// Database connection pool wrapper
@@ -135,22 +146,38 @@ impl DbPool {
     pub async fn connect(url: &str) -> Result<Self> {
         Self::connect_with_options(url, PoolOptions::default()).await
     }
-    
+
     pub async fn connect_with_options(url: &str, options: PoolOptions) -> Result<Self> {
         sqlx::any::install_default_drivers();
-        let max_conns = if url.contains(":memory:") { 1 } else { options.max_connections };
-        
+        let max_conns = if url.contains(":memory:") {
+            1
+        } else {
+            options.max_connections
+        };
+
+        if let Some(path) = sqlite_path_from_url(url) {
+            if let Some(parent) = path.parent() {
+                if !parent.as_os_str().is_empty() {
+                    std::fs::create_dir_all(parent)?;
+                }
+            }
+
+            if !path.exists() {
+                std::fs::File::create(&path)?;
+            }
+        }
+
         let mut pool_options = AnyPoolOptions::new()
             .max_connections(max_conns)
             .min_connections(options.min_connections)
             .acquire_timeout(options.connect_timeout);
-        
+
         if let Some(idle_timeout) = options.idle_timeout {
             pool_options = pool_options.idle_timeout(idle_timeout);
         }
-        
+
         let pool = pool_options.connect(url).await?;
-        
+
         let db_type = parse_database_type(url)?;
 
         Ok(Self { pool, db_type })
@@ -201,7 +228,7 @@ impl Database for DbPool {
         sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
-    
+
     async fn begin_transaction(&self) -> Result<DbTransaction> {
         let tx = self.pool.begin().await?;
         Ok(DbTransaction {
@@ -210,17 +237,26 @@ impl Database for DbPool {
         })
     }
 
-    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64> {
+    async fn execute_query<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<u64> {
         let result = query.execute(&self.pool).await?;
         Ok(result.rows_affected())
     }
 
-    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> {
+    async fn fetch_all<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Vec<AnyRow>> {
         let rows = query.fetch_all(&self.pool).await?;
         Ok(rows)
     }
 
-    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> {
+    async fn fetch_one<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Option<AnyRow>> {
         let row = query.fetch_optional(&self.pool).await?;
         Ok(row)
     }
@@ -311,14 +347,19 @@ impl Database for DbTransaction {
         self.execute("SELECT 1").await?;
         Ok(())
     }
-    
+
     async fn begin_transaction(&self) -> Result<DbTransaction> {
         // Nested transactions not supported by this simple wrapper yet
         // Could use savepoints if needed.
-        Err(sqlx::Error::Configuration("Nested transactions not supported".into()))
+        Err(sqlx::Error::Configuration(
+            "Nested transactions not supported".into(),
+        ))
     }
 
-    async fn execute_query<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<u64> {
+    async fn execute_query<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<u64> {
         let mut lock = self.tx.lock().await;
         if let Some(ref mut tx) = *lock {
             let result = query.execute(&mut **tx).await?;
@@ -328,7 +369,10 @@ impl Database for DbTransaction {
         }
     }
 
-    async fn fetch_all<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> {
+    async fn fetch_all<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Vec<AnyRow>> {
         let mut lock = self.tx.lock().await;
         if let Some(ref mut tx) = *lock {
             let rows = query.fetch_all(&mut **tx).await?;
@@ -338,7 +382,10 @@ impl Database for DbTransaction {
         }
     }
 
-    async fn fetch_one<'q>(&self, query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> {
+    async fn fetch_one<'q>(
+        &self,
+        query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
+    ) -> Result<Option<AnyRow>> {
         let mut lock = self.tx.lock().await;
         if let Some(ref mut tx) = *lock {
             let row = query.fetch_optional(&mut **tx).await?;
@@ -440,10 +487,7 @@ enum Filter {
 
 #[derive(Debug, Clone)]
 enum QueryBuildError {
-    InvalidIdentifier {
-        kind: &'static str,
-        value: String,
-    },
+    InvalidIdentifier { kind: &'static str, value: String },
     EmptySelectFields,
 }
 
@@ -801,7 +845,11 @@ impl QueryBuilder {
     }
 
     pub fn build(&self) -> String {
-        let mut query = format!("SELECT {} FROM {}", self.select_fields.join(", "), self.table);
+        let mut query = format!(
+            "SELECT {} FROM {}",
+            self.select_fields.join(", "),
+            self.table
+        );
 
         if !self.where_clauses.is_empty() {
             query.push_str(&format!(" WHERE {}", self.where_clauses.join(" AND ")));
@@ -848,7 +896,7 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
             query.push_str(" AND deleted_at IS NULL");
         }
         let row = db.fetch_one(sqlx::query(&query).bind(id)).await?;
-        
+
         match row {
             Some(row) => Ok(Some(Self::from_row(&row)?)),
             None => Ok(None),
@@ -862,7 +910,7 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
             query.push_str(" WHERE deleted_at IS NULL");
         }
         let rows = db.fetch_all(sqlx::query(&query)).await?;
-        
+
         let mut models = Vec::new();
         for row in rows {
             models.push(Self::from_row(&row)?);
@@ -872,12 +920,10 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
 
     /// Find a record by ID and return a typed not-found error when missing.
     async fn find_or_fail(db: &impl Database, id: i64) -> OrmResult<Self> {
-        Self::find(db, id)
-            .await?
-            .ok_or(OrmError::NotFound {
-                model: Self::table_name(),
-                id,
-            })
+        Self::find(db, id).await?.ok_or(OrmError::NotFound {
+            model: Self::table_name(),
+            id,
+        })
     }
 
     /// Fetch a page of records with optional soft-delete filtering.
@@ -917,7 +963,7 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
         }
         Ok(models)
     }
-    
+
     /// Create a new record
     async fn create(&mut self, db: &impl Database) -> Result<()>;
 
@@ -926,10 +972,10 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
 
     /// Delete the record (soft delete if supported, otherwise hard delete)
     async fn delete(&self, db: &impl Database) -> Result<()>;
-    
+
     /// Force delete the record (hard delete)
     async fn force_delete(&self, db: &impl Database) -> Result<()>;
-    
+
     /// Validate the model fields
     fn validate(&self) -> std::result::Result<(), String> {
         Ok(())
@@ -987,16 +1033,42 @@ fn parse_database_type(url: &str) -> Result<DatabaseType> {
     if url.starts_with("mysql://") {
         return Ok(DatabaseType::MySql);
     }
-    if url.starts_with("sqlite://") {
+    if url.starts_with("sqlite://") || url.starts_with("sqlite:") {
         return Ok(DatabaseType::Sqlite);
     }
 
     Err(sqlx::Error::Configuration(
         format!(
-            "unsupported database URL scheme for `{url}`; expected postgres://, postgresql://, mysql://, or sqlite://"
+            "unsupported database URL scheme for `{url}`; expected postgres://, postgresql://, mysql://, sqlite://, or sqlite:"
         )
         .into(),
     ))
+}
+
+fn sqlite_path_from_url(url: &str) -> Option<PathBuf> {
+    if matches!(url, "sqlite::memory:" | "sqlite://:memory:") {
+        return None;
+    }
+
+    if let Some(path_and_query) = url.strip_prefix("sqlite://") {
+        let path = path_and_query.split('?').next().unwrap_or_default();
+        if path.is_empty() {
+            return None;
+        }
+
+        return Some(PathBuf::from(path));
+    }
+
+    if let Some(path_and_query) = url.strip_prefix("sqlite:") {
+        let path = path_and_query.split('?').next().unwrap_or_default();
+        if path.is_empty() {
+            return None;
+        }
+
+        return Some(PathBuf::from(path));
+    }
+
+    None
 }
 
 fn escape_sql_literal(value: &str) -> String {
@@ -1004,17 +1076,18 @@ fn escape_sql_literal(value: &str) -> String {
 }
 
 pub(crate) fn is_valid_identifier(value: &str) -> bool {
-    !value.is_empty()
-        && value
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_')
+    !value.is_empty() && value.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
 }
 
 #[cfg(test)]
 mod tests {
+    use super::{
+        parse_database_type, sqlite_path_from_url, DatabaseType, Model, Pagination, QueryBuilder,
+        QueryValue, SortDirection,
+    };
     use crate as oxidite_db;
-    use super::{parse_database_type, DatabaseType, Model, Pagination, QueryBuilder, QueryValue, SortDirection};
     use crate::sqlx;
+    use std::path::PathBuf;
 
     #[allow(dead_code)]
     #[derive(Model, sqlx::FromRow)]
@@ -1034,7 +1107,9 @@ mod tests {
 
     #[test]
     fn query_builder_normalizes_order_direction() {
-        let asc_query = QueryBuilder::new("users").order_by("id", "something").build();
+        let asc_query = QueryBuilder::new("users")
+            .order_by("id", "something")
+            .build();
         assert_eq!(asc_query, "SELECT * FROM users ORDER BY id ASC");
 
         let desc_query = QueryBuilder::new("users").order_by("id", "DESC").build();
@@ -1062,6 +1137,27 @@ mod tests {
             parse_database_type("sqlite://db.sqlite").unwrap(),
             DatabaseType::Sqlite
         );
+        assert_eq!(
+            parse_database_type("sqlite:db.sqlite").unwrap(),
+            DatabaseType::Sqlite
+        );
+    }
+
+    #[test]
+    fn extracts_sqlite_file_paths() {
+        assert_eq!(
+            sqlite_path_from_url("sqlite://./data.db"),
+            Some(PathBuf::from("./data.db"))
+        );
+        assert_eq!(
+            sqlite_path_from_url("sqlite:///tmp/data.db?mode=rwc"),
+            Some(PathBuf::from("/tmp/data.db"))
+        );
+        assert_eq!(
+            sqlite_path_from_url("sqlite:data.db"),
+            Some(PathBuf::from("data.db"))
+        );
+        assert_eq!(sqlite_path_from_url("sqlite::memory:"), None);
     }
 
     #[test]
@@ -1106,10 +1202,7 @@ mod tests {
         let json = serde_json::json!({"k":"v"});
 
         assert!(matches!(QueryValue::from(uuid), QueryValue::Uuid(_)));
-        assert!(matches!(
-            QueryValue::from(now),
-            QueryValue::DateTimeUtc(_)
-        ));
+        assert!(matches!(QueryValue::from(now), QueryValue::DateTimeUtc(_)));
         assert!(matches!(QueryValue::from(json), QueryValue::Json(_)));
     }
 

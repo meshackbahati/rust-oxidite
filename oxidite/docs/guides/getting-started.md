@@ -159,27 +159,39 @@ async fn main() -> Result<()> {
 
 ## Using the CLI Tool
 
-Install the Oxidite CLI for easier project management:
+Install the `oxidite-cli` package to get the `oxidite` executable:
 
 ```bash
 cargo install oxidite-cli
+
+# Install this generated CLI build explicitly
+cargo install oxidite-cli --version 2.1.0-gen
 ```
 
-Create a new project:
+Create and run a project:
 
 ```bash
 oxidite new myapp --type fullstack
 cd myapp
-oxidite migrate run
-cargo run
+oxidite migrate
+oxidite dev
 ```
 
 Generate code:
 
 ```bash
-oxidite make model User
-oxidite make controller UserController
-oxidite make middleware AuthMiddleware
+oxidite generate model User
+oxidite generate model Profile display_name:string
+oxidite generate controller UserController
+oxidite generate middleware AuthMiddleware
+oxidite generate route users
+oxidite generate service Billing
+oxidite generate validator CreateUser
+oxidite generate job SendDigest
+oxidite generate policy Post
+oxidite generate event UserSignedUp
+oxidite generate migration create_users_table
+oxidite generate seeder users_seed
 ```
 
 ## Feature Flags

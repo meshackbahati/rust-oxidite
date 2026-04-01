@@ -38,9 +38,15 @@ Oxidite is a batteries-included web framework that combines Rust's performance w
 
 ## Installation
 
-Install the Oxidite CLI tool to get started:
+Install the `oxidite-cli` package to get the `oxidite` executable:
 
 ```bash
+# Install from crates.io
+cargo install oxidite-cli
+
+# Install this generated CLI build explicitly
+cargo install oxidite-cli --version 2.1.0-gen
+
 # Install from source (recommended for development)
 cargo install --path oxidite-cli
 ```
@@ -78,12 +84,13 @@ async fn main() -> Result<()> {
 }
 ```
 
-### 3. Development
+### 3. Database And Development
 
-Navigate to your project and start the development server.
+Navigate to your project, run migrations, and start the development server.
 
 ```bash
 cd my-app
+oxidite migrate
 oxidite dev
 ```
 

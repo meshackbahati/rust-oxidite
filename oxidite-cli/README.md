@@ -1,227 +1,204 @@
 # oxidite-cli
 
-Command-line interface for the Oxidite web framework. Provides tools for project scaffolding, code generation, migrations, and development server management.
-
-<div align="center">
-
-[![Crates.io](https://img.shields.io/crates/v/oxidite-cli.svg)](https://crates.io/crates/oxidite-cli)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
-
-</div>
-
-## Overview
-
-`oxidite-cli` is the official command-line tool for the Oxidite web framework. It streamlines development workflows by providing commands for project creation, code generation, database migrations, and development server management.
+Command-line tooling for Oxidite. The package name is `oxidite-cli`, and the installed binary is `oxidite`.
 
 ## Installation
 
-Install the CLI tool globally:
-
 ```bash
-# Install from crates.io (when published)
+# Install from crates.io
 cargo install oxidite-cli
 
-# Or install from local source
+# Install this generated CLI build explicitly
+cargo install oxidite-cli --version 2.1.0-gen
+
+# Install from the local checkout
 cargo install --path .
 ```
 
-## Features
-
-- **Project scaffolding** - Create new Oxidite projects with a single command
-- **Code generation** - Generate models, controllers, middleware, and other components
-- **Migration management** - Create, run, and rollback database migrations
-- **Development server** - Hot-reloading development server with file watching
-- **Interactive setup** - Guided project creation with configuration options
-- **Health checks** - Diagnose and troubleshoot common issues
-- **Asset management** - Build and optimize static assets
-
-## Usage
-
-### Creating a New Project
-
-Generate a new Oxidite project:
+Verify the binary:
 
 ```bash
-# Interactive project creation
+oxidite --version
+oxidite version
+```
+
+## Project Creation
+
+```bash
 oxidite new my-app
-
-# The interactive wizard will guide you through:
-# - Project type selection (Fullstack, API, Microservice, Serverless)
-# - Database configuration
-# - Feature selection
-# - Directory structure setup
+oxidite new my-api --project-type api
+oxidite new my-api --type api
+oxidite new my-web --template web
+oxidite new my-minimal --template minimal
 ```
 
-### Development Server
+Generated projects include:
 
-Start the development server with hot reloading:
-
-```bash
-# Navigate to your project directory
-cd my-app
-
-# Start the development server
-oxidite dev
-
-# The server will watch for file changes and automatically restart
-# Available at http://127.0.0.1:8080 by default
+```text
+my-app/
+├── Cargo.toml
+├── README.md
+├── oxidite.toml
+├── migrations/
+├── seeds/
+├── src/
+│   ├── main.rs
+│   ├── controllers/
+│   ├── events/
+│   ├── jobs/
+│   ├── middleware/
+│   ├── models/
+│   ├── policies/
+│   ├── routes/
+│   ├── services/
+│   └── validators/
+└── tests/
 ```
 
-### Code Generation
+Supported project kinds:
 
-Generate common components:
+- `api`
+- `fullstack`
+- `web` as an alias for `fullstack`
+- `microservice`
+- `minimal` as an alias for `api`
+- `serverless`
+
+## Generators
+
+Use `generate` for new workflows. `make` remains as a hidden compatibility alias.
 
 ```bash
-# Generate a model
-oxidite make model User
+oxidite generate model User
+oxidite generate model User email:string age:integer
+oxidite generate route users
+oxidite generate controller UserController
+oxidite generate middleware AuthMiddleware
+oxidite generate service Billing
+oxidite generate validator CreateUser
+oxidite generate job SendDigest
+oxidite generate policy Post
+oxidite generate event UserSignedUp
+oxidite generate migration create_users_table
+oxidite generate seeder users_seed
+```
 
-# Generate a controller
-oxidite make controller Users
+Supported model field types:
 
-# Generate middleware
-oxidite make middleware Auth
+- `string`
+- `text`
+- `integer`
+- `float`
+- `decimal`
+- `boolean`
+- `uuid`
+- `json`
+- `timestamp`
 
-# Generate a migration
+## Migrations
+
+Create a migration:
+
+```bash
 oxidite migrate create create_users_table
+oxidite generate migration create_users_table
 ```
 
-### Database Migrations
+Migration files are SQL files with `-- migrate:up` and `-- migrate:down` sections:
 
-Manage your database schema:
+```sql
+-- migrate:up
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL
+);
+
+-- migrate:down
+DROP TABLE users;
+```
+
+Run or inspect migrations:
 
 ```bash
-# Create a new migration
-oxidite migrate create add_email_to_users
-
-# Run pending migrations
+oxidite migrate
 oxidite migrate run
-
-# Rollback the last migration
-oxidite migrate revert
-
-# View migration status
 oxidite migrate status
+oxidite migrate revert
+oxidite migrate:rollback
 ```
 
-### Health Checks
-
-Diagnose common issues:
+## Seeders
 
 ```bash
-# Run system diagnostics
+oxidite seed create users_seed
+oxidite generate seeder users_seed
+oxidite seed
+oxidite seed run
+oxidite db:seed
+```
+
+## Queue Commands
+
+Canonical commands:
+
+```bash
+oxidite queue work --workers 4
+oxidite queue list
+oxidite queue dlq
+oxidite queue clear
+```
+
+Compatibility aliases:
+
+```bash
+oxidite queue:work --workers 4
+oxidite queue:list
+oxidite queue:dlq
+oxidite queue:clear
+```
+
+## Development Workflow
+
+```bash
+oxidite dev
+oxidite dev --port 8080
+oxidite dev --host 0.0.0.0 --env development
+oxidite dev --watch src --watch templates
+oxidite dev --ignore dist
+oxidite dev --no-hot-reload
+```
+
+`oxidite dev` forwards the selected host, port, and environment through:
+
+- `SERVER_HOST`
+- `SERVER_PORT`
+- `OXIDITE_ENV`
+
+Build and run the current project:
+
+```bash
+oxidite build
+oxidite build --release
+oxidite build --profile release
+oxidite build --target x86_64-unknown-linux-musl
+oxidite build --features "database,queue"
+oxidite build --verbose
+
+oxidite serve
+oxidite serve --addr 0.0.0.0:8080
+oxidite serve --env production
+```
+
+## Diagnostics
+
+```bash
 oxidite doctor
-
-# This checks:
-# - Rust installation
-# - Database connectivity
-# - Configuration files
-# - Dependency versions
-# - Common setup issues
-```
-
-### Full Command Reference
-
-```bash
-# Show help
 oxidite --help
-oxidite new --help
-oxidite dev --help
-
-# Project commands
-oxidite new <project-name>     # Create a new project
-oxidite build                 # Build the project
-oxidite serve                 # Start production server
-
-# Development commands
-oxidite dev                   # Start development server
-oxidite watch                 # Watch files and run tests/builds
-
-# Code generation
-oxidite make model <name>     # Generate a model
-oxidite make controller <name> # Generate a controller
-oxidite make middleware <name> # Generate middleware
-oxidite migrate create <name> # Generate a migration
-
-# Database commands
-oxidite migrate create <name> # Create migration
-oxidite migrate run          # Run migrations
-oxidite migrate revert       # Revert the last migration
-oxidite migrate status       # Show migration status
-
-# Utility commands
-oxidite doctor              # Run health checks
-oxidite clean               # Clean build artifacts
-oxidite version             # Show version information
+oxidite migrate --help
+oxidite generate --help
 ```
 
-### Project Types
-
-The CLI supports different project types:
-
-- **Fullstack Application**: Complete setup with templates, static files, and database
-- **REST API**: Optimized for backend services (JSON only)
-- **Microservice**: Minimal setup for specialized services
-- **Serverless Function**: Lightweight event handler
-
-### Configuration
-
-The CLI reads configuration from `config.toml` in your project root:
-
-```toml
-[app]
-name = "my-app"
-port = 3000
-environment = "development"
-
-[database]
-url = "sqlite::memory:"
-migrations_dir = "./migrations"
-
-[server]
-host = "127.0.0.1"
-workers = 4
-timeout = 30
-```
-
-### Environment Variables
-
-The CLI respects common environment variables:
-
-```bash
-# Override the port
-OXIDITE_PORT=8080 oxidite dev
-
-# Use a different database
-DATABASE_URL=postgresql://user:pass@localhost/db oxidite dev
-
-# Set environment
-OXIDITE_ENV=production oxidite serve
-```
-
-## Integration with Oxidite
-
-The CLI is designed to work seamlessly with Oxidite projects:
-
-- Automatically generates Oxidite-compatible code
-- Sets up proper directory structure
-- Configures dependencies in Cargo.toml
-- Creates appropriate example code
-- Sets up development workflow
-
-## Troubleshooting
-
-Common issues and solutions:
-
-```bash
-# If the CLI isn't found after installation
-export PATH="$HOME/.cargo/bin:$PATH"
-
-# If you get permission errors
-cargo install --path . --force
-
-# To update the CLI
-cargo install oxidite-cli --force
-```
+The generated project configuration file is `oxidite.toml`.
 
 ## License
 

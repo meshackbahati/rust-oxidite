@@ -181,590 +181,209 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="cli-tools"><a class="header" href="#cli-tools">CLI Tools</a></h1>
-<p>The Oxidite CLI provides powerful command-line tools for project scaffolding, code generation, and development workflows. This chapter covers all available CLI commands and their usage.</p>
-<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
-<p>The Oxidite CLI includes:</p>
-<ul>
-<li>Project creation and scaffolding</li>
-<li>Code generation tools</li>
-<li>Database migrations</li>
-<li>Development server with hot reload</li>
-<li>Build and deployment utilities</li>
-</ul>
+                                                <h1 id="cli-tools"><a class="header" href="#cli-tools">CLI Tools</a></h1>
+<p>The Oxidite CLI package is <code>oxidite-cli</code>, and the installed executable is <code>oxidite</code>.</p>
 <h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
-<p>Install the Oxidite CLI globally:</p>
-<pre><code class="language-bash"># Install via cargo
+<pre><code class="language-bash"># Install from crates.io
 cargo install oxidite-cli
 
-# Or install a specific version
-cargo install oxidite-cli --version 2.0.0
+# Install this generated build explicitly
+cargo install oxidite-cli --version 2.1.0-gen
 
-# Verify installation
-oxidite --version
+# Install from the workspace checkout
+cargo install --path oxidite-cli
+</code></pre>
+<p>Verify the binary:</p>
+<pre><code class="language-bash">oxidite --version
+oxidite version
 </code></pre>
 <h2 id="project-scaffolding"><a class="header" href="#project-scaffolding">Project Scaffolding</a></h2>
-<p>Create new projects with the CLI:</p>
-<pre><code class="language-bash"># Create a new Oxidite project
+<p>Create a new project:</p>
+<pre><code class="language-bash"># Interactive project creation
 oxidite new my_app
 
-# Create with specific features
-oxidite new my_app --features "db,auth,api"
+# Explicit project type
+oxidite new my_api --project-type api
+oxidite new my_api --type api
 
-# Create with template
-oxidite new my_app --template api
-oxidite new my_app --template web
-oxidite new my_app --template fullstack
+# Template aliases
+oxidite new my_web --template web
+oxidite new my_fullstack --template fullstack
+oxidite new my_minimal --template minimal
 </code></pre>
-<p>The CLI creates a complete project structure:</p>
+<p>Supported project kinds:</p>
+<ul>
+<li><code>api</code></li>
+<li><code>fullstack</code></li>
+<li><code>web</code> as an alias for <code>fullstack</code></li>
+<li><code>microservice</code></li>
+<li><code>minimal</code> as an alias for <code>api</code></li>
+<li><code>serverless</code></li>
+</ul>
+<p>The generated project includes the directories the CLI expects for development:</p>
 <pre><code class="language-text">my_app/
 ├── Cargo.toml
+├── README.md
+├── oxidite.toml
+├── migrations/
+├── seeds/
 ├── src/
 │   ├── main.rs
-│   ├── routes/
-│   ├── models/
+│   ├── controllers/
+│   ├── events/
+│   ├── jobs/
 │   ├── middleware/
-│   └── lib.rs
-├── migrations/
-├── templates/
-├── public/
-├── config/
-│   └── default.toml
-├── tests/
-├── docs/
-└── README.md
-</code></pre>
-<h3 id="project-templates"><a class="header" href="#project-templates">Project Templates</a></h3>
-<p>Different templates for various use cases:</p>
-<pre><code class="language-bash"># API-only template
-oxidite new api_project --template api
-
-# Web application template
-oxidite new web_project --template web
-
-# Full-stack application template
-oxidite new fullstack_project --template fullstack
-
-# Minimal template
-oxidite new minimal_project --template minimal
+│   ├── models/
+│   ├── policies/
+│   ├── routes/
+│   ├── services/
+│   └── validators/
+└── tests/
 </code></pre>
 <h2 id="code-generation"><a class="header" href="#code-generation">Code Generation</a></h2>
-<p>Generate boilerplate code automatically:</p>
-<pre><code class="language-bash"># Generate a new route
-oxidite generate route users
-
-# Generate a model
-oxidite generate model User name:string email:string age:integer
-
-# Generate a controller
-oxidite generate controller Posts
-
-# Generate a middleware
-oxidite generate middleware auth
-
-# Generate a migration
-oxidite generate migration create_users_table
-
-# Generate a component (for full-stack apps)
-oxidite generate component UserCard
-</code></pre>
-<h3 id="model-generation"><a class="header" href="#model-generation">Model Generation</a></h3>
-<p>Create database models with the generator:</p>
-<pre><code class="language-bash"># Basic model
+<p>Use <code>generate</code> for new workflows. <code>make</code> remains as a hidden compatibility alias.</p>
+<pre><code class="language-bash"># Models
 oxidite generate model User
+oxidite generate model User email:string age:integer
 
-# Model with fields
-oxidite generate model Post title:string content:text author_id:integer published:boolean
-
-# Model with relationships
-oxidite generate model Comment content:text user_id:integer post_id:integer
-
-# Model with custom options
-oxidite generate model Product \
-    name:string \
-    price:decimal \
-    description:text \
-    --timestamps \
-    --uuid-primary-key \
-    --with-soft-delete
-</code></pre>
-<p>The generated model looks like:</p>
-<pre><code class="language-rust ignore">use oxidite::prelude::*;
-use serde::{Deserialize, Serialize};
-
-#[derive(Model, Serialize, Deserialize)]
-#[model(table = "products")]
-pub struct Product {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
-    pub name: String,
-    #[model(not_null)]
-    pub price: f64,
-    pub description: Option&lt;String&gt;,
-    #[model(created_at)]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-}</code></pre>
-<h3 id="route-generation"><a class="header" href="#route-generation">Route Generation</a></h3>
-<p>Generate route files:</p>
-<pre><code class="language-bash"># Generate basic CRUD routes
+# Route modules
 oxidite generate route users
 
-# Generate routes for a specific model
-oxidite generate route --model User
+# Controllers and middleware
+oxidite generate controller UserController
+oxidite generate middleware AuthMiddleware
 
-# Generate API routes
-oxidite generate route --api posts
+# Other supported generators
+oxidite generate service Billing
+oxidite generate validator CreateUser
+oxidite generate job SendDigest
+oxidite generate policy Post
+oxidite generate event UserSignedUp
 
-# Generate routes with custom template
-oxidite generate route --template api-crud products
+# File-based database artifacts
+oxidite generate migration create_users_table
+oxidite generate seeder users_seed
 </code></pre>
-<p>Generated route file:</p>
-<pre><code class="language-rust ignore">use oxidite::prelude::*;
-use crate::models::User;
+<p>Supported model field types:</p>
+<ul>
+<li><code>string</code></li>
+<li><code>text</code></li>
+<li><code>integer</code></li>
+<li><code>float</code></li>
+<li><code>decimal</code></li>
+<li><code>boolean</code></li>
+<li><code>uuid</code></li>
+<li><code>json</code></li>
+<li><code>timestamp</code></li>
+</ul>
+<p>Example generated model:</p>
+<pre><code class="language-rust ignore">use serde::{Deserialize, Serialize};
+use oxidite::db::{Model, sqlx};
 
-pub fn configure_routes(router: &amp;mut Router) {
-    router.get("/users", get_all_users);
-    router.get("/users/:id", get_user);
-    router.post("/users", create_user);
-    router.put("/users/:id", update_user);
-    router.delete("/users/:id", delete_user);
-}
-
-async fn get_all_users(_req: Request) -&gt; Result&lt;Response&gt; {
-    // Implementation here
-    Ok(Response::json(serde_json::json!({})))
-}
-
-async fn get_user(Path(id): Path&lt;i32&gt;) -&gt; Result&lt;Response&gt; {
-    // Implementation here
-    Ok(Response::json(serde_json::json!({})))
-}
-
-async fn create_user(_req: Request) -&gt; Result&lt;Response&gt; {
-    // Implementation here
-    Ok(Response::json(serde_json::json!({})))
-}
-
-async fn update_user(Path(id): Path&lt;i32&gt;, _req: Request) -&gt; Result&lt;Response&gt; {
-    // Implementation here
-    Ok(Response::json(serde_json::json!({})))
-}
-
-async fn delete_user(Path(id): Path&lt;i32&gt;) -&gt; Result&lt;Response&gt; {
-    // Implementation here
-    Ok(Response::json(serde_json::json!({})))
+#[derive(Debug, Clone, Serialize, Deserialize, Model, sqlx::FromRow)]
+#[model(table = "users")]
+pub struct User {
+    pub id: i64,
+    pub email: String,
+    pub age: i64,
 }</code></pre>
-<h2 id="database-commands"><a class="header" href="#database-commands">Database Commands</a></h2>
-<p>Manage your database with CLI tools:</p>
-<pre><code class="language-bash"># Run pending migrations
+<h2 id="database-migrations"><a class="header" href="#database-migrations">Database Migrations</a></h2>
+<p>Create a migration file:</p>
+<pre><code class="language-bash">oxidite migrate create create_users_table
+oxidite generate migration create_users_table
+</code></pre>
+<p>The generated file uses file-based SQL sections:</p>
+<pre><code class="language-sql">-- migrate:up
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL
+);
+
+-- migrate:down
+DROP TABLE users;
+</code></pre>
+<p>Run migrations:</p>
+<pre><code class="language-bash"># Canonical command
+oxidite migrate run
+
+# Bare command also runs pending migrations
 oxidite migrate
+</code></pre>
+<p>Check or revert migrations:</p>
+<pre><code class="language-bash">oxidite migrate status
+oxidite migrate revert
 
-# Create a new migration
-oxidite generate migration add_email_to_users
-
-# Rollback last migration
+# Compatibility alias retained by the CLI
 oxidite migrate:rollback
+</code></pre>
+<h2 id="seeders"><a class="header" href="#seeders">Seeders</a></h2>
+<pre><code class="language-bash"># Create a seeder file
+oxidite seed create users_seed
+oxidite generate seeder users_seed
 
-# Drop all tables (dangerous!)
-oxidite migrate:reset
+# Run seeders
+oxidite seed run
+oxidite seed
 
-# Seed the database
+# Compatibility alias
 oxidite db:seed
-
-# Generate migration from model changes
-oxidite migrate:generate
 </code></pre>
-<h3 id="migration-generation"><a class="header" href="#migration-generation">Migration Generation</a></h3>
-<p>Automatically generate migrations from model changes:</p>
-<pre><code class="language-bash"># Generate migration based on model differences
-oxidite generate migration --auto
-
-# Generate migration for a specific model
-oxidite generate migration --model User --add-field phone:string
-
-# Generate migration for model deletion
-oxidite generate migration --model OldTable --delete-table
+<h2 id="queue-commands"><a class="header" href="#queue-commands">Queue Commands</a></h2>
+<p>Canonical queue commands:</p>
+<pre><code class="language-bash">oxidite queue work --workers 4
+oxidite queue list
+oxidite queue dlq
+oxidite queue clear
 </code></pre>
-<p>Example generated migration:</p>
-<pre><code class="language-rust ignore">use oxidite_db::Migration;
-
-pub struct AddPhoneToUsers;
-
-impl Migration for AddPhoneToUsers {
-    fn version(&amp;self) -&gt; i64 {
-        20240121120000
-    }
-    
-    fn name(&amp;self) -&gt; &amp;'static str {
-        "add_phone_to_users"
-    }
-    
-    fn up(&amp;self) -&gt; &amp;'static str {
-        r#"
-        ALTER TABLE users ADD COLUMN phone VARCHAR(20);
-        "#
-    }
-    
-    fn down(&amp;self) -&gt; &amp;'static str {
-        r#"
-        ALTER TABLE users DROP COLUMN phone;
-        "#
-    }
-}</code></pre>
-<h2 id="development-server"><a class="header" href="#development-server">Development Server</a></h2>
-<p>Run your application with the development server:</p>
-<pre><code class="language-bash"># Start development server
-oxidite dev
-
-# Start with specific port
+<p>Compatibility aliases that still work:</p>
+<pre><code class="language-bash">oxidite queue:work --workers 4
+oxidite queue:list
+oxidite queue:dlq
+oxidite queue:clear
+</code></pre>
+<h2 id="development-workflow"><a class="header" href="#development-workflow">Development Workflow</a></h2>
+<p>Start the development server with hot reload:</p>
+<pre><code class="language-bash">oxidite dev
 oxidite dev --port 8080
-
-# Start with hot reload disabled
-oxidite dev --no-hot-reload
-
-# Start with specific environment
-oxidite dev --env development
-
-# Watch specific directories
+oxidite dev --host 0.0.0.0 --env development
 oxidite dev --watch src --watch templates
+oxidite dev --ignore dist
+oxidite dev --no-hot-reload
 </code></pre>
-<h3 id="hot-reload-configuration"><a class="header" href="#hot-reload-configuration">Hot Reload Configuration</a></h3>
-<p>The development server supports hot reload for rapid development:</p>
-<pre><code class="language-bash"># Enable hot reload (default)
-oxidite dev --hot-reload
-
-# Specify files/directories to watch
-oxidite dev --watch src/**/*.rs --watch templates/**/*.html
-
-# Ignore specific files
-oxidite dev --ignore target --ignore node_modules
+<p>The CLI forwards these overrides to the generated app via:</p>
+<ul>
+<li><code>SERVER_HOST</code></li>
+<li><code>SERVER_PORT</code></li>
+<li><code>OXIDITE_ENV</code></li>
+</ul>
+<p>Start the current project in release mode:</p>
+<pre><code class="language-bash">oxidite serve
+oxidite serve --addr 0.0.0.0:8080
+oxidite serve --env production
 </code></pre>
-<h2 id="build-and-production-commands"><a class="header" href="#build-and-production-commands">Build and Production Commands</a></h2>
-<p>Prepare your application for production:</p>
-<pre><code class="language-bash"># Build for release
-oxidite build
-
-# Build with specific profile
-oxidite build --profile release
-
-# Build for specific target
-oxidite build --target x86_64-unknown-linux-musl
-
-# Build with features
-oxidite build --features "postgres,redis"
-
-# Create optimized build
+<p>Build the current project:</p>
+<pre><code class="language-bash">oxidite build
 oxidite build --release
+oxidite build --profile release
+oxidite build --target x86_64-unknown-linux-musl
+oxidite build --features "database,queue"
+oxidite build --verbose
 </code></pre>
-<h3 id="production-deployment"><a class="header" href="#production-deployment">Production Deployment</a></h3>
-<p>Deploy your application:</p>
-<pre><code class="language-bash"># Deploy to production
-oxidite deploy
-
-# Deploy to specific environment
-oxidite deploy --env production
-
-# Deploy with specific configuration
-oxidite deploy --config prod.toml
-
-# Dry run deployment
-oxidite deploy --dry-run
+<h2 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h2>
+<pre><code class="language-bash">oxidite doctor
 </code></pre>
-<h2 id="configuration-management"><a class="header" href="#configuration-management">Configuration Management</a></h2>
-<p>Manage application configuration:</p>
-<pre><code class="language-bash"># Generate configuration file
-oxidite config:generate
-
-# Validate configuration
-oxidite config:validate
-
-# Show current configuration
-oxidite config:show
-
-# Set configuration values
-oxidite config:set database.url postgresql://localhost/myapp
-
-# Encrypt sensitive configuration
-oxidite config:encrypt --key SECRET_KEY
-</code></pre>
-<p>Configuration file structure:</p>
-<pre><code class="language-toml">[server]
-port = 3000
-host = "127.0.0.1"
-workers = 4
-timeout = 30
-
-[database]
-url = "postgresql://localhost/myapp"
-pool_size = 10
-timeout = 30
-
-[authentication]
-jwt_secret = "your-secret-key"
-token_expiration = 86400
-
-[logging]
-level = "info"
-format = "json"
-output = "stdout"
-
-[cache]
-backend = "redis"
-url = "redis://127.0.0.1:6379"
-ttl = 3600
-</code></pre>
-<h2 id="testing-commands"><a class="header" href="#testing-commands">Testing Commands</a></h2>
-<p>Run tests with the CLI:</p>
-<pre><code class="language-bash"># Run all tests
-oxidite test
-
-# Run specific test
-oxidite test test_name
-
-# Run tests with specific features
-oxidite test --features integration
-
-# Run tests in watch mode
-oxidite test --watch
-
-# Run tests with coverage
-oxidite test --coverage
-
-# Run only unit tests
-oxidite test --unit
-
-# Run only integration tests
-oxidite test --integration
-</code></pre>
-<h2 id="plugin-management"><a class="header" href="#plugin-management">Plugin Management</a></h2>
-<p>Manage Oxidite plugins:</p>
-<pre><code class="language-bash"># List installed plugins
-oxidite plugin:list
-
-# Install a plugin
-oxidite plugin:install plugin-name
-
-# Install plugin from git
-oxidite plugin:install git+https://github.com/user/plugin.git
-
-# Uninstall plugin
-oxidite plugin:uninstall plugin-name
-
-# Update plugins
-oxidite plugin:update
-
-# Search for plugins
-oxidite plugin:search keyword
-</code></pre>
-<h2 id="custom-commands"><a class="header" href="#custom-commands">Custom Commands</a></h2>
-<p>Create custom CLI commands:</p>
-<pre><code class="language-bash"># Generate a custom command
-oxidite generate command backup
-
-# Create command with arguments
-oxidite generate command import --args "source:string destination:string"
-</code></pre>
-<p>Custom command template:</p>
-<pre><code class="language-rust ignore">use clap::Parser;
-use oxidite_cli::Command;
-
-#[derive(Parser)]
-#[clap(name = "backup")]
-pub struct BackupCommand {
-    #[clap(short, long)]
-    pub output: Option&lt;String&gt;,
-    
-    #[clap(short, long)]
-    pub compress: bool,
-}
-
-#[async_trait::async_trait]
-impl Command for BackupCommand {
-    async fn run(&amp;self) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
-        println!("Running backup command");
-        
-        if let Some(output) = &amp;self.output {
-            println!("Output to: {}", output);
-        }
-        
-        if self.compress {
-            println!("Compression enabled");
-        }
-        
-        // Your backup logic here
-        
-        Ok(())
-    }
-}</code></pre>
-<p>Register the command in your CLI:</p>
-<pre><code class="language-rust ignore">use oxidite_cli::{Cli, Command};
-
-pub struct MyAppCli {
-    commands: Vec&lt;Box&lt;dyn Command&gt;&gt;,
-}
-
-impl MyAppCli {
-    pub fn new() -&gt; Self {
-        let mut cli = Self {
-            commands: vec![],
-        };
-        
-        cli.register_command(Box::new(BackupCommand::parse_from(["backup"])));
-        
-        cli
-    }
-    
-    pub fn register_command(&amp;mut self, command: Box&lt;dyn Command&gt;) {
-        self.commands.push(command);
-    }
-    
-    pub async fn run(&amp;self) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
-        // Execute the command
-        Ok(())
-    }
-}</code></pre>
-<h2 id="help-and-documentation"><a class="header" href="#help-and-documentation">Help and Documentation</a></h2>
-<p>Get help and documentation:</p>
-<pre><code class="language-bash"># Show help
-oxidite --help
-oxidite help
-oxidite -h
-
-# Show help for specific command
+<p>The doctor command checks:</p>
+<ul>
+<li>Rust and Cargo availability</li>
+<li>project files</li>
+<li>migration directory presence</li>
+<li>common environment variables</li>
+</ul>
+<h2 id="help"><a class="header" href="#help">Help</a></h2>
+<pre><code class="language-bash">oxidite --help
 oxidite migrate --help
 oxidite generate --help
-
-# Show version
-oxidite --version
-oxidite -V
-
-# Show verbose output
-oxidite migrate --verbose
-oxidite build -v
 </code></pre>
-<h2 id="environment-specific-commands"><a class="header" href="#environment-specific-commands">Environment-Specific Commands</a></h2>
-<p>Handle different environments:</p>
-<pre><code class="language-bash"># Development environment
-oxidite dev --env development
-
-# Staging environment
-oxidite deploy --env staging
-
-# Production environment
-oxidite deploy --env production
-
-# Load environment-specific configuration
-oxidite --config config/staging.toml
-</code></pre>
-<h2 id="task-automation"><a class="header" href="#task-automation">Task Automation</a></h2>
-<p>Run automated tasks:</p>
-<pre><code class="language-bash"># Run predefined tasks
-oxidite run setup
-oxidite run cleanup
-oxidite run seed-users
-
-# List available tasks
-oxidite run --list
-
-# Run task with arguments
-oxidite run backup -- --output /tmp/backup.sql
-</code></pre>
-<p>Task definition in <code>tasks.rs</code>:</p>
-<pre><code class="language-rust ignore">use oxidite_cli::Task;
-
-pub struct SetupTask;
-
-impl Task for SetupTask {
-    fn name(&amp;self) -&gt; &amp;str { "setup" }
-    
-    fn description(&amp;self) -&gt; &amp;str { "Set up the application" }
-    
-    async fn execute(&amp;self) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
-        println!("Setting up application...");
-        
-        // Run migrations
-        // Create directories
-        // Set up initial data
-        
-        println!("Setup complete!");
-        Ok(())
-    }
-}</code></pre>
-<h2 id="performance-profiling"><a class="header" href="#performance-profiling">Performance Profiling</a></h2>
-<p>Profile application performance:</p>
-<pre><code class="language-bash"># Profile application
-oxidite profile
-
-# Profile with specific duration
-oxidite profile --duration 30s
-
-# Profile specific endpoint
-oxidite profile --endpoint /api/users
-
-# Generate flame graph
-oxidite profile --flamegraph
-</code></pre>
-<h2 id="security-scanning"><a class="header" href="#security-scanning">Security Scanning</a></h2>
-<p>Scan for security vulnerabilities:</p>
-<pre><code class="language-bash"># Scan dependencies
-oxidite security:audit
-
-# Scan for common vulnerabilities
-oxidite security:scan
-
-# Generate security report
-oxidite security:report
-
-# Fix known vulnerabilities
-oxidite security:fix
-</code></pre>
-<h2 id="docker-integration"><a class="header" href="#docker-integration">Docker Integration</a></h2>
-<p>Work with Docker containers:</p>
-<pre><code class="language-bash"># Generate Dockerfile
-oxidite docker:generate
-
-# Build Docker image
-oxidite docker:build
-
-# Run in Docker
-oxidite docker:run
-
-# Push to registry
-oxidite docker:push
-
-# Generate docker-compose
-oxidite docker:compose
-</code></pre>
-<p>Dockerfile template:</p>
-<pre><code class="language-dockerfile">FROM rust:1.92 as builder
-
-WORKDIR /app
-COPY . .
-RUN cargo build --release
-
-FROM debian:bullseye-slim
-RUN apt-get update &amp;&amp; apt-get install -y ca-certificates &amp;&amp; rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/my_app /usr/local/bin/my_app
-EXPOSE 3000
-CMD ["my_app"]
-</code></pre>
-<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
-<p>The Oxidite CLI provides comprehensive tools for:</p>
-<ul>
-<li><strong>Project scaffolding</strong>: Quick project creation with templates</li>
-<li><strong>Code generation</strong>: Automate repetitive coding tasks</li>
-<li><strong>Database management</strong>: Migrations and seeding</li>
-<li><strong>Development workflow</strong>: Hot reload and testing</li>
-<li><strong>Building and deployment</strong>: Production-ready builds</li>
-<li><strong>Configuration management</strong>: Environment-specific configs</li>
-<li><strong>Task automation</strong>: Custom command creation</li>
-<li><strong>Performance profiling</strong>: Application optimization</li>
-<li><strong>Security scanning</strong>: Vulnerability detection</li>
-</ul>
-<p>The CLI streamlines development workflows and enforces best practices across your Oxidite projects.</p>
 
                     </main>
 

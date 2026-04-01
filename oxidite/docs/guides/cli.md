@@ -1,147 +1,148 @@
 # CLI Tool Guide
 
-The Oxidite CLI helps you scaffold projects, generate code, and manage your application.
+The CLI package is `oxidite-cli`. The installed binary is `oxidite`.
 
 ## Installation
 
 ```bash
 cargo install oxidite-cli
+
+# Install this generated CLI build explicitly
+cargo install oxidite-cli --version 2.1.0-gen
 ```
 
-## Commands
-
-### Create New Project
+## Project Creation
 
 ```bash
-# Basic project
 oxidite new myapp
-
-# With specific type
 oxidite new myapp --type api
-oxidite new myapp --type fullstack
-oxidite new myapp --type microservice
+oxidite new myapp --template web
 ```
 
-### Code Generation
+Generated projects include:
+
+- `oxidite.toml`
+- `migrations/`
+- `seeds/`
+- `src/controllers/`
+- `src/events/`
+- `src/jobs/`
+- `src/middleware/`
+- `src/models/`
+- `src/policies/`
+- `src/routes/`
+- `src/services/`
+- `src/validators/`
+
+## Generators
+
+Use `generate` for new workflows. `make` remains as a hidden compatibility alias.
 
 ```bash
-# Generate model
-oxidite make model User
-
-# Generate controller
-oxidite make controller UserController
-
-# Generate middleware
-oxidite make middleware AuthMiddleware
+oxidite generate model User
+oxidite generate model User email:string age:integer
+oxidite generate route users
+oxidite generate controller UserController
+oxidite generate middleware AuthMiddleware
+oxidite generate service Billing
+oxidite generate validator CreateUser
+oxidite generate job SendDigest
+oxidite generate policy Post
+oxidite generate event UserSignedUp
+oxidite generate migration create_users_table
+oxidite generate seeder users_seed
 ```
 
-### Database Migrations
+## Migrations
 
 ```bash
-# Create migration
 oxidite migrate create create_users_table
-
-# Run migrations
+oxidite migrate
 oxidite migrate run
-
-# Rollback last migration
-oxidite migrate revert
-
-# Check status
 oxidite migrate status
+oxidite migrate revert
+oxidite migrate:rollback
 ```
 
-### Database Seeders
+Migration files use the SQL sections the runtime understands:
+
+```sql
+-- migrate:up
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL
+);
+
+-- migrate:down
+DROP TABLE users;
+```
+
+## Seeders
 
 ```bash
-# Create seeder
-oxidite seed create UserSeeder
-
-# Run seeders
+oxidite seed create users_seed
+oxidite seed
 oxidite seed run
+oxidite db:seed
 ```
 
-### Queue Management
+## Queue Commands
+
+Canonical commands:
 
 ```bash
-# Start workers
+oxidite queue work --workers 4
+oxidite queue list
+oxidite queue dlq
+oxidite queue clear
+```
+
+Compatibility aliases:
+
+```bash
 oxidite queue:work --workers 4
-
-# View statistics
 oxidite queue:list
-
-# View dead letter queue
 oxidite queue:dlq
-
-# Clear pending jobs
 oxidite queue:clear
 ```
 
-### Health Check
+## Development
 
 ```bash
-# System diagnostics
-oxidite doctor
-```
-
-### Build
-
-```bash
-# Development build
-oxidite build
-
-# Production build  
-oxidite build --release
-```
-
-### Development Server
-
-```bash
-# Start with hot reload
 oxidite dev
+oxidite dev --port 8080
+oxidite dev --host 0.0.0.0 --env development
+oxidite dev --watch src --watch templates
+oxidite dev --ignore dist
+oxidite dev --no-hot-reload
 ```
 
-## Project Structure
+The CLI forwards host, port, and environment overrides through:
 
-After `oxidite new myapp`, you get:
+- `SERVER_HOST`
+- `SERVER_PORT`
+- `OXIDITE_ENV`
 
-```
-myapp/
-├── Cargo.toml
-├── src/
-│   ├── main.rs
-│   ├── models/
-│   ├── controllers/
-│   └── middleware/
-├── migrations/
-├── seeders/
-├── templates/
-└── config.toml
-```
+## Build And Serve
 
-## Configuration
+```bash
+oxidite build
+oxidite build --release
+oxidite build --profile release
+oxidite build --target x86_64-unknown-linux-musl
+oxidite build --features "database,queue"
+oxidite build --verbose
 
-Oxidite projects use `config.toml`:
-
-```toml
-[app]
-name = "myapp"
-url = "http://localhost:3000"
-
-[database]
-url = "postgresql://localhost/myapp"
-
-[cache]
-driver = "redis"
-url = "redis://127.0.0.1"
-
-[queue]
-driver = "redis"
-url = "redis://127.0.0.1"
+oxidite serve
+oxidite serve --addr 0.0.0.0:8080
+oxidite serve --env production
 ```
 
-## Tips
+## Diagnostics
 
-- Use `oxidite doctor` to debug issues
-- Run `oxidite migrate status` before deploying
-- Use `oxidite dev` for automatic reloading during development
+```bash
+oxidite doctor
+oxidite --help
+oxidite --version
+oxidite version
+```

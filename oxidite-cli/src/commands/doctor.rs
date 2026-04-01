@@ -1,11 +1,11 @@
-use std::process::Command;
 use std::env;
+use std::process::Command;
 
 pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏥 Oxidite Health Check\n");
-    
+
     let mut all_ok = true;
-    
+
     // Check Rust installation
     print!("Checking Rust installation... ");
     match Command::new("rustc").arg("--version").output() {
@@ -18,7 +18,7 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
             all_ok = false;
         }
     }
-    
+
     // Check Cargo
     print!("Checking Cargo... ");
     match Command::new("cargo").arg("--version").output() {
@@ -31,7 +31,7 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
             all_ok = false;
         }
     }
-    
+
     // Check if in an Oxidite project
     print!("Checking project structure... ");
     if std::path::Path::new("Cargo.toml").exists() {
@@ -39,7 +39,7 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("⚠️  Not in a Cargo project directory");
     }
-    
+
     // Check oxidite.toml or config
     print!("Checking configuration... ");
     if std::path::Path::new("oxidite.toml").exists() {
@@ -49,7 +49,7 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("⚠️  No configuration file found (optional)");
     }
-    
+
     // Check migrations directory
     print!("Checking migrations... ");
     if std::path::Path::new("migrations").exists() {
@@ -58,20 +58,20 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("ℹ️  No migrations directory");
     }
-    
+
     // Check common dependencies
     println!("\nChecking environment variables:");
     check_env_var("DATABASE_URL");
     check_env_var("REDIS_URL");
     check_env_var("JWT_SECRET");
-    
+
     println!();
     if all_ok {
         println!("✅ All critical checks passed!");
     } else {
         println!("⚠️  Some checks failed. See above for details.");
     }
-    
+
     Ok(())
 }
 

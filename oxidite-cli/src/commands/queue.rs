@@ -1,40 +1,39 @@
-use std::io::{self, Write};
 use oxidite_queue::{Queue, QueueStats};
+use std::io::{self, Write};
 
 pub async fn queue_work(workers: usize) -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting queue worker with {} workers...", workers);
-    
+
     // Initialize queue (in real app, this would come from config)
     let queue = Queue::memory();
-    
-    let worker = oxidite_queue::Worker::new(std::sync::Arc::new(queue))
-        .worker_count(workers);
-    
+
+    let worker = oxidite_queue::Worker::new(std::sync::Arc::new(queue)).worker_count(workers);
+
     println!("✅ Queue worker started. Press Ctrl+C to stop.");
     worker.start().await;
-    
+
     Ok(())
 }
 
 pub async fn queue_list() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Queue Statistics\n");
-    
+
     // Initialize queue
     let queue = Queue::memory();
     let stats = queue.get_stats().await;
-    
+
     print_stats(&stats);
-    
+
     Ok(())
 }
 
 pub async fn queue_dlq() -> Result<(), Box<dyn std::error::Error>> {
     println!("💀 Dead Letter Queue\n");
-    
+
     // Initialize queue
     let queue = Queue::memory();
     let dlq_jobs = queue.list_dead_letter().await?;
-    
+
     if dlq_jobs.is_empty() {
         println!("✨ No jobs in dead letter queue");
     } else {
@@ -43,21 +42,24 @@ pub async fn queue_dlq() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}. Job ID: {}", i + 1, job.id);
             println!("   Name: {}", job.name);
             println!("   Attempts: {}", job.attempts);
-            println!("   Error: {}", job.error.as_ref().unwrap_or(&"Unknown".to_string()));
+            println!(
+                "   Error: {}",
+                job.error.as_ref().unwrap_or(&"Unknown".to_string())
+            );
             println!();
         }
     }
-    
+
     Ok(())
 }
 
 pub async fn queue_clear() -> Result<(), Box<dyn std::error::Error>> {
     print!("⚠️  Are you sure you want to clear all pending jobs? (y/N): ");
     io::stdout().flush()?;
-    
+
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
-    
+
     if input.trim().to_lowercase() == "y" {
         println!("🗑️  Clearing queue...");
         let queue = Queue::memory();
@@ -66,7 +68,7 @@ pub async fn queue_clear() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("❌ Cancelled");
     }
-    
+
     Ok(())
 }
 

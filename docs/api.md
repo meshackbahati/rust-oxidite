@@ -430,13 +430,13 @@ oxidite new my-fullstack --project-type fullstack
 
 ```bash
 # Generate model
-oxidite make model User
+oxidite generate model User
 
 # Generate controller
-oxidite make controller UserController
+oxidite generate controller UserController
 
 # Generate middleware
-oxidite make middleware AuthMiddleware
+oxidite generate middleware AuthMiddleware
 ```
 
 ### Database Operations

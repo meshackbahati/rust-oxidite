@@ -5,16 +5,36 @@ pub fn load_database_url() -> Result<String, Box<dyn std::error::Error>> {
 
     if let Ok(url) = env::var("DATABASE_URL") {
         if !url.trim().is_empty() {
-            return Ok(url);
+            return Ok(normalize_database_url(&url));
         }
     }
 
     let config = Config::load()?;
     if !config.database.url.trim().is_empty() {
-        return Ok(config.database.url.clone());
+        return Ok(normalize_database_url(&config.database.url));
     }
 
-    Ok("sqlite://data.db".to_string())
+    Ok("sqlite://./data.db".to_string())
+}
+
+fn normalize_database_url(url: &str) -> String {
+    if let Some(path_and_query) = url.strip_prefix("sqlite://") {
+        if path_and_query.starts_with('/')
+            || path_and_query.starts_with("./")
+            || path_and_query.starts_with("../")
+            || path_and_query.is_empty()
+        {
+            return url.to_string();
+        }
+
+        if let Some((path, query)) = path_and_query.split_once('?') {
+            return format!("sqlite://./{path}?{query}");
+        }
+
+        return format!("sqlite://./{path_and_query}");
+    }
+
+    url.to_string()
 }
 
 pub async fn execute_sql_script(
@@ -115,7 +135,7 @@ pub fn split_sql_statements(script: &str) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::split_sql_statements;
+    use super::{normalize_database_url, split_sql_statements};
 
     #[test]
     fn splitter_handles_semicolons_in_strings() {
@@ -135,5 +155,25 @@ mod tests {
         assert_eq!(statements.len(), 2);
         assert!(statements[0].starts_with("CREATE TABLE users"));
         assert!(statements[1].starts_with("INSERT INTO users"));
+    }
+
+    #[test]
+    fn normalizes_relative_sqlite_file_urls() {
+        assert_eq!(
+            normalize_database_url("sqlite://data.db"),
+            "sqlite://./data.db"
+        );
+        assert_eq!(
+            normalize_database_url("sqlite://db/app.db?mode=rwc"),
+            "sqlite://./db/app.db?mode=rwc"
+        );
+        assert_eq!(
+            normalize_database_url("sqlite:///tmp/data.db"),
+            "sqlite:///tmp/data.db"
+        );
+        assert_eq!(
+            normalize_database_url("postgres://localhost/app"),
+            "postgres://localhost/app"
+        );
     }
 }
