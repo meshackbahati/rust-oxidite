@@ -3,12 +3,12 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Performance - Oxidite Documentation</title>
+        <title>Performance | Oxidite v2.2</title>
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="Benchmarks, profiling, and optimization techniques for Oxidite applications.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -264,17 +264,16 @@ async fn preprocessing_middleware(req: Request, next: Next) -&gt; Result&lt;Resp
 use serde::{Deserialize, Serialize};
 
 // Optimized model with proper indexing hints
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "optimized_users")]
 pub struct OptimizedUser {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     #[model(unique, not_null, indexed)]  // Add index hint
     pub email: String,
     #[model(not_null, indexed)]         // Add index hint
     pub name: String,
     #[model(indexed)]                   // Add index hint
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 // Batch operations for better performance

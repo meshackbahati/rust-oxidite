@@ -60,6 +60,15 @@ enum Commands {
         #[command(subcommand)]
         migration: Option<MigrateCommand>,
     },
+    /// Generate a declarative migration by diffing models with current schema
+    #[command(name = "make-migrations")]
+    MakeMigrations {
+        /// Name of the migration
+        name: Option<String>,
+        /// Dry run: show SQL without writing files
+        #[arg(long)]
+        dry_run: bool,
+    },
     /// Roll back the last migration using the documented alias
     #[command(name = "migrate:rollback", hide = true)]
     MigrateRollback,
@@ -125,6 +134,8 @@ enum Commands {
     },
     /// Print the installed CLI version
     Version,
+    /// Open an interactive console (REPL) for your project
+    Tinker,
 }
 
 #[derive(Subcommand)]
@@ -167,6 +178,15 @@ enum MigrateCommand {
     Revert,
     /// Show migration status
     Status,
+    /// Generate a declarative migration
+    #[command(name = "make")]
+    Make {
+        /// Name of the migration
+        name: Option<String>,
+        /// Dry run
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -235,7 +255,16 @@ async fn main() -> Result<()> {
                 MigrateCommand::Status => commands::migrate::migration_status()
                     .await
                     .map_err(|err| Error::InternalServerError(err.to_string()))?,
+                MigrateCommand::Make { name, dry_run } => commands::migrate::declarative::make_migrations(name, dry_run)
+                    .await
+                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
             }
+            Ok(())
+        }
+        Commands::MakeMigrations { name, dry_run } => {
+            commands::migrate::declarative::make_migrations(name, dry_run)
+                .await
+                .map_err(|err| Error::InternalServerError(err.to_string()))?;
             Ok(())
         }
         Commands::MigrateRollback => {
@@ -326,6 +355,11 @@ async fn main() -> Result<()> {
         }
         Commands::Version => {
             println!("oxidite {}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
+        Commands::Tinker => {
+            commands::tinker::run_tinker()
+                .map_err(|err| Error::InternalServerError(err.to_string()))?;
             Ok(())
         }
     }

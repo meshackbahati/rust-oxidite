@@ -14,6 +14,81 @@ pub use validation::{FileValidator, ValidationRules};
 #[cfg(feature = "s3")]
 pub use s3::S3Storage;
 
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use once_cell::sync::Lazy;
+
+/// Global storage manager instance
+pub static STORAGE: Lazy<StorageManager> = Lazy::new(|| StorageManager::new());
+
+/// The Storage Facade for static access
+pub struct StorageFacade;
+
+impl StorageFacade {
+    /// Get a specific disk by name
+    pub async fn disk(name: &str) -> Option<Arc<dyn Storage>> {
+        STORAGE.disk(name).await
+    }
+    
+    /// Get the default disk
+    pub async fn default() -> Result<Arc<dyn Storage>> {
+        STORAGE.default_disk().await.ok_or_else(|| StorageError::Other("Default disk not found".to_string()))
+    }
+
+    /// Store a file using the default disk
+    pub async fn put(path: &str, data: Bytes) -> Result<StoredFile> {
+        Self::default().await?.put(path, data).await
+    }
+    
+    /// Retrieve a file using the default disk
+    pub async fn get(path: &str) -> Result<Bytes> {
+        Self::default().await?.get(path).await
+    }
+    
+    /// Delete a file using the default disk
+    pub async fn delete(path: &str) -> Result<()> {
+        Self::default().await?.delete(path).await
+    }
+    
+    /// Check if file exists on default disk
+    pub async fn exists(path: &str) -> Result<bool> {
+        Self::default().await?.exists(path).await
+    }
+}
+
+/// Manager for configuring different storage backends
+pub struct StorageManager {
+    backends: RwLock<HashMap<String, Arc<dyn Storage>>>,
+    default_disk: RwLock<String>,
+}
+
+impl StorageManager {
+    pub fn new() -> Self {
+        Self {
+            backends: RwLock::new(HashMap::new()),
+            default_disk: RwLock::new("local".to_string()),
+        }
+    }
+    
+    pub async fn add_disk(&self, name: &str, backend: Arc<dyn Storage>) {
+        self.backends.write().await.insert(name.to_string(), backend);
+    }
+    
+    pub async fn set_default(&self, name: &str) {
+        *self.default_disk.write().await = name.to_string();
+    }
+    
+    pub async fn disk(&self, name: &str) -> Option<Arc<dyn Storage>> {
+        self.backends.read().await.get(name).cloned()
+    }
+    
+    pub async fn default_disk(&self) -> Option<Arc<dyn Storage>> {
+        let name = self.default_disk.read().await.clone();
+        self.disk(&name).await
+    }
+}
+
 /// Storage trait for file operations
 #[async_trait]
 pub trait Storage: Send + Sync {

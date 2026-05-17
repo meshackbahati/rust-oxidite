@@ -9,7 +9,7 @@ A modern, high-performance web framework for Rust, inspired by FastAPI, Express.
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 [![GitHub](https://img.shields.io/badge/github-Kyle6012%2Frust--oxidite-black)](https://github.com/Kyle6012/rust-oxidite)
-[![Status](https://img.shields.io/badge/status-stable-green.svg)](../STATUS.md)
+[![Status](https://img.shields.io/badge/status-beta-yellow.svg)](../STATUS.md)
 
 Built with ❤️ by [Meshack Bahati Ouma](https://github.com/Kyle6012)
 
@@ -19,22 +19,33 @@ Built with ❤️ by [Meshack Bahati Ouma](https://github.com/Kyle6012)
 
 ## 🚀 What is Oxidite?
 
-Oxidite is a batteries-included web framework that combines Rust's performance with developer-friendly APIs. It provides a complete ecosystem for building scalable web applications, from REST APIs to fullstack server-side rendered apps.
+Oxidite is a modern, high-performance, developer-first web framework for Rust that provides a Rails-like, batteries-included experience. Built on top of the lightning-fast `hyper` and `tokio` asynchronous runtimes, it eliminates boilerplates by providing first-class identity & access management, a fully-featured custom ORM with async validation and eager-loading, a unified cloud/local storage manager, durable background queues, interactive REPL (`oxidite tinker`), hot-reload dev servers, and beautiful diagnostic pages. Oxidite is designed to provide maximum velocity and system-level performance, without compromising on developer ergonomics.
 
-## ✨ Key Features
+## ✨ What's Included
 
-- **⚡ High Performance**: Built on `hyper` and `tokio` for blazing speed
-- **🗄️ Advanced ORM**: Complete database layer with relationships, soft deletes, validation
-- **🛠️ Powerful CLI**: Scaffolding, migrations, hot-reload dev server, code generators
-- **🔋 Batteries Included**: RBAC/PBAC, API Keys, Queues, Caching, Email, Storage
-- **🔐 Enterprise Security**: Password hashing, JWT, OAuth2, 2FA, rate limiting
-- **🎨 Template Engine**: Jinja2-style templates with inheritance and auto-escaping
-- **🔄 Real-time**: WebSockets and Redis pub/sub support
-- **📝 Type-Safe**: Strong typing for requests, responses, and database queries
-- **📊 Auto-Documentation**: OpenAPI/Swagger UI generation
-- **🔧 Enhanced Extractors**: Form, Cookies, Body extractors for comprehensive request handling
-- **📈 API Versioning**: Support for URL, header, and query parameter versioning
-- **🐛 Comprehensive Error Handling**: Specific HTTP status codes and detailed error messages
+Oxidite provides a complete out-of-the-box toolkit for modern application development:
+- **`oxidite-core`**: High-performance routing, hyper HTTP server, and type-safe extractors (`Json`, `Path`, `Query`, `State`, `Form`, `Cookies`, `Body`).
+- **`oxidite-db`**: Advanced custom ORM featuring async validation rules (`length`, `range`, `email`, `url`, `regex`, `custom`, `unique`), relationships (`has_many`, `has_one`, `belongs_to`), and auto-diff schema migrations.
+- **`oxidite-auth`**: End-to-end Identity & Access Management supporting RBAC/PBAC, API keys, JWT session handling, and OAuth2 integration.
+- **`oxidite-realtime`**: Full-duplex WebSockets, Server-Sent Events (SSE), and Redis-backed event broadcasting.
+- **`oxidite-queue`**: Durable background job execution with automatic retries and dead-letter queues.
+- **`oxidite-cache`**: Transparent caching supporting in-memory and Redis backends.
+- **`oxidite-storage`**: Unified storage API with local disk and AWS S3/Cloudinary/ImageKit compatibility.
+- **`oxidite-template`**: Lightweight server-side rendering (SSR) templates.
+- **`oxidite-openapi`**: Automatic Swagger UI/OpenAPI 3.0 document generation.
+- **`oxidite-cli`**: Command-line scaffolding, migrations, code generators, and `oxidite tinker` interactive console.
+
+### 🗄️ Our ORM Goal: Parity with SeaORM & Diesel
+
+We designed our built-in ORM to match the ergonomics, power, and safety of the ecosystem's industry-standard libraries like **SeaORM** and **Diesel**:
+- **Compile-Time Checks**: Using our procedural macros and `handler_fn` route helper, handler extractor bindings and model queries are verified at compile time.
+- **Solve the N+1 Problem**: Prevents N+1 database queries with static eager-loading helper methods (`eager_load_posts`, `eager_load_profile`) that execute batched SQL `IN` queries.
+- **Auto-Diff Migrations**: Eliminate manually written SQL migration scripts. Oxidite's CLI parses and diffs your Rust struct models against the live database schema to generate migrations automatically.
+
+### ⚡ Honest Benchmarks Notice
+
+**We currently do not have public benchmarks.**
+While Oxidite leverages `hyper` and `tokio` to achieve very high performance, we prioritised completing the unified framework ecosystem first. Detailed performance profiles (RPS, latency, memory usage) comparing Oxidite against Axum, Actix Web, and Loco will be published in future releases.
 
 > **Status**: See [STATUS.md](../STATUS.md) for detailed feature completeness
 

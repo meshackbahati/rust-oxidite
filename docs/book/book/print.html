@@ -3,13 +3,13 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Oxidite Documentation</title>
+        <title>Printable Version | Oxidite v2.2</title>
         <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="Print-friendly version of the complete Oxidite documentation.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -241,7 +241,7 @@ cargo install --path oxidite-cli
 cargo install oxidite-cli
 
 # Or pin this generated CLI build
-cargo install oxidite-cli --version 2.1.0-gen
+cargo install oxidite-cli --version 2.2.0
 </code></pre>
 <h2 id="creating-your-first-project"><a class="header" href="#creating-your-first-project">Creating Your First Project</a></h2>
 <p>Once you have the CLI installed, create a new project:</p>
@@ -253,7 +253,7 @@ oxidite --version
 <h2 id="manual-installation"><a class="header" href="#manual-installation">Manual Installation</a></h2>
 <p>If you prefer to add Oxidite to an existing project manually, add it to your <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[dependencies]
-oxidite = { version = "2.1", features = ["full"] }
+oxidite = { version = "2.2", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 </code></pre>
@@ -590,7 +590,7 @@ async fn main() -&gt; Result&lt;()&gt; {
 <li>Create a new Rust project: <code>cargo new hello-oxidite</code></li>
 <li>Add Oxidite to your <code>Cargo.toml</code>:
 <pre><code class="language-toml">[dependencies]
-oxidite = { version = "2.1", features = ["full"] }
+oxidite = { version = "2.2", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -2609,27 +2609,18 @@ async fn with_rate_limit() -&gt; Result&lt;()&gt; {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-    #[model(default = "false")]
+    pub created_at: i64,
+    pub updated_at: i64,
     pub active: bool,
 }
 
-// Helper function for default timestamp
-fn now() -&gt; String {
-    chrono::Utc::now().to_rfc3339()
-}</code></pre>
+// Timestamps (created_at, updated_at) are automatically set by the Model derive macro.</code></pre>
 <h2 id="basic-crud-operations"><a class="header" href="#basic-crud-operations">Basic CRUD Operations</a></h2>
 <h3 id="creating-records"><a class="header" href="#creating-records">Creating Records</a></h3>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
@@ -2639,12 +2630,12 @@ async fn create_user() -&gt; Result&lt;()&gt; {
         id: 0, // Will be auto-generated
         email: "john@example.com".to_string(),
         name: "John Doe".to_string(),
-        created_at: now(),
-        updated_at: now(),
+        created_at: 0, // Auto-set by Model derive
+        updated_at: 0, // Auto-set by Model derive
         active: true,
     };
     
-    let saved_user = user.save().await?;
+    let saved_user = user.save(&amp;db).await?;
     println!("Created user with ID: {}", saved_user.id);
     
     Ok(())
@@ -2656,8 +2647,8 @@ async fn create_user_alternative() -&gt; Result&lt;()&gt; {
         id: 0,
         email: "jane@example.com".to_string(),
         name: "Jane Smith".to_string(),
-        created_at: now(),
-        updated_at: now(),
+        created_at: 0, // Auto-set by Model derive
+        updated_at: 0, // Auto-set by Model derive
         active: true,
     }).await?;
     
@@ -2667,29 +2658,29 @@ async fn create_user_alternative() -&gt; Result&lt;()&gt; {
 <h3 id="reading-records"><a class="header" href="#reading-records">Reading Records</a></h3>
 <pre><code class="language-rust ignore">async fn find_users() -&gt; Result&lt;()&gt; {
     // Find all users
-    let all_users = User::find_all().await?;
+    let all_users = User::all(&amp;db).await?;
     println!("Found {} users", all_users.len());
     
     // Find user by ID
-    if let Some(user) = User::find_by_id(1).await? {
+    if let Some(user) = User::find(&amp;db, 1).await? {
         println!("Found user: {}", user.name);
     } else {
         println!("User not found");
     }
     
     // Find users with conditions (simplified example)
-    let active_users = User::find_where("active = true").await?;
+    let active_users = User::query().filter_eq("active = true").await?;
     println!("Found {} active users", active_users.len());
     
     Ok(())
 }</code></pre>
 <h3 id="updating-records"><a class="header" href="#updating-records">Updating Records</a></h3>
 <pre><code class="language-rust ignore">async fn update_user() -&gt; Result&lt;()&gt; {
-    if let Some(mut user) = User::find_by_id(1).await? {
+    if let Some(mut user) = User::find(&amp;db, 1).await? {
         user.name = "John Updated".to_string();
         user.updated_at = now();
         
-        let updated_user = user.save().await?;
+        let updated_user = user.save(&amp;db).await?;
         println!("Updated user: {}", updated_user.name);
     }
     
@@ -2708,8 +2699,8 @@ async fn bulk_update() -&gt; Result&lt;()&gt; {
 }</code></pre>
 <h3 id="deleting-records"><a class="header" href="#deleting-records">Deleting Records</a></h3>
 <pre><code class="language-rust ignore">async fn delete_user() -&gt; Result&lt;()&gt; {
-    if let Some(user) = User::find_by_id(1).await? {
-        user.delete().await?;
+    if let Some(user) = User::find(&amp;db, 1).await? {
+        user.delete(&amp;db).await?;
         println!("Deleted user: {}", user.name);
     }
     
@@ -2727,54 +2718,44 @@ async fn bulk_delete() -&gt; Result&lt;()&gt; {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "posts")]
 pub struct Post {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub content: String,
-    pub user_id: i32,  // Foreign key
-    #[model(created_at)]
-    pub created_at: String,
+    pub user_id: i64,  // Foreign key
+    pub created_at: i64,
 }
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "comments")]
 pub struct Comment {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub content: String,
-    pub user_id: i32,   // Foreign key
-    pub post_id: i32,  // Foreign key
-    #[model(created_at)]
-    pub created_at: String,
+    pub user_id: i64,   // Foreign key
+    pub post_id: i64,  // Foreign key
+    pub created_at: i64,
 }
 
 // Update User model to include relationships
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-    #[model(default = "false")]
+    pub created_at: i64,
+    pub updated_at: i64,
     pub active: bool,
 }
 
 // Access related records
 async fn work_with_relationships() -&gt; Result&lt;()&gt; {
     // Find a user
-    if let Some(user) = User::find_by_id(1).await? {
+    if let Some(user) = User::find(&amp;db, 1).await? {
         // Find user's posts
-        let posts = Post::find_where(&amp;format!("user_id = {}", user.id)).await?;
+        let posts = Post::query().filter_eq(&amp;format!("user_id = {}", user.id)).await?;
         println!("User {} has {} posts", user.name, posts.len());
         
         // Find user's comments
@@ -2790,11 +2771,11 @@ async fn work_with_relationships() -&gt; Result&lt;()&gt; {
 
 async fn complex_queries() -&gt; Result&lt;()&gt; {
     // Find users with custom conditions
-    let users = User::find_where("name LIKE '%John%' AND active = true").await?;
+    let users = User::query().filter_eq("name LIKE '%John%' AND active = true").await?;
     println!("Found {} users matching criteria", users.len());
     
     // Find with ordering
-    let recent_users = User::find_where("active = true")
+    let recent_users = User::query().filter_eq("active = true")
         .order_by("created_at DESC")
         .limit(10)
         .await?;
@@ -2881,21 +2862,15 @@ impl Migration for CreatePostsTable {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct ValidatedUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(validate = "validate_age")]
     pub age: u8,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
 impl ValidatedUser {
@@ -2935,11 +2910,11 @@ async fn transaction_example() -&gt; Result&lt;()&gt; {
             id: 0,
             email: "transaction@example.com".to_string(),
             name: "Transaction User".to_string(),
-            created_at: now(),
-            updated_at: now(),
+            created_at: 0, // Auto-set by Model derive
+            updated_at: 0, // Auto-set by Model derive
             active: true,
         };
-        let saved_user = user.save().await?;
+        let saved_user = user.save(&amp;db).await?;
         
         // Create a post for the user
         let post = Post {
@@ -2947,9 +2922,9 @@ async fn transaction_example() -&gt; Result&lt;()&gt; {
             title: "First Post".to_string(),
             content: "Hello, world!".to_string(),
             user_id: saved_user.id,
-            created_at: now(),
+            created_at: 0, // Auto-set by Model derive
         };
-        post.save().await?;
+        post.save(&amp;db).await?;
         
         Ok::&lt;_, Error&gt;(saved_user.id)
     }.await {
@@ -2990,33 +2965,27 @@ impl Transaction {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
-#[model(table = "soft_delete_users", soft_delete = true)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
+#[model(table = "soft_delete_users")]
 pub struct SoftDeleteUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(deleted_at)]  // Special field for soft deletes
-    pub deleted_at: Option&lt;String&gt;,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
+    pub deleted_at: Option&lt;i64&gt;,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
 async fn soft_delete_example() -&gt; Result&lt;()&gt; {
     // Find all users (includes soft-deleted ones)
-    let all_users = SoftDeleteUser::find_all_with_deleted().await?;
+    let all_users = SoftDeleteUser::query().with_deleted().fetch_all(&amp;db).await?;
     
     // Find only active users (excludes soft-deleted ones)
-    let active_users = SoftDeleteUser::find_all().await?;
+    let active_users = SoftDeleteUser::all(&amp;db).await?;
     
     // Soft delete a user
-    if let Some(mut user) = SoftDeleteUser::find_by_id(1).await? {
-        user.delete().await?;  // This sets deleted_at instead of removing the record
+    if let Some(mut user) = SoftDeleteUser::find(&amp;db, 1).await? {
+        user.delete(&amp;db).await?;  // This sets deleted_at instead of removing the record
         println!("User soft-deleted");
     }
     
@@ -3061,7 +3030,7 @@ async fn init_database(_config: DatabaseConfig) -&gt; Result&lt;()&gt; {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 
 async fn error_handling_example() -&gt; Result&lt;()&gt; {
-    match User::find_by_id(999999).await {
+    match User::find(&amp;db, 999999).await {
         Ok(Some(user)) =&gt; {
             println!("Found user: {}", user.name);
         }
@@ -4458,14 +4427,10 @@ use serde::Deserialize;
 #[derive(Model, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 fn now() -&gt; String {
@@ -4478,20 +4443,20 @@ async fn user_operations() -&gt; Result&lt;()&gt; {
         id: 0,
         email: "john@example.com".to_string(),
         name: "John Doe".to_string(),
-        created_at: now(),
+        created_at: 0, // Auto-set by Model derive
     };
-    let saved_user = user.save().await?;
+    let saved_user = user.save(&amp;db).await?;
     
     // Read
-    let users = User::find_all().await?;
+    let users = User::all(&amp;db).await?;
     
     // Update
     let mut user = saved_user;
     user.name = "John Updated".to_string();
-    user.save().await?;
+    user.save(&amp;db).await?;
     
     // Delete
-    user.delete().await?;
+    user.delete(&amp;db).await?;
     
     Ok(())
 }</code></pre>
@@ -7341,7 +7306,7 @@ async fn feature_flagged_handler(
 cargo install oxidite-cli
 
 # Install this generated build explicitly
-cargo install oxidite-cli --version 2.1.0-gen
+cargo install oxidite-cli --version 2.2.0
 
 # Install from the workspace checkout
 cargo install --path oxidite-cli
@@ -7791,14 +7756,11 @@ mod middleware_tests {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "test_users")]
 pub struct TestUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
 }
 
@@ -7832,7 +7794,7 @@ mod database_tests {
         assert!(!saved_user.id == 0);
 
         // Test read
-        let found_user = TestUser::find_by_id(saved_user.id).await.unwrap().unwrap();
+        let found_user = TestUser::find(&amp;db, saved_user.id).await.unwrap().unwrap();
         assert_eq!(found_user.email, "test@example.com");
         assert_eq!(found_user.name, "Test User");
 
@@ -7844,7 +7806,7 @@ mod database_tests {
 
         // Test delete
         updated_user.delete().await.unwrap();
-        let deleted_user = TestUser::find_by_id(updated_user.id).await.unwrap();
+        let deleted_user = TestUser::find(&amp;db, updated_user.id).await.unwrap();
         assert!(deleted_user.is_none());
 
         teardown_test_db().await.unwrap();
@@ -8043,24 +8005,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Model, Serialize, Deserialize, Clone)]
 #[model(table = "test_posts")]
 pub struct TestPost {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub title: String,
-    #[model(not_null)]
     pub content: String,
-    pub user_id: i32,
+    pub user_id: i64,
 }
 
 #[derive(Model, Serialize, Deserialize, Clone)]
 #[model(table = "test_comments")]
 pub struct TestComment {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub content: String,
-    pub post_id: i32,
-    pub user_id: i32,
+    pub post_id: i64,
+    pub user_id: i64,
 }
 
 // Test factory for creating test data
@@ -10111,31 +10068,23 @@ use serde::{Deserialize, Serialize};
 #[model(table = "graphql_users")]
 #[graphql(description = "A user in the system")]
 pub struct GraphqlUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub name: String,
-    #[model(unique, not_null)]
     pub email: String,
     pub age: i32,
-    #[model(created_at)]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 #[derive(Model, Serialize, Deserialize, juniper::GraphQLObject)]
 #[model(table = "graphql_posts")]
 #[graphql(description = "A blog post")]
 pub struct GraphqlPost {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub title: String,
-    #[model(not_null)]
     pub content: String,
     pub author_id: i32,
     pub published: bool,
-    #[model(created_at)]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 // Enhanced context with database access
@@ -10151,7 +10100,7 @@ impl DbQueryRoot {
     /// Get a user by ID
     async fn user(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
         // In a real app, fetch from database
-        let user = GraphqlUser::find_by_id(id).await
+        let user = GraphqlUser::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(user)
@@ -10159,7 +10108,7 @@ impl DbQueryRoot {
     
     /// Get all users
     async fn users(context: &amp;DatabaseContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
-        let users = GraphqlUser::find_all().await
+        let users = GraphqlUser::all(&amp;db).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(users)
@@ -10167,7 +10116,7 @@ impl DbQueryRoot {
     
     /// Get a post by ID
     async fn post(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
-        let post = GraphqlPost::find_by_id(id).await
+        let post = GraphqlPost::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(post)
@@ -10178,7 +10127,7 @@ impl DbQueryRoot {
         author_id: i32,
         context: &amp;DatabaseContext
     ) -&gt; FieldResult&lt;Vec&lt;GraphqlPost&gt;&gt; {
-        let posts = GraphqlPost::find_where(&amp;format!("author_id = {}", author_id)).await
+        let posts = GraphqlPost::query().filter_eq(&amp;format!("author_id = {}", author_id)).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(posts)
@@ -10219,7 +10168,7 @@ impl DbMutationRoot {
         age: Option&lt;i32&gt;,
         context: &amp;DatabaseContext,
     ) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
-        if let Some(mut user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+        if let Some(mut user) = GraphqlUser::find(&amp;db, id).await.map_err(|e| {
             juniper::FieldError::new(e.to_string(), juniper::Value::null())
         })? {
             if let Some(new_name) = name {
@@ -10246,7 +10195,7 @@ impl DbMutationRoot {
         id: i32,
         context: &amp;DatabaseContext,
     ) -&gt; FieldResult&lt;bool&gt; {
-        if let Some(user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+        if let Some(user) = GraphqlUser::find(&amp;db, id).await.map_err(|e| {
             juniper::FieldError::new(e.to_string(), juniper::Value::null())
         })? {
             user.delete().await
@@ -10292,7 +10241,7 @@ impl SecuredQueryRoot {
     async fn users(context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
         match &amp;context.user {
             Some(user) if is_admin_user(user) =&gt; {
-                GraphqlUser::find_all().await
+                GraphqlUser::all(&amp;db).await
                     .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
             }
             Some(_) =&gt; Err(juniper::FieldError::new(
@@ -10309,7 +10258,7 @@ impl SecuredQueryRoot {
     /// Get user by ID (public endpoint)
     async fn user(id: i32, context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
         // Anyone can view user profiles
-        GraphqlUser::find_by_id(id).await
+        GraphqlUser::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
     }
 }
@@ -10356,7 +10305,7 @@ impl SecuredMutationRoot {
     ) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
         match &amp;context.user {
             Some(current_user) =&gt; {
-                if let Some(mut post) = GraphqlPost::find_by_id(id).await
+                if let Some(mut post) = GraphqlPost::find(&amp;db, id).await
                     .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?
                 {
                     // Check if current user is the author
@@ -10412,7 +10361,7 @@ async fn graphql_auth_middleware(
             // Verify token and get user
             if let Ok(user_id) = verify_jwt_token(token).await {
                 // Fetch user from database
-                if let Ok(Some(user)) = GraphqlUser::find_by_id(user_id).await {
+                if let Ok(Some(user)) = GraphqlUser::find(&amp;db, user_id).await {
                     context.user = Some(user);
                 }
             }
@@ -13145,17 +13094,16 @@ async fn preprocessing_middleware(req: Request, next: Next) -&gt; Result&lt;Resp
 use serde::{Deserialize, Serialize};
 
 // Optimized model with proper indexing hints
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "optimized_users")]
 pub struct OptimizedUser {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     #[model(unique, not_null, indexed)]  // Add index hint
     pub email: String,
     #[model(not_null, indexed)]         // Add index hint
     pub name: String,
     #[model(indexed)]                   // Add index hint
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 // Batch operations for better performance

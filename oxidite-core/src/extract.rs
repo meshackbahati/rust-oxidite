@@ -1,6 +1,7 @@
 use crate::error::{Error, Result};
-use crate::types::OxiditeRequest;
+use crate::types::{OxiditeRequest, OxiditeResponse as Response};
 use serde::de::DeserializeOwned;
+use http_body_util::BodyExt;
 
 /// Extract typed path parameters from the request
 ///
@@ -121,11 +122,24 @@ pub struct State<T>(pub T);
 
 impl<T: Clone + Send + Sync + 'static> FromRequest for State<T> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
-        req.extensions()
-            .get::<T>()
-            .cloned()
-            .map(State)
-            .ok_or_else(|| Error::InternalServerError("Application state not found in request extensions".to_string()))
+        // 1. Check direct request extensions
+        if let Some(state) = req.extensions().get::<T>() {
+            return Ok(State(state.clone()));
+        }
+
+        // 2. Check global router extensions
+        if let Some(router_exts) = req.extensions().get::<std::sync::Arc<std::sync::RwLock<http::Extensions>>>() {
+            if let Ok(exts) = router_exts.read() {
+                if let Some(state) = exts.get::<T>() {
+                    return Ok(State(state.clone()));
+                }
+            }
+        }
+
+        Err(Error::InternalServerError(format!(
+            "Application state of type {} not found in request or router extensions",
+            std::any::type_name::<T>()
+        )))
     }
 }
 
@@ -253,6 +267,7 @@ impl FromRequest for Body<String> {
     }
 }
 
+/// Extract raw request body as Vec<u8>
 impl FromRequest for Body<Vec<u8>> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         use http_body_util::BodyExt;
@@ -263,5 +278,59 @@ impl FromRequest for Body<Vec<u8>> {
             .to_bytes();
         
         Ok(Body(bytes.to_vec()))
+    }
+}
+
+/// Extractor for WebSocket upgrade requests
+///
+/// # Example
+/// ```ignore
+/// async fn ws_handler(ws: WebSocketUpgrade) -> Result<Response> {
+///     Ok(ws.on_upgrade(|socket| async move {
+///         // use socket
+///     }))
+/// }
+/// ```
+pub struct WebSocketUpgrade {
+    pub key: String,
+}
+
+impl WebSocketUpgrade {
+    /// Create the required 101 Switching Protocols response for the upgrade
+    pub fn response(&self) -> Response {
+        use sha1::{Sha1, Digest};
+        use base64::{Engine as _, engine::general_purpose};
+        
+        let mut hasher = Sha1::new();
+        hasher.update(self.key.as_bytes());
+        hasher.update(b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
+        let accept = general_purpose::STANDARD.encode(hasher.finalize());
+
+        let res = http::Response::builder()
+            .status(http::StatusCode::SWITCHING_PROTOCOLS)
+            .header(http::header::UPGRADE, "websocket")
+            .header(http::header::CONNECTION, "upgrade")
+            .header(http::header::SEC_WEBSOCKET_ACCEPT, accept)
+            .body(crate::types::BoxBody::new(http_body_util::Empty::new().map_err(|e| match e {}).boxed()))
+            .unwrap();
+            
+        Response::new(res)
+    }
+}
+
+impl FromRequest for WebSocketUpgrade {
+    async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
+        let headers = req.headers();
+        let upgrade = headers.get(http::header::UPGRADE).and_then(|h| h.to_str().ok());
+        let _connection = headers.get(http::header::CONNECTION).and_then(|h| h.to_str().ok());
+        let key = headers.get(http::header::SEC_WEBSOCKET_KEY).and_then(|h| h.to_str().ok());
+
+        if upgrade == Some("websocket") && key.is_some() {
+            Ok(WebSocketUpgrade {
+                key: key.unwrap().to_string(),
+            })
+        } else {
+            Err(Error::BadRequest("Expected WebSocket upgrade".to_string()))
+        }
     }
 }

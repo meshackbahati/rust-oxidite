@@ -1,3 +1,5 @@
+extern crate oxidite_db as oxidite;
+
 use oxidite_db::Model;
 use sqlx::FromRow;
 

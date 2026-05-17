@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-macros"
-version = "2.1.0"
+version = "2.2.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Procedural macros for the Oxidite web framework (Model derive, etc.)"
@@ -19,5 +19,5 @@ proc-macro2 = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"
-oxidite-db = { path = "../oxidite-db" }
+oxidite-db = { path = "../oxidite-db", version = "2.2.0" }
 sqlx = { version = "0.8.2", features = ["macros", "any"] }

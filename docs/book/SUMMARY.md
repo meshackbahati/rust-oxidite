@@ -26,6 +26,7 @@
 - [Authentication](./authentication.md)
 - [Templates](./templates.md)
 - [Features](./features.md)
+- [File Storage](./storage.md)
 - [Background Jobs](./jobs.md)
 - [Real-time Features](./realtime.md)
 - [Observability](./observability.md)
@@ -35,8 +36,8 @@
 
 - [CLI Tools](./cli.md)
 - [Testing](./testing.md)
-- [Plugins](./plugins.md)
-- [GraphQL](./graphql.md)
+- [OpenAPI & Swagger UI](./openapi.md)
+- [Plugins & Extensions](./plugins.md)
 - [Subcrate Reference Overview](./subcrates/overview.md)
 - [Core Stack Crates](./subcrates/core-stack.md)
 - [Data and State Crates](./subcrates/data-stack.md)

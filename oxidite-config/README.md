@@ -6,7 +6,7 @@ Configuration management for Oxidite applications.
 
 ```toml
 [dependencies]
-oxidite-config = "2.1.0"
+oxidite-config = "2.2.0"
 ```
 
 ## Usage

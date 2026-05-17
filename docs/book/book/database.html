@@ -3,12 +3,12 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Database ORM - Oxidite Documentation</title>
+        <title>Database ORM | Oxidite v2.2</title>
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="Define models with derive macros, run SQL migrations, use ModelQuery for type-safe queries, and manage transactions.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -198,27 +198,18 @@
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-    #[model(default = "false")]
+    pub created_at: i64,
+    pub updated_at: i64,
     pub active: bool,
 }
 
-// Helper function for default timestamp
-fn now() -&gt; String {
-    chrono::Utc::now().to_rfc3339()
-}</code></pre>
+// Timestamps (created_at, updated_at) are automatically set by the Model derive macro.</code></pre>
 <h2 id="basic-crud-operations"><a class="header" href="#basic-crud-operations">Basic CRUD Operations</a></h2>
 <h3 id="creating-records"><a class="header" href="#creating-records">Creating Records</a></h3>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
@@ -228,57 +219,59 @@ async fn create_user() -&gt; Result&lt;()&gt; {
         id: 0, // Will be auto-generated
         email: "john@example.com".to_string(),
         name: "John Doe".to_string(),
-        created_at: now(),
-        updated_at: now(),
+        created_at: 0, // Auto-set by Model derive
+        updated_at: 0, // Auto-set by Model derive
         active: true,
     };
     
-    let saved_user = user.save().await?;
-    println!("Created user with ID: {}", saved_user.id);
+    user.save(&amp;db).await?;
+    println!("Created user");
     
     Ok(())
 }
 
-// Alternative: Using create method
-async fn create_user_alternative() -&gt; Result&lt;()&gt; {
-    let user = User::create(User {
+// Alternative: Using create method directly
+async fn create_user_alternative(db: &amp;DbPool) -&gt; oxidite::db::Result&lt;()&gt; {
+    let mut user = User {
         id: 0,
         email: "jane@example.com".to_string(),
         name: "Jane Smith".to_string(),
-        created_at: now(),
-        updated_at: now(),
+        created_at: 0, // Auto-set by Model derive
+        updated_at: 0, // Auto-set by Model derive
         active: true,
-    }).await?;
+    };
+    user.create(db).await?;
     
     println!("Created user: {}", user.name);
     Ok(())
 }</code></pre>
+
 <h3 id="reading-records"><a class="header" href="#reading-records">Reading Records</a></h3>
 <pre><code class="language-rust ignore">async fn find_users() -&gt; Result&lt;()&gt; {
     // Find all users
-    let all_users = User::find_all().await?;
+    let all_users = User::all(&amp;db).await?;
     println!("Found {} users", all_users.len());
     
     // Find user by ID
-    if let Some(user) = User::find_by_id(1).await? {
+    if let Some(user) = User::find(&amp;db, 1).await? {
         println!("Found user: {}", user.name);
     } else {
         println!("User not found");
     }
     
     // Find users with conditions (simplified example)
-    let active_users = User::find_where("active = true").await?;
+    let active_users = User::query().filter_eq("active = true").await?;
     println!("Found {} active users", active_users.len());
     
     Ok(())
 }</code></pre>
 <h3 id="updating-records"><a class="header" href="#updating-records">Updating Records</a></h3>
 <pre><code class="language-rust ignore">async fn update_user() -&gt; Result&lt;()&gt; {
-    if let Some(mut user) = User::find_by_id(1).await? {
+    if let Some(mut user) = User::find(&amp;db, 1).await? {
         user.name = "John Updated".to_string();
         user.updated_at = now();
         
-        let updated_user = user.save().await?;
+        let updated_user = user.save(&amp;db).await?;
         println!("Updated user: {}", updated_user.name);
     }
     
@@ -287,7 +280,8 @@ async fn create_user_alternative() -&gt; Result&lt;()&gt; {
 
 // Bulk update
 async fn bulk_update() -&gt; Result&lt;()&gt; {
-    let updated_count = User::update_where(
+    let updated_count = // Use ModelQuery or raw SQL for bulk operations
+    // 
         "active = false",
         &amp;[("updated_at", &amp;now())]
     ).await?;
@@ -297,8 +291,8 @@ async fn bulk_update() -&gt; Result&lt;()&gt; {
 }</code></pre>
 <h3 id="deleting-records"><a class="header" href="#deleting-records">Deleting Records</a></h3>
 <pre><code class="language-rust ignore">async fn delete_user() -&gt; Result&lt;()&gt; {
-    if let Some(user) = User::find_by_id(1).await? {
-        user.delete().await?;
+    if let Some(user) = User::find(&amp;db, 1).await? {
+        user.delete(&amp;db).await?;
         println!("Deleted user: {}", user.name);
     }
     
@@ -307,7 +301,8 @@ async fn bulk_update() -&gt; Result&lt;()&gt; {
 
 // Bulk delete
 async fn bulk_delete() -&gt; Result&lt;()&gt; {
-    let deleted_count = User::delete_where("created_at &lt; '2023-01-01'").await?;
+    let deleted_count = // Use ModelQuery or raw SQL for bulk operations
+    // "created_at &lt; '2023-01-01'").await?;
     println!("Deleted {} old users", deleted_count);
     Ok(())
 }</code></pre>
@@ -316,58 +311,48 @@ async fn bulk_delete() -&gt; Result&lt;()&gt; {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "posts")]
 pub struct Post {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub content: String,
-    pub user_id: i32,  // Foreign key
-    #[model(created_at)]
-    pub created_at: String,
+    pub user_id: i64,  // Foreign key
+    pub created_at: i64,
 }
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "comments")]
 pub struct Comment {
-    #[model(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub content: String,
-    pub user_id: i32,   // Foreign key
-    pub post_id: i32,  // Foreign key
-    #[model(created_at)]
-    pub created_at: String,
+    pub user_id: i64,   // Foreign key
+    pub post_id: i64,  // Foreign key
+    pub created_at: i64,
 }
 
 // Update User model to include relationships
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-    #[model(default = "false")]
+    pub created_at: i64,
+    pub updated_at: i64,
     pub active: bool,
 }
 
 // Access related records
 async fn work_with_relationships() -&gt; Result&lt;()&gt; {
     // Find a user
-    if let Some(user) = User::find_by_id(1).await? {
+    if let Some(user) = User::find(&amp;db, 1).await? {
         // Find user's posts
-        let posts = Post::find_where(&amp;format!("user_id = {}", user.id)).await?;
+        let posts = Post::query().filter_eq("user_id", user.id).fetch_all(&amp;db).await?;
         println!("User {} has {} posts", user.name, posts.len());
         
         // Find user's comments
-        let comments = Comment::find_where(&amp;format!("user_id = {}", user.id)).await?;
+        let comments = Comment::query().filter_eq("user_id", user.id).fetch_all(&amp;db).await?;
         println!("User {} has {} comments", user.name, comments.len());
     }
     
@@ -379,11 +364,11 @@ async fn work_with_relationships() -&gt; Result&lt;()&gt; {
 
 async fn complex_queries() -&gt; Result&lt;()&gt; {
     // Find users with custom conditions
-    let users = User::find_where("name LIKE '%John%' AND active = true").await?;
+    let users = User::query().filter_eq("name LIKE '%John%' AND active = true").await?;
     println!("Found {} users matching criteria", users.len());
     
     // Find with ordering
-    let recent_users = User::find_where("active = true")
+    let recent_users = User::query().filter_eq("active = true")
         .order_by("created_at DESC")
         .limit(10)
         .await?;
@@ -407,11 +392,11 @@ async fn execute_raw_query&lt;T&gt;(_sql: &amp;str) -&gt; Result&lt;Vec&lt;T&gt;
 }</code></pre>
 <h2 id="migrations"><a class="header" href="#migrations">Migrations</a></h2>
 <p>Database migrations allow you to manage schema changes:</p>
-<pre><code class="language-rust ignore">use oxidite_db::Migration;
-
-pub struct CreateUsersTable;
-
-impl Migration for CreateUsersTable {
+<pre><code class="language-rust ignore">// Migrations are SQL files managed by the CLI.
+// Generate one with: oxidite generate migration create_users_table
+// The file uses -- migrate:up and -- migrate:down sections.
+//
+// Example generated migration:
     fn version(&amp;self) -&gt; i64 {
         20231201000001  // YYYYMMDDHHMMSS
     }
@@ -470,53 +455,99 @@ impl Migration for CreatePostsTable {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct ValidatedUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
-    pub email: String,
-    #[model(not_null)]
+    pub id: i64,
+    
+    // String length validation
+    #[validate(length(min = 3, max = 50))]
     pub name: String,
-    #[model(validate = "validate_age")]
-    pub age: u8,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
+    
+    // Email format and database uniqueness validation
+    #[validate(email, unique(table = "users", column = "email"))]
+    pub email: String,
+    
+    // Numeric range validation
+    #[validate(range(min = 18, max = 120))]
+    pub age: i64,
+    
+    // URL format validation
+    #[validate(url)]
+    pub website: String,
+    
+    // Regex and custom function validation
+    #[validate(regex("^[a-zA-Z0-9]+$"), custom("check_username_blacklist"))]
+    pub username: String,
+
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
 impl ValidatedUser {
-    // Validation method
-    fn validate_age(&amp;self) -&gt; Result&lt;(), String&gt; {
-        if self.age &lt; 13 {
-            Err("User must be at least 13 years old".to_string())
-        } else if self.age &gt; 120 {
-            Err("Invalid age".to_string())
+    // Custom validation logic
+    async fn check_username_blacklist(&self, _db: &amp;impl Database) -&gt; std::result::Result&lt;(), String&gt; {
+        if self.username == "admin" || self.username == "root" {
+            Err("This username is reserved".to_string())
         } else {
             Ok(())
         }
     }
-    
-    // Hook methods
-    fn before_save(&amp;mut self) -&gt; Result&lt;(), String&gt; {
-        self.updated_at = now();
-        self.validate_age()  // Run validation before saving
-    }
-    
-    fn after_save(&amp;self) -&gt; Result&lt;(), String&gt; {
-        println!("User {} saved with ID {}", self.name, self.id);
-        Ok(())
-    }
-}</code></pre>
-<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
-<p>Perform operations within transactions:</p>
+}
+
+// To run these validations, use the save_checked method instead of save:
+//   user.save_checked(&amp;db).await?;
+</code></pre>
+<h2 id="relationships"><a class="header" href="#relationships">Relationships</a></h2>
+<p>Oxidite provides a fluent ActiveRecord-style syntax for defining relationships between models. Using the <code>has_many</code>, <code>has_one</code>, and <code>belongs_to</code> attributes, the framework will automatically generate asynchronous lazy-loading accessor methods for your models.</p>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 
-async fn transaction_example() -&gt; Result&lt;()&gt; {
-    // Start a transaction
-    let tx = begin_transaction().await?;
+#[derive(Model, Clone, Serialize, Deserialize)]
+#[has_many(model = "Post", foreign_key = "user_id", name = "posts")]
+#[has_one(model = "Profile", foreign_key = "user_id", name = "profile")]
+pub struct User {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Model, Clone, Serialize, Deserialize)]
+#[belongs_to(model = "User", foreign_key = "user_id", name = "user")]
+pub struct Post {
+    pub id: i64,
+    pub user_id: i64,
+    pub title: String,
+}
+</code></pre>
+<h3 id="accessing-relationships"><a class="header" href="#accessing-relationships">Accessing Relationships</a></h3>
+<p>Once defined, you can fetch related models asynchronously by passing a database reference:</p>
+<pre><code class="language-rust ignore">async fn fetch_user_data(db: &amp;impl Database) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let user = User::find(db, 1).await?.unwrap();
+    
+    // Fetch all posts belonging to the user (Has Many)
+    let posts: Vec&lt;Post&gt; = user.posts(db).await?;
+    println!("User has {} posts", posts.len());
+    
+    // Fetch the user's profile (Has One)
+    if let Some(profile) = user.profile(db).await? {
+        println!("Profile Bio: {}", profile.bio);
+    }
+    
+    // Fetch the post's author (Belongs To)
+    if let Some(post) = posts.first() {
+        let author = post.user(db).await?.unwrap();
+        println!("Author name: {}", author.name);
+    }
+    
+    Ok(())
+}
+</code></pre>
+<h2 id="transactions"><a class="header" href="#transactions">Transactions</a></h2>
+<p>Perform operations within transactions:</p>
+<pre><code class="language-rust ignore">use oxidite::db::DbPool;
+
+async fn transaction_example(db: &amp;DbPool) -&gt; oxidite::db::Result&lt;()&gt; {
+    // with_transaction auto-commits on Ok, auto-rollbacks on Err
+    db.with_transaction(|tx| async move {
     
     match async {
         // Create user
@@ -524,11 +555,11 @@ async fn transaction_example() -&gt; Result&lt;()&gt; {
             id: 0,
             email: "transaction@example.com".to_string(),
             name: "Transaction User".to_string(),
-            created_at: now(),
-            updated_at: now(),
+            created_at: 0, // Auto-set by Model derive
+            updated_at: 0, // Auto-set by Model derive
             active: true,
         };
-        let saved_user = user.save().await?;
+        let saved_user = user.save(&amp;db).await?;
         
         // Create a post for the user
         let post = Post {
@@ -536,9 +567,9 @@ async fn transaction_example() -&gt; Result&lt;()&gt; {
             title: "First Post".to_string(),
             content: "Hello, world!".to_string(),
             user_id: saved_user.id,
-            created_at: now(),
+            created_at: 0, // Auto-set by Model derive
         };
-        post.save().await?;
+        post.save(&amp;db).await?;
         
         Ok::&lt;_, Error&gt;(saved_user.id)
     }.await {
@@ -579,78 +610,73 @@ impl Transaction {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
-#[model(table = "soft_delete_users", soft_delete = true)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
+// Soft-delete is auto-detected: just include a `deleted_at: Option&lt;i64&gt;` field.
+#[model(table = "soft_delete_users")]
 pub struct SoftDeleteUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(deleted_at)]  // Special field for soft deletes
-    pub deleted_at: Option&lt;String&gt;,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
+    pub deleted_at: Option&lt;i64&gt;,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
-async fn soft_delete_example() -&gt; Result&lt;()&gt; {
-    // Find all users (includes soft-deleted ones)
-    let all_users = SoftDeleteUser::find_all_with_deleted().await?;
+async fn soft_delete_example(db: &amp;DbPool) -&gt; Result&lt;()&gt; {
+    // Find active users (deleted_at IS NULL is added automatically)
+    let active_users = SoftDeleteUser::all(db).await?;
     
-    // Find only active users (excludes soft-deleted ones)
-    let active_users = SoftDeleteUser::find_all().await?;
+    // Include soft-deleted rows with .with_deleted()
+    let all_users = SoftDeleteUser::query().with_deleted().fetch_all(db).await?;
     
-    // Soft delete a user
-    if let Some(mut user) = SoftDeleteUser::find_by_id(1).await? {
-        user.delete().await?;  // This sets deleted_at instead of removing the record
+    // Soft delete a user (sets deleted_at to now)
+    if let Some(user) = SoftDeleteUser::find(db, 1).await? {
+        user.delete(db).await?;
         println!("User soft-deleted");
     }
     
-    // Restore a soft-deleted user
-    if let Some(mut user) = SoftDeleteUser::find_by_id_trashed(1).await? {
-        user.restore().await?;  // This clears the deleted_at field
-        println!("User restored");
+    // Force-delete permanently removes the row
+    if let Some(user) = SoftDeleteUser::find(db, 2).await? {
+        user.force_delete(db).await?;
+        println!("User permanently deleted");
     }
     
     Ok(())
 }</code></pre>
 <h2 id="connection-management"><a class="header" href="#connection-management">Connection Management</a></h2>
 <p>Configure database connections:</p>
-<pre><code class="language-rust ignore">use oxidite::prelude::*;
+<pre><code class="language-rust ignore">use oxidite::db::{DbPool, PoolOptions};
 
-async fn configure_database() -&gt; Result&lt;()&gt; {
-    // Configure database connection
-    let db_config = DatabaseConfig {
-        url: std::env::var("DATABASE_URL").unwrap_or("sqlite::memory:".to_string()),
-        pool_size: 10,
-        timeout: std::time::Duration::from_secs(30),
+async fn configure_database() -&gt; oxidite::db::Result&lt;DbPool&gt; {
+    let url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "sqlite://data.db".to_string());
+    
+    // Connect with default pool settings (max 10 connections)
+    let db = DbPool::connect(&amp;url).await?;
+    
+    Ok(db)
+}
+
+async fn configure_database_advanced() -&gt; oxidite::db::Result&lt;DbPool&gt; {
+    let url = std::env::var("DATABASE_URL").unwrap();
+    
+    let options = PoolOptions {
+        max_connections: 20,
+        min_connections: 2,
+        connect_timeout: std::time::Duration::from_secs(10),
+        idle_timeout: Some(std::time::Duration::from_secs(300)),
     };
     
-    // Initialize the database connection
-    init_database(db_config).await?;
+    let db = DbPool::connect_with_options(&amp;url, options).await?;
     
-    Ok(())
-}
-
-pub struct DatabaseConfig {
-    pub url: String,
-    pub pool_size: usize,
-    pub timeout: std::time::Duration,
-}
-
-async fn init_database(_config: DatabaseConfig) -&gt; Result&lt;()&gt; {
-    // Implementation would depend on the specific database connector
-    Ok(())
+    Ok(db)
 }</code></pre>
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <p>Handle database errors appropriately:</p>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 
 async fn error_handling_example() -&gt; Result&lt;()&gt; {
-    match User::find_by_id(999999).await {
+    match User::find(&amp;db, 999999).await {
         Ok(Some(user)) =&gt; {
             println!("Found user: {}", user.name);
         }

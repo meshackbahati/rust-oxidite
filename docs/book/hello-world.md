@@ -250,7 +250,14 @@ Here's a more complete example combining multiple features:
 
 ```rust,ignore
 use oxidite::prelude::*;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
+#[model(table = "users")]
+pub struct User {
+    id: i32,
+    name: String,
+}
 
 #[derive(Deserialize)]
 struct UserQuery {
@@ -279,7 +286,7 @@ async fn api_hello(_req: Request) -> Result<Response> {
     Ok(Response::json(serde_json::json!({
         "message": "Hello from API",
         "framework": "Oxidite",
-        "version": "2.0"
+        "version": "2.2"
     })))
 }
 
@@ -327,7 +334,7 @@ To run any of these examples:
 2. Add Oxidite to your `Cargo.toml`:
    ```toml
    [dependencies]
-   oxidite = { version = "2.1", features = ["full"] }
+   oxidite = { version = "2.2", features = ["full"] }
    tokio = { version = "1.0", features = ["full"] }
    serde = { version = "1.0", features = ["derive"] }
    serde_json = "1.0"

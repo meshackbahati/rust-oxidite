@@ -10,10 +10,12 @@ pub mod versioning;
 pub mod cookie;
 
 pub use error::{Error, Result};
-pub use extract::{FromRequest, Json, Path, Query, State, Form, Cookies, Body};
+pub use extract::{FromRequest, Json, Path, Query, State, Form, Cookies, Body, WebSocketUpgrade};
+pub use http::{StatusCode, Method, HeaderMap, HeaderValue};
+pub use tokio::sync::mpsc;
+pub use http_body_util::BodyExt;
 
-
-pub use router::{Handler, Router};
+pub use router::{Handler, Router, IntoHandler, handler_fn};
 pub use server::Server;
 pub use types::{OxiditeRequest, OxiditeResponse};
 pub use types::OxiditeResponse as Response;

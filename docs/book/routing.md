@@ -205,11 +205,11 @@ use oxidite::prelude::*;
 
 // API versioning example
 async fn v1_users(_req: Request) -> Result<Response> {
-    Ok(Response::json(serde_json::json!({ "version": "v1", "endpoint": "users" })))
+    Ok(Response::json(serde_json::json!({ "version": "2.1", "endpoint": "users" })))
 }
 
 async fn v2_users(_req: Request) -> Result<Response> {
-    Ok(Response::json(serde_json::json!({ "version": "v2", "endpoint": "users", "enhanced": true })))
+    Ok(Response::json(serde_json::json!({ "version": "2.2", "endpoint": "users", "enhanced": true })))
 }
 
 #[tokio::main]

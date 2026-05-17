@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-05-16
+
+### Added
+- **Native WebSocket Orchestration**: Implemented a professional-grade `WebSocketUpgrade` extractor in `oxidite-core`, featuring automated 101 Switching Protocols handshake generation and header validation.
+- **Thread-Safe State Management**: Added `with_state()` to `Router` utilizing `Arc<RwLock<Extensions>>` for reliable, concurrent shared state access across handlers.
+- **Automated Declarative Migrations**: Introduced a powerful schema drift detection engine in `oxidite-cli`. Users can now generate incremental SQL migrations (UP/DOWN) directly from Rust model changes via `oxidite make-migrations`.
+- **Introspective Database Layer**: Added the `DbInspector` trait to `oxidite-db`, enabling runtime schema inspection and validation across PostgreSQL, MySQL, and SQLite.
+- **Self-Describing Models**: Enhanced the `Model` trait and its derive macro to automatically generate schema metadata, bridging the gap between Rust type safety and database structure.
+- **Enhanced Framework Prelude**: Integrated `StatusCode`, `mpsc`, and `BodyExt` re-exports directly into the `oxidite` prelude to streamline asynchronous logic and HTTP status management.
+- **Protocol Foundations**: Added `sha1` and `base64` dependencies to the core kernel to support low-level protocol requirements natively.
+
+### Changed
+- **Strategic Rebranding**: Executed a comprehensive framework overhaul to project an enterprise-grade, mission-critical positioning across all documentation, metadata, and introductory materials.
+- **Macro Robustness**: Refactored the `Model` derive macro in `oxidite-macros` to utilize explicit absolute paths (`::oxidite::db`), ensuring reliable crate resolution across complex workspace architectures.
+
+### Fixed
+- **Crate Resolution**: Resolved critical bugs in the procedural macro layer that prevented successful compilation in projects using the umbrella framework structure.
+
 ## [2.1.0] - 2026-03-29
 
 ### Added

@@ -465,3 +465,71 @@ Request extractors provide a powerful and type-safe way to access different part
 - Consider performance implications
 
 Extractors are a fundamental part of Oxidite's design and enable clean, readable handler functions.
+
+## State Injection Patterns (Recommended)
+
+In production applications, you typically share a database pool, cache connections, and configuration through `State<Arc<AppState>>`. Here's the recommended pattern:
+
+```rust,ignore
+use oxidite::prelude::*;
+use oxidite::db::DbPool;
+use std::sync::Arc;
+
+// 1. Define your application state
+#[derive(Clone)]
+pub struct AppState {
+    pub db: DbPool,
+    pub config: AppConfig,
+}
+
+#[derive(Clone)]
+pub struct AppConfig {
+    pub app_name: String,
+    pub secret_key: String,
+}
+
+// 2. Use State in handlers — no manual extraction needed
+async fn list_users(
+    State(state): State<Arc<AppState>>,
+    Query(pagination): Query<PaginationParams>,
+) -> Result<OxiditeResponse> {
+    let users = User::all(&state.db).await
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
+    Ok(response::json(serde_json::json!(users)))
+}
+
+async fn create_user(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<CreateUserRequest>,
+) -> Result<OxiditeResponse> {
+    let mut user = User { id: 0, name: payload.name, email: payload.email, ..Default::default() };
+    user.save_checked(&state.db).await
+        .map_err(|e| Error::Validation(e.to_string()))?;
+    Ok(response::json(serde_json::json!(user)))
+}
+
+// 3. Wire it up in main
+#[tokio::main]
+async fn main() -> Result<()> {
+    let db = DbPool::connect(&std::env::var("DATABASE_URL").unwrap()).await?;
+    
+    let state = Arc::new(AppState {
+        db,
+        config: AppConfig {
+            app_name: "MyApp".to_string(),
+            secret_key: std::env::var("SECRET_KEY").unwrap_or_default(),
+        },
+    });
+
+    let mut router = Router::new();
+    router.with_state(state);
+    router.get("/users", list_users);
+    router.post("/users", create_user);
+
+    Server::new(router)
+        .listen("0.0.0.0:3000".parse()?)
+        .await
+}
+```
+
+The `oxidite generate controller` command scaffolds handlers with this pattern by default.

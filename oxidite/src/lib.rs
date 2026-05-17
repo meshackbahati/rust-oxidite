@@ -81,10 +81,11 @@ pub use oxidite_utils as utils;
 /// Prelude module for common imports
 pub mod prelude {
     pub use oxidite_core::{
-        Router, Server, Handler,
+        Router, Server, Handler, IntoHandler, handler_fn,
         Error, Result,
         Request, Response,
-        extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body},
+        StatusCode, mpsc, BodyExt,
+        extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body, WebSocketUpgrade},
     };
     
     pub use oxidite_middleware::{

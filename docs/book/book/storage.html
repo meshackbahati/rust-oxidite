@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <meta charset="UTF-8">
+        <title>File Storage - Oxidite Handbook</title>
+        <base href="./">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="custom.css">
+    </head>
+    <body>
+        <div id="page-wrapper" class="page-wrapper">
+            <div class="page">
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="unified-file-storage-api"><a class="header" href="#unified-file-storage-api">Unified File Storage API</a></h1>
+<p>Oxidite provides a unified <code>Storage</code> facade to abstract away file storage mechanisms. Whether you're using the local filesystem, AWS S3, DigitalOcean Spaces, Cloudinary, or ImageKit, the API remains the same.</p>
+<h2 id="setup--configuration"><a class="header" href="#setup--configuration">Setup &amp; Configuration</a></h2>
+<p>Oxidite comes with the <code>StorageFacade</code> configured globally. By default, it uses the local disk.</p>
+<pre><code class="language-rust ignore">use oxidite::storage::{StorageFacade as Storage, LocalStorage};
+
+// Add disks to the storage manager on application boot
+Storage::add_disk("local", Arc::new(LocalStorage::new("uploads/")?)).await;
+
+// Set the default disk
+Storage::set_default("local").await;
+</code></pre>
+<h2 id="basic-usage"><a class="header" href="#basic-usage">Basic Usage</a></h2>
+<p>With the facade configured, you can perform storage operations asynchronously from anywhere in your application without needing to pass database or state references explicitly.</p>
+<pre><code class="language-rust ignore">use oxidite::storage::StorageFacade as Storage;
+use bytes::Bytes;
+
+async fn upload_avatar(user_id: i64, data: Bytes) -&gt; Result&lt;String, oxidite::storage::StorageError&gt; {
+    let path = format!("avatars/{}.png", user_id);
+    
+    // Store file
+    let file = Storage::put(&amp;path, data).await?;
+    
+    // Get URL
+    Ok(file.url.unwrap_or(path))
+}
+
+async fn download_file(path: &amp;str) -&gt; Result&lt;Bytes, oxidite::storage::StorageError&gt; {
+    // Read file from default disk
+    Storage::get(path).await
+}
+
+async fn remove_avatar(user_id: i64) -&gt; Result&lt;(), oxidite::storage::StorageError&gt; {
+    let path = format!("avatars/{}.png", user_id);
+    
+    if Storage::exists(&amp;path).await? {
+        Storage::delete(&amp;path).await?;
+    }
+    
+    Ok(())
+}
+</code></pre>
+<h2 id="cloud-storage-integrations"><a class="header" href="#cloud-storage-integrations">Cloud Storage Integrations</a></h2>
+<p>Oxidite's <code>Storage</code> trait makes it incredibly easy to plug in popular third-party services. Because you only interact with <code>StorageFacade</code>, your application logic never changes when migrating from Local to Cloud.</p>
+<h3 id="aws-s3--digitalocean-spaces"><a class="header" href="#aws-s3--digitalocean-spaces">AWS S3 / DigitalOcean Spaces</a></h3>
+<p>Oxidite includes built-in support for S3-compatible APIs.</p>
+<pre><code class="language-rust ignore">use oxidite::storage::{StorageFacade as Storage, S3Storage, S3Config};
+
+let s3_config = S3Config {
+    bucket: "my-bucket".to_string(),
+    region: "us-east-1".to_string(),
+    access_key: "ACCESS_KEY".to_string(),
+    secret_key: "SECRET_KEY".to_string(),
+    endpoint: None, // Set this for DigitalOcean, MinIO, or Cloudflare R2
+};
+
+Storage::add_disk("s3", Arc::new(S3Storage::new(s3_config))).await;
+Storage::set_default("s3").await;
+
+Storage::put("documents/invoice.pdf", pdf_bytes).await?;
+</code></pre>
+<h3 id="writing-custom-integrations"><a class="header" href="#writing-custom-integrations">Writing Custom Integrations (Cloudinary, ImageKit)</a></h3>
+<p>It's extremely simple to create a custom driver. Just implement the <code>Storage</code> trait, and your entire application can instantly start uploading to ImageKit, Cloudinary, or any other provider.</p>
+<pre><code class="language-rust ignore">use async_trait::async_trait;
+use oxidite::storage::{Storage, StoredFile, FileMetadata, Result};
+use bytes::Bytes;
+
+pub struct CloudinaryStorage {
+    api_key: String,
+    api_secret: String,
+    cloud_name: String,
+}
+
+#[async_trait]
+impl Storage for CloudinaryStorage {
+    async fn put(&amp;self, path: &amp;str, data: Bytes) -&gt; Result&lt;StoredFile&gt; {
+        // Use reqwest to POST data to the Cloudinary API
+        Ok(StoredFile {
+            path: path.to_string(),
+            size: data.len() as u64,
+            mime_type: "image/jpeg".to_string(),
+            url: Some("https://res.cloudinary.com/...".to_string()),
+        })
+    }
+    
+    async fn get(&amp;self, path: &amp;str) -&gt; Result&lt;Bytes&gt; { /* ... */ }
+    async fn delete(&amp;self, path: &amp;str) -&gt; Result&lt;()&gt; { /* ... */ }
+    async fn exists(&amp;self, path: &amp;str) -&gt; Result&lt;bool&gt; { /* ... */ }
+    async fn metadata(&amp;self, path: &amp;str) -&gt; Result&lt;FileMetadata&gt; { /* ... */ }
+    async fn list(&amp;self, prefix: &amp;str) -&gt; Result&lt;Vec&lt;String&gt;&gt; { /* ... */ }
+}
+</code></pre>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

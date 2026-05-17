@@ -6,7 +6,7 @@ use hyper::Response;
 use hyper::header::{HeaderValue, CONTENT_TYPE, SERVER};
 use http::StatusCode;
 
-const SERVER_HEADER_VALUE: &str = concat!("Oxidite/", env!("CARGO_PKG_VERSION"));
+pub(crate) const SERVER_HEADER_VALUE: &str = concat!("Oxidite/", env!("CARGO_PKG_VERSION"));
 
 impl OxiditeResponse {
     /// Create a JSON response

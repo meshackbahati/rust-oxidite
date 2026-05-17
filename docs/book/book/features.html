@@ -3,12 +3,12 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Features - Oxidite Documentation</title>
+        <title>Features | Oxidite v2.2</title>
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="Complete feature overview of the Oxidite web framework.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -274,14 +274,10 @@ use serde::Deserialize;
 #[derive(Model, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 fn now() -&gt; String {
@@ -299,7 +295,7 @@ async fn user_operations() -&gt; Result&lt;()&gt; {
     let saved_user = user.save().await?;
     
     // Read
-    let users = User::find_all().await?;
+    let users = User::all(&amp;db).await?;
     
     // Update
     let mut user = saved_user;

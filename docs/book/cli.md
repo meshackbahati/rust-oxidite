@@ -9,7 +9,7 @@ The Oxidite CLI package is `oxidite-cli`, and the installed executable is `oxidi
 cargo install oxidite-cli
 
 # Install this generated build explicitly
-cargo install oxidite-cli --version 2.1.0-gen
+cargo install oxidite-cli --version 2.2.0
 
 # Install from the workspace checkout
 cargo install --path oxidite-cli
@@ -124,6 +124,8 @@ pub struct User {
     pub id: i64,
     pub email: String,
     pub age: i64,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 ```
 
@@ -160,13 +162,33 @@ oxidite migrate
 ```
 
 Check or revert migrations:
+ 
+ ```bash
+ oxidite migrate status
+ oxidite migrate revert
+ 
+ # Compatibility alias retained by the CLI
+ oxidite migrate:rollback
+ ```
+
+### Declarative Migrations (Auto-Generation)
+
+Oxidite can automatically generate migration files by diffing your Rust models against the current database schema. This eliminates the need for manual SQL for common schema changes.
 
 ```bash
-oxidite migrate status
-oxidite migrate revert
+# Generate a migration based on model changes
+oxidite migrate make
 
-# Compatibility alias retained by the CLI
-oxidite migrate:rollback
+# Generate with a specific name
+oxidite migrate make create_users_table
+
+# Dry run: see the SQL without generating files
+oxidite migrate make --dry-run
+```
+
+You can also use the top-level alias:
+```bash
+oxidite make-migrations
 ```
 
 ## Seeders
@@ -241,6 +263,36 @@ oxidite build --target x86_64-unknown-linux-musl
 oxidite build --features "database,queue"
 oxidite build --verbose
 ```
+
+## Interactive Console (Tinker)
+
+Oxidite ships with a built-in interactive console, similar to Laravel's Tinker or Rails' console. It lets you evaluate Rust expressions directly inside your project's context — with access to all your models, services, and the database.
+
+```bash
+oxidite tinker
+```
+
+**Example session:**
+
+```
+🧪 Oxidite Tinker v2.2.0
+Type Rust expressions to evaluate them in your project's context.
+Use `exit` or Ctrl-D to quit.
+
+oxidite> User::all(&db).await
+[User { id: 1, name: "Alice", ... }, User { id: 2, name: "Bob", ... }]
+
+oxidite> User::find(&db, 1).await
+Some(User { id: 1, name: "Alice", email: "alice@example.com" })
+
+oxidite> 2 + 2
+4
+
+oxidite> exit
+👋 Goodbye!
+```
+
+Under the hood, Tinker generates a temporary `src/bin/_tinker.rs` file, compiles it with `cargo run`, and displays the result. The temporary file is cleaned up automatically when you exit.
 
 ## Diagnostics
 

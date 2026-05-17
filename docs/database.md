@@ -20,7 +20,7 @@ Add the database feature to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite = { version = "2.1", features = ["database"] }
+oxidite = { version = "2.2", features = ["database"] }
 ```
 
 ## Database Connection
@@ -34,13 +34,13 @@ use oxidite::db::DbPool;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Connect to PostgreSQL
     let db = DbPool::connect("postgresql://username:password@localhost/database").await?;
-    
+  
     // Connect to MySQL
     let db = DbPool::connect("mysql://username:password@localhost/database").await?;
-    
+  
     // Connect to SQLite
     let db = DbPool::connect("sqlite:my_database.db").await?;
-    
+  
     Ok(())
 }
 ```
@@ -116,18 +116,57 @@ With soft deletes enabled, the `delete()` method will set the `deleted_at` field
 
 #### Field Validation
 
-Models can include validation attributes:
+Models support expressive validation rules via the `#[validate(...)]` attribute. Oxidite will automatically generate a `validate(&self, db: &DbPool)` method for you.
 
 ```rust
 #[derive(Model, Serialize, Deserialize, Clone)]
+#[model(table = "users")]
 pub struct User {
     pub id: i64,
+  
+    // String length validation
+    #[validate(length(min = 3, max = 50))]
     pub name: String,
-    #[validate(email)]
-    pub email: String,  // Will be validated as email format
+  
+    // Email format and database uniqueness validation
+    #[validate(email, unique(table = "users", column = "email"))]
+    pub email: String,
+  
+    // Numeric range validation
+    #[validate(range(min = 18, max = 120))]
+    pub age: i64,
+  
+    // URL format validation
+    #[validate(url)]
+    pub website: String,
+  
+    // Regex and custom function validation
+    #[validate(regex("^[a-zA-Z0-9]+$"), custom("check_username_blacklist"))]
+    pub username: String,
+
     pub created_at: i64,
     pub updated_at: i64,
 }
+
+impl User {
+    // Custom validation logic
+    async fn check_username_blacklist(&self, _db: &impl Database) -> std::result::Result<(), String> {
+        if self.username == "admin" || self.username == "root" {
+            Err("This username is reserved".to_string())
+        } else {
+            Ok(())
+        }
+    }
+}
+```
+
+To run these validations, use the `save_checked` method instead of `save`:
+
+```rust
+let mut user = User { /* ... */ };
+
+// Returns OrmError::Validation("...") if rules fail
+user.save_checked(&db).await?;
 ```
 
 ## Model Operations
@@ -145,10 +184,10 @@ async fn create_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error
         created_at: 0,  // Will be set automatically
         updated_at: 0,  // Will be set automatically
     };
-    
+  
     // Create the user in the database
     user.create(db).await?;
-    
+  
     println!("Created user with ID: {}", user.id);
     Ok(())
 }
@@ -181,10 +220,10 @@ async fn find_all_users(db: &impl Database) -> Result<(), Box<dyn std::error::Er
 async fn update_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
     let mut user = User::find(db, 1).await?.unwrap();
     user.name = "Jane Doe".to_string();
-    
+  
     // Update the user in the database
     user.update(db).await?;
-    
+  
     println!("Updated user: {}", user.name);
     Ok(())
 }
@@ -197,7 +236,7 @@ async fn update_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error
 async fn delete_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
     let user = User::find(db, 1).await?.unwrap();
     user.delete(db).await?;
-    
+  
     println!("User deleted");
     Ok(())
 }
@@ -206,7 +245,7 @@ async fn delete_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error
 async fn force_delete_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
     let user = User::find(db, 1).await?.unwrap();
     user.force_delete(db).await?;
-    
+  
     println!("User permanently deleted");
     Ok(())
 }
@@ -223,11 +262,63 @@ async fn save_user(db: &impl Database) -> Result<(), Box<dyn std::error::Error>>
         created_at: 0,
         updated_at: 0,
     });
-    
+  
     user.name = "Updated Name".to_string();
-    
+  
     // This will either create or update based on the implementation
     user.save(db).await?;
+  
+    Ok(())
+}
+```
+
+## Relationships
+
+Oxidite provides a fluent ActiveRecord-style syntax for defining relationships between models. 
+Using the `has_many`, `has_one`, and `belongs_to` attributes, the framework will automatically generate asynchronous lazy-loading accessor methods for your models.
+
+```rust
+use oxidite::prelude::*;
+
+#[derive(Model, Clone, Serialize, Deserialize)]
+#[has_many(model = "Post", foreign_key = "user_id", name = "posts")]
+#[has_one(model = "Profile", foreign_key = "user_id", name = "profile")]
+pub struct User {
+    pub id: i64,
+    pub name: String,
+}
+
+#[derive(Model, Clone, Serialize, Deserialize)]
+#[belongs_to(model = "User", foreign_key = "user_id", name = "user")]
+pub struct Post {
+    pub id: i64,
+    pub user_id: i64,
+    pub title: String,
+}
+```
+
+### Accessing Relationships
+
+Once defined, you can fetch related models asynchronously by passing a database reference:
+
+```rust
+async fn fetch_user_data(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
+    let user = User::find(db, 1).await?.unwrap();
+    
+    // Fetch all posts belonging to the user (Has Many)
+    let posts: Vec<Post> = user.posts(db).await?;
+    println!("User has {} posts", posts.len());
+    
+    // Fetch the user's profile (Has One)
+    if let Some(profile) = user.profile(db).await? {
+        println!("Profile Bio: {}", profile.bio);
+    }
+    
+    // Fetch the post's author (Belongs To)
+    if let Some(post) = posts.first() {
+        let author = post.user(db).await?.unwrap();
+        println!("Author name: {}", author.name);
+    }
     
     Ok(())
 }
@@ -244,17 +335,17 @@ async fn custom_query(db: &impl Database) -> Result<(), Box<dyn std::error::Erro
     // Execute a query that doesn't return results
     let rows_affected = db.execute("UPDATE users SET name = 'Anonymous' WHERE email IS NULL").await?;
     println!("Updated {} rows", rows_affected);
-    
+  
     // Query multiple rows
     let rows = db.query("SELECT id, name, email FROM users WHERE active = 1").await?;
     for row in rows {
         let id: i64 = row.try_get("id")?;
         let name: String = row.try_get("name")?;
         let email: String = row.try_get("email")?;
-        
+      
         println!("User {}: {} ({})", id, name, email);
     }
-    
+  
     Ok(())
 }
 ```
@@ -268,7 +359,7 @@ use oxidite::db::{Database, DbTransaction};
 
 async fn transaction_example(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
     let tx = db.begin_transaction().await?;
-    
+  
     // Perform operations within the transaction
     let mut user = User {
         id: 0,
@@ -277,12 +368,12 @@ async fn transaction_example(db: &impl Database) -> Result<(), Box<dyn std::erro
         created_at: 0,
         updated_at: 0,
     };
-    
+  
     user.create(&tx).await?;
-    
+  
     // If everything succeeds, commit the transaction
     tx.commit().await?;
-    
+  
     println!("Transaction committed successfully");
     Ok(())
 }
@@ -290,7 +381,7 @@ async fn transaction_example(db: &impl Database) -> Result<(), Box<dyn std::erro
 // Example with rollback on error
 async fn transaction_with_rollback(db: &impl Database) -> Result<(), Box<dyn std::error::Error>> {
     let tx = db.begin_transaction().await?;
-    
+  
     // Perform operations
     let mut user = User {
         id: 0,
@@ -299,9 +390,9 @@ async fn transaction_with_rollback(db: &impl Database) -> Result<(), Box<dyn std
         created_at: 0,
         updated_at: 0,
     };
-    
+  
     user.create(&tx).await?;
-    
+  
     // Simulate an error condition
     if user.name == "Test User" {
         // Rollback the transaction
@@ -309,7 +400,7 @@ async fn transaction_with_rollback(db: &impl Database) -> Result<(), Box<dyn std
         println!("Transaction rolled back");
         return Ok(());
     }
-    
+  
     // If no error, commit
     tx.commit().await?;
     println!("Transaction committed");
@@ -368,10 +459,10 @@ async fn create_user_handler(
         updated_at: 0,
         deleted_at: None,
     };
-    
+  
     user.create(&state.db).await
         .map_err(|e| Error::Server(e.to_string()))?;
-    
+  
     Ok(response::json(serde_json::json!(user)))
 }
 
@@ -380,7 +471,7 @@ async fn get_user_handler(
     Path(params): Path<serde_json::Value>
 ) -> Result<OxiditeResponse> {
     let id = params["id"].as_i64().unwrap_or(0);
-    
+  
     match User::find(&state.db, id).await {
         Ok(Some(user)) => Ok(response::json(serde_json::json!(user))),
         Ok(None) => Err(Error::NotFound),
@@ -391,17 +482,17 @@ async fn get_user_handler(
 #[tokio::main]
 async fn main() -> Result<()> {
     let db = DbPool::connect("sqlite::memory:").await?;
-    
+  
     let state = Arc::new(AppState { db });
-    
+  
     let mut router = Router::new();
     router.post("/users", create_user_handler);
     router.get("/users/:id", get_user_handler);
-    
+  
     let service = ServiceBuilder::new()
         .layer(AddExtensionLayer::new(state))
         .service(router);
-    
+  
     Server::new(service)
         .listen("127.0.0.1:3000".parse().unwrap())
         .await

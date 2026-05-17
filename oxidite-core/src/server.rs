@@ -28,34 +28,61 @@ impl<S> BodyAdapter<S> {
     }
 }
 
-use futures_util::future::Map;
-use futures_util::FutureExt;
+
+
+use std::pin::Pin;
 
 impl<S> Service<hyper::Request<hyper::body::Incoming>> for BodyAdapter<S>
 where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = Error> + Clone,
+    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = Error> + Clone + Send + 'static,
+    S::Future: Send + 'static,
 {
     type Response = hyper::Response<crate::types::BoxBody>;
     type Error = Error;
-    type Future = Map<S::Future, fn(std::result::Result<OxiditeResponse, Error>) -> std::result::Result<hyper::Response<crate::types::BoxBody>, Error>>;
+    type Future = Pin<Box<dyn std::future::Future<Output = std::result::Result<Self::Response, Self::Error>> + Send>>;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<std::result::Result<(), Self::Error>> {
         self.0.poll_ready(cx)
     }
 
     fn call(&mut self, req: hyper::Request<hyper::body::Incoming>) -> Self::Future {
+        let accepts_html = req.headers().get(hyper::header::ACCEPT)
+            .map(|h| h.to_str().unwrap_or("").contains("text/html"))
+            .unwrap_or(false);
+            
         let req = req.map(|b| b.map_err(|e| e.into()).boxed());
-        fn map_response(res: std::result::Result<OxiditeResponse, Error>) -> std::result::Result<hyper::Response<crate::types::BoxBody>, Error> {
-            match res {
+        let fut = self.0.call(req);
+        
+        Box::pin(async move {
+            match fut.await {
                 Ok(response) => Ok(response.into()),
-                // Convert framework/service errors into proper HTTP responses
-                // so connections are not aborted for expected handler errors.
-                Err(error) => Ok(OxiditeResponse::from(error).into()),
+                Err(error) => {
+                    let env = std::env::var("OXIDITE_ENV").unwrap_or_else(|_| "development".to_string());
+                    
+                    if env == "development" && accepts_html && error.is_server_error() {
+                        use bytes::Bytes;
+                        use http_body_util::Full;
+                        use hyper::header::{CONTENT_TYPE, SERVER};
+                        
+                        let html = crate::error::render_ignition_error(&error);
+                        
+                        let res = hyper::Response::builder()
+                            .status(error.status_code())
+                            .header(CONTENT_TYPE, "text/html; charset=utf-8")
+                            .header(SERVER, crate::response::SERVER_HEADER_VALUE)
+                            .body(Full::new(Bytes::from(html)).map_err(|e| match e {}).boxed())
+                            .unwrap();
+                            
+                        Ok(res)
+                    } else {
+                        Ok(OxiditeResponse::from(error).into())
+                    }
+                }
             }
-        }
-        self.0.call(req).map(map_response)
+        })
     }
 }
+
 
 
 pub struct Server<S> {

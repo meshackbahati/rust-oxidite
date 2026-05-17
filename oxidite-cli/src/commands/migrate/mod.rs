@@ -1,3 +1,4 @@
+pub mod declarative;
 use super::sql_script::{execute_sql_script, load_database_url};
 
 pub fn create_migration(name: &str) -> Result<(), Box<dyn std::error::Error>> {

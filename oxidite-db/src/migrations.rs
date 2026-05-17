@@ -270,7 +270,7 @@ impl MigrationManager {
 #[cfg(test)]
 mod tests {
     use super::{Migration, MigrationManager};
-    use crate::{sqlx, Database, DatabaseType, DbTransaction, Result};
+    use crate::{sqlx, Database, DatabaseType, DbTransaction, Result, DbInspector, TableSchema};
     use async_trait::async_trait;
     use sqlx::any::AnyRow;
     use std::sync::Arc;
@@ -333,6 +333,19 @@ mod tests {
             _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
         ) -> Result<Option<AnyRow>> {
             Ok(None)
+        }
+        fn inspector(&self) -> Box<dyn DbInspector> {
+            struct MockInspector;
+            #[async_trait]
+            impl DbInspector for MockInspector {
+                async fn get_table_schema(&self, _table_name: &str) -> Result<Option<TableSchema>> {
+                    Ok(None)
+                }
+                async fn list_tables(&self) -> Result<Vec<String>> {
+                    Ok(vec![])
+                }
+            }
+            Box::new(MockInspector)
         }
     }
 

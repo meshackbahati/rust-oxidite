@@ -1,64 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 /* Oxidite docs website branding and readability enhancements. */
 :root {
-  --content-max-width: 980px;
-  --ox-border: #d7dee9;
+  --content-max-width: 1040px;
+  --ox-border: #e2e8f0;
   --ox-surface: #ffffff;
   --ox-accent: #0f766e;
-  --ox-link: #0b5ed7;
+  --ox-link: #2563eb;
+  --ox-bg: #f8fafc;
+  --ox-text: #1e293b;
+  --ox-code-bg: #f1f5f9;
+  --ox-glass: rgba(255, 255, 255, 0.85);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--ox-text);
+  line-height: 1.6;
+  background-color: var(--ox-bg);
 }
 
 .content main {
   max-width: var(--content-max-width);
+  padding: 40px;
+  background: var(--ox-surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--ox-border);
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+code, pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--ox-code-bg) !important;
+  border-radius: 12px;
+  border: 1px solid var(--ox-border);
+  padding: 1.25em !important;
 }
 
 h1, h2, h3 {
-  scroll-margin-top: 72px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  scroll-margin-top: 100px;
+  color: #0f172a;
 }
+
+h1 { font-size: 2.25rem; border-bottom: none; margin-bottom: 1.5rem; }
+h2 { font-size: 1.75rem; margin-top: 3rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--ox-border); padding-bottom: 0.5rem; }
 
 #mdbook-menu-bar {
   border-bottom: 1px solid var(--ox-border);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
-}
-
-#mdbook-content {
-  background: var(--ox-surface);
-  border-radius: 12px;
-  border: 1px solid var(--ox-border);
-}
-
-a {
-  color: var(--ox-link);
+  background: var(--ox-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  height: 64px;
 }
 
 .menu-title {
   font-weight: 700;
+  color: var(--ox-accent);
 }
 
 .oxidite-docs-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: inherit;
-  margin-right: 10px;
+  margin-right: 20px;
+  transition: opacity 0.2s;
+}
+
+.oxidite-docs-brand:hover {
+  opacity: 0.8;
 }
 
 .oxidite-docs-brand img {
-  width: 30px;
-  height: 30px;
-  display: block;
+  width: 32px;
+  height: 32px;
 }
 
 .oxidite-docs-brand span {
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: #0f172a;
 }
+
+/* Custom Alert Styles */
+.alert {
+  padding: 1rem;
+  margin: 1.5rem 0;
+  border-left: 4px solid;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.alert-note { border-color: #3b82f6; background: #eff6ff; }
+.alert-tip { border-color: #10b981; background: #ecfdf5; }
+.alert-warning { border-color: #f59e0b; background: #fffbeb; }
 
 @media (max-width: 1024px) {
   .oxidite-docs-brand span {
     display: none;
+  }
+  .content main {
+    padding: 20px;
+    border-radius: 0;
+    border: none;
+    margin-top: 0;
   }
 }

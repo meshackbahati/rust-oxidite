@@ -3,12 +3,12 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Testing - Oxidite Documentation</title>
+        <title>Testing | Oxidite v2.2</title>
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="Unit and integration testing patterns for Oxidite applications.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -435,14 +435,11 @@ mod middleware_tests {
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "test_users")]
 pub struct TestUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
 }
 
@@ -476,7 +473,7 @@ mod database_tests {
         assert!(!saved_user.id == 0);
 
         // Test read
-        let found_user = TestUser::find_by_id(saved_user.id).await.unwrap().unwrap();
+        let found_user = TestUser::find(&amp;db, saved_user.id).await.unwrap().unwrap();
         assert_eq!(found_user.email, "test@example.com");
         assert_eq!(found_user.name, "Test User");
 
@@ -488,7 +485,7 @@ mod database_tests {
 
         // Test delete
         updated_user.delete().await.unwrap();
-        let deleted_user = TestUser::find_by_id(updated_user.id).await.unwrap();
+        let deleted_user = TestUser::find(&amp;db, updated_user.id).await.unwrap();
         assert!(deleted_user.is_none());
 
         teardown_test_db().await.unwrap();
@@ -687,24 +684,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Model, Serialize, Deserialize, Clone)]
 #[model(table = "test_posts")]
 pub struct TestPost {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub title: String,
-    #[model(not_null)]
     pub content: String,
-    pub user_id: i32,
+    pub user_id: i64,
 }
 
 #[derive(Model, Serialize, Deserialize, Clone)]
 #[model(table = "test_comments")]
 pub struct TestComment {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub content: String,
-    pub post_id: i32,
-    pub user_id: i32,
+    pub post_id: i64,
+    pub user_id: i64,
 }
 
 // Test factory for creating test data

@@ -123,12 +123,21 @@ struct Route {
 #[derive(Clone)]
 pub struct Router {
     routes: HashMap<Method, Vec<Arc<Route>>>,
+    extensions: Arc<std::sync::RwLock<http::Extensions>>,
 }
 
 impl Router {
     pub fn new() -> Self {
         Self {
             routes: HashMap::new(),
+            extensions: Arc::new(std::sync::RwLock::new(http::Extensions::new())),
+        }
+    }
+
+    /// Add a shared state to the router that will be available in all handlers
+    pub fn with_state<T: Clone + Send + Sync + 'static>(&mut self, state: T) {
+        if let Ok(mut exts) = self.extensions.write() {
+            exts.insert(state);
         }
     }
 
@@ -333,6 +342,57 @@ fn compile_path(path: &str) -> (Regex, Vec<String>) {
     pattern.push('$');
     let regex = Regex::new(&pattern).expect("Invalid route pattern");
     (regex, param_names)
+}
+
+/// Trait that provides compile-time verification that a function is a valid handler.
+///
+/// This is used by the [`handler_fn`] function to give clear, readable error messages
+/// when a function doesn't satisfy the handler requirements, rather than the cryptic
+/// trait-bound errors that would otherwise surface from the router.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use oxidite::prelude::*;
+///
+/// // This compiles because the function matches Handler<(State<Arc<AppState>>,)>
+/// let h = handler_fn(my_handler);
+/// router.get("/users", h);
+///
+/// // This would fail at compile time with a clear error if the function
+/// // has extractors that don't implement FromRequest.
+/// ```
+pub trait IntoHandler<Args>: Handler<Args> + Sized {
+    fn into_handler(self) -> Self {
+        self
+    }
+}
+
+impl<H, Args> IntoHandler<Args> for H where H: Handler<Args> {}
+
+/// Compile-time handler verification helper.
+///
+/// Wraps a handler function and ensures at compile time that all its extractors
+/// implement `FromRequest`. Provides clearer error messages than raw trait bounds.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use oxidite::prelude::*;
+///
+/// async fn index(State(s): State<Arc<AppState>>) -> Result<OxiditeResponse> {
+///     Ok(response::json(serde_json::json!({"ok": true})))
+/// }
+///
+/// // Verified at compile time:
+/// router.get("/", handler_fn(index));
+/// ```
+pub fn handler_fn<H, Args>(handler: H) -> H
+where
+    H: IntoHandler<Args>,
+    Args: Send + Sync + 'static,
+{
+    handler
 }
 
 #[cfg(test)]

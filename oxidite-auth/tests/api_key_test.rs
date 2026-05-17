@@ -21,6 +21,15 @@ impl Database for MockDb {
     }
     async fn fetch_all<'q>(&self, _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Vec<AnyRow>> { Ok(vec![]) }
     async fn fetch_one<'q>(&self, _query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>) -> Result<Option<AnyRow>> { Ok(None) }
+    fn inspector(&self) -> Box<dyn oxidite_db::DbInspector> {
+        struct MockInspector;
+        #[async_trait]
+        impl oxidite_db::DbInspector for MockInspector {
+            async fn get_table_schema(&self, _table_name: &str) -> Result<Option<oxidite_db::TableSchema>> { Ok(None) }
+            async fn list_tables(&self) -> Result<Vec<String>> { Ok(vec![]) }
+        }
+        Box::new(MockInspector)
+    }
 }
 
 #[test]

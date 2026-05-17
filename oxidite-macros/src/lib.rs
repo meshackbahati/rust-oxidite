@@ -4,7 +4,7 @@ use syn::{
     parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, LitStr, Type,
 };
 
-#[proc_macro_derive(Model, attributes(validate, model))]
+#[proc_macro_derive(Model, attributes(validate, model, has_many, has_one, belongs_to))]
 pub fn derive_model(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
@@ -170,7 +170,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         quote! {
             async fn delete(&self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
                 let now = oxidite_db::chrono::Utc::now().timestamp();
-                let query = oxidite_db::sqlx::query(#soft_delete_query)
+                let query = ::oxidite::db::sqlx::query(#soft_delete_query)
                     .bind(now)
                     .bind(&self.id);
                 db.execute_query(query).await?;
@@ -179,8 +179,8 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         }
     } else {
         quote! {
-            async fn delete(&self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
-                let query = oxidite_db::sqlx::query(#hard_delete_query)
+            async fn delete(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let query = ::oxidite::db::sqlx::query(#hard_delete_query)
                     .bind(&self.id);
                 db.execute_query(query).await?;
                 Ok(())
@@ -190,7 +190,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
     let created_at_logic = if has_created_at {
         quote! {
-            let now = oxidite_db::chrono::Utc::now().timestamp();
+            let now = ::oxidite::db::chrono::Utc::now().timestamp();
             self.created_at = now;
             let query = query.bind(now);
         }
@@ -200,7 +200,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
     let updated_at_create_logic = if has_updated_at {
         quote! {
-            let now = oxidite_db::chrono::Utc::now().timestamp();
+            let now = ::oxidite::db::chrono::Utc::now().timestamp();
             self.updated_at = now;
             let query = query.bind(now);
         }
@@ -210,7 +210,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
     let updated_at_update_logic = if has_updated_at {
         quote! {
-            let now = oxidite_db::chrono::Utc::now().timestamp();
+            let now = ::oxidite::db::chrono::Utc::now().timestamp();
             self.updated_at = now;
             let query = query.bind(now);
         }
@@ -227,34 +227,212 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
         for attr in &field.attrs {
             if attr.path().is_ident("validate") {
-                let attr_str = attr.to_token_stream().to_string();
-                if attr_str.contains("email") {
-                    if !is_string_type(&field.ty) {
-                        return Err(syn::Error::new(
-                            field.ty.span(),
-                            "#[validate(email)] can only be used on String fields",
-                        ));
-                    }
-
-                    validation_checks.push(quote! {
-                        {
-                            static EMAIL_REGEX: oxidite_db::once_cell::sync::Lazy<oxidite_db::regex::Regex> =
-                                oxidite_db::once_cell::sync::Lazy::new(|| oxidite_db::regex::Regex::new(r"^[^@\s]+@[^@\s]+\.[^@\s]+$").unwrap());
-                            if !EMAIL_REGEX.is_match(&self.#field_name) {
-                                return Err(format!("Invalid email format for field {}", stringify!(#field_name)));
-                            }
+                let res = attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("email") {
+                        if !is_string_type(&field.ty) {
+                            return Err(meta.error("#[validate(email)] can only be used on String fields"));
                         }
-                    });
+                        validation_checks.push(quote! {
+                            {
+                                static EMAIL_REGEX: ::oxidite::db::once_cell::sync::Lazy<::oxidite::db::regex::Regex> =
+                                    ::oxidite::db::once_cell::sync::Lazy::new(|| ::oxidite::db::regex::Regex::new(r"^[^@\s]+@[^@\s]+\.[^@\s]+$").unwrap());
+                                if !EMAIL_REGEX.is_match(&self.#field_name) {
+                                    return Err(format!("Invalid email format for field {}", stringify!(#field_name)));
+                                }
+                            }
+                        });
+                        Ok(())
+                    } else if meta.path.is_ident("url") {
+                        if !is_string_type(&field.ty) {
+                            return Err(meta.error("#[validate(url)] can only be used on String fields"));
+                        }
+                        validation_checks.push(quote! {
+                            {
+                                static URL_REGEX: ::oxidite::db::once_cell::sync::Lazy<::oxidite::db::regex::Regex> =
+                                    ::oxidite::db::once_cell::sync::Lazy::new(|| ::oxidite::db::regex::Regex::new(r"^https?://[^\s/$.?#].[^\s]*$").unwrap());
+                                if !URL_REGEX.is_match(&self.#field_name) {
+                                    return Err(format!("Invalid URL format for field {}", stringify!(#field_name)));
+                                }
+                            }
+                        });
+                        Ok(())
+                    } else if meta.path.is_ident("length") {
+                        if !is_string_type(&field.ty) {
+                            return Err(meta.error("#[validate(length)] can only be used on String fields"));
+                        }
+                        
+                        let mut min = None;
+                        let mut max = None;
+                        
+                        meta.parse_nested_meta(|inner| {
+                            if inner.path.is_ident("min") {
+                                let v: syn::LitInt = inner.value()?.parse()?;
+                                min = Some(v.base10_parse::<usize>()?);
+                                Ok(())
+                            } else if inner.path.is_ident("max") {
+                                let v: syn::LitInt = inner.value()?.parse()?;
+                                max = Some(v.base10_parse::<usize>()?);
+                                Ok(())
+                            } else {
+                                Err(inner.error("unsupported length property"))
+                            }
+                        })?;
+                        
+                        if let Some(min_val) = min {
+                            validation_checks.push(quote! {
+                                if self.#field_name.len() < #min_val {
+                                    return Err(format!("Field {} must be at least {} characters long", stringify!(#field_name), #min_val));
+                                }
+                            });
+                        }
+                        if let Some(max_val) = max {
+                            validation_checks.push(quote! {
+                                if self.#field_name.len() > #max_val {
+                                    return Err(format!("Field {} must be at most {} characters long", stringify!(#field_name), #max_val));
+                                }
+                            });
+                        }
+                        Ok(())
+                    } else if meta.path.is_ident("range") {
+                        let mut min = None;
+                        let mut max = None;
+                        
+                        meta.parse_nested_meta(|inner| {
+                            if inner.path.is_ident("min") {
+                                let v: syn::LitInt = inner.value()?.parse()?;
+                                min = Some(v.base10_parse::<i64>()?);
+                                Ok(())
+                            } else if inner.path.is_ident("max") {
+                                let v: syn::LitInt = inner.value()?.parse()?;
+                                max = Some(v.base10_parse::<i64>()?);
+                                Ok(())
+                            } else {
+                                Err(inner.error("unsupported range property"))
+                            }
+                        })?;
+                        
+                        if let Some(min_val) = min {
+                            validation_checks.push(quote! {
+                                if (self.#field_name as i64) < #min_val {
+                                    return Err(format!("Field {} must be >= {}", stringify!(#field_name), #min_val));
+                                }
+                            });
+                        }
+                        if let Some(max_val) = max {
+                            validation_checks.push(quote! {
+                                if (self.#field_name as i64) > #max_val {
+                                    return Err(format!("Field {} must be <= {}", stringify!(#field_name), #max_val));
+                                }
+                            });
+                        }
+                        Ok(())
+                    } else if meta.path.is_ident("regex") {
+                        let value = meta.value()?;
+                        let pattern: syn::LitStr = value.parse()?;
+                        let pat_str = pattern.value();
+                        
+                        validation_checks.push(quote! {
+                            {
+                                static REGEX: ::oxidite::db::once_cell::sync::Lazy<::oxidite::db::regex::Regex> =
+                                    ::oxidite::db::once_cell::sync::Lazy::new(|| ::oxidite::db::regex::Regex::new(#pat_str).unwrap());
+                                if !REGEX.is_match(&self.#field_name) {
+                                    return Err(format!("Field {} does not match required pattern", stringify!(#field_name)));
+                                }
+                            }
+                        });
+                        Ok(())
+                    } else if meta.path.is_ident("custom") {
+                        let value = meta.value()?;
+                        let func_str: syn::LitStr = value.parse()?;
+                        let func_ident = syn::Ident::new(&func_str.value(), func_str.span());
+                        
+                        validation_checks.push(quote! {
+                            if let Err(e) = self.#func_ident(db).await {
+                                return Err(e);
+                            }
+                        });
+                        Ok(())
+                    } else if meta.path.is_ident("unique") {
+                        let mut table = None;
+                        let mut column = None;
+                        
+                        meta.parse_nested_meta(|inner| {
+                            if inner.path.is_ident("table") {
+                                let v: syn::LitStr = inner.value()?.parse()?;
+                                table = Some(v.value());
+                                Ok(())
+                            } else if inner.path.is_ident("column") {
+                                let v: syn::LitStr = inner.value()?.parse()?;
+                                column = Some(v.value());
+                                Ok(())
+                            } else {
+                                Err(inner.error("unsupported unique property"))
+                            }
+                        })?;
+                        
+                        let t_name = table.unwrap_or_else(|| table_name.clone());
+                        let c_name = column.unwrap_or_else(|| field_name.to_string());
+                        
+                        validation_checks.push(quote! {
+                            {
+                                let query = format!("SELECT COUNT(*) FROM {} WHERE {} = $1 AND id != $2", #t_name, #c_name);
+                                let row = db.fetch_one(::oxidite::db::sqlx::query(&query).bind(&self.#field_name).bind(self.id)).await
+                                    .map_err(|e| format!("Database error during unique validation: {}", e))?;
+                                    
+                                if let Some(r) = row {
+                                    use ::oxidite::db::sqlx::Row;
+                                    let count: i64 = r.try_get(0).unwrap_or(0);
+                                    if count > 0 {
+                                        return Err(format!("Field {} must be unique", stringify!(#field_name)));
+                                    }
+                                }
+                            }
+                        });
+                        Ok(())
+                    } else {
+                        // ignore unknown validations instead of erroring, so we don't break backward compatibility
+                        Ok(())
+                    }
+                });
+                
+                if let Err(e) = res {
+                    return Err(e);
                 }
             }
         }
     }
 
+    let column_schemas = named_fields.iter().map(|f| {
+        let field_ident = f.ident.as_ref().unwrap();
+        let field_name = field_ident.to_string();
+        let (ty, nullable) = map_rust_type_to_column_type(&f.ty);
+        let primary_key = field_name == "id";
+        
+        quote! {
+            ::oxidite::db::ColumnSchema {
+                name: #field_name.to_string(),
+                ty: ::oxidite::db::ColumnType::#ty,
+                nullable: #nullable,
+                primary_key: #primary_key,
+                default: None,
+            }
+        }
+    });
+
     let expanded = quote! {
-        #[oxidite_db::async_trait]
-        impl oxidite_db::Model for #name {
+        #[::oxidite::db::async_trait]
+        impl ::oxidite::db::Model for #name {
             fn table_name() -> &'static str {
                 #table_name
+            }
+
+            fn schema() -> ::oxidite::db::TableSchema {
+                ::oxidite::db::TableSchema {
+                    name: #table_name.to_string(),
+                    columns: vec![
+                        #(#column_schemas),*
+                    ],
+                }
             }
 
             fn fields() -> &'static [&'static str] {
@@ -265,8 +443,8 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 #has_deleted_at
             }
 
-            async fn create(&mut self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
-                let query = oxidite_db::sqlx::query(#create_query);
+            async fn create(&mut self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let query = ::oxidite::db::sqlx::query(#create_query);
                 #(
                     let query = query.bind(&self.#non_id_names);
                 )*
@@ -277,8 +455,8 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 Ok(())
             }
 
-            async fn update(&mut self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
-                let query = oxidite_db::sqlx::query(#update_query);
+            async fn update(&mut self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let query = ::oxidite::db::sqlx::query(#update_query);
                 #(
                     let query = query.bind(&self.#non_id_names);
                 )*
@@ -291,14 +469,15 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
             #delete_impl
 
-            async fn force_delete(&self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
-                let query = oxidite_db::sqlx::query(#hard_delete_query)
+            async fn force_delete(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let query = ::oxidite::db::sqlx::query(#hard_delete_query)
                     .bind(&self.id);
                 db.execute_query(query).await?;
                 Ok(())
             }
 
-            fn validate(&self) -> std::result::Result<(), String> {
+            async fn validate(&self, db: &impl ::oxidite::db::Database) -> std::result::Result<(), String> {
+                let _ = db; // silence unused warning if there are no db validations
                 #(#validation_checks)*
                 Ok(())
             }
@@ -309,7 +488,103 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         }
     };
 
-    Ok(expanded)
+    let mut relation_methods = Vec::new();
+    
+    for attr in &input.attrs {
+        if attr.path().is_ident("has_many") || attr.path().is_ident("has_one") || attr.path().is_ident("belongs_to") {
+            let mut model_name = None;
+            let mut foreign_key = None;
+            let mut name = None;
+            
+            let is_has_many = attr.path().is_ident("has_many");
+            let is_has_one = attr.path().is_ident("has_one");
+            let is_belongs_to = attr.path().is_ident("belongs_to");
+            
+            let res = attr.parse_nested_meta(|meta| {
+                if meta.path.is_ident("model") {
+                    let v: syn::LitStr = meta.value()?.parse()?;
+                    model_name = Some(v.value());
+                    Ok(())
+                } else if meta.path.is_ident("foreign_key") {
+                    let v: syn::LitStr = meta.value()?.parse()?;
+                    foreign_key = Some(v.value());
+                    Ok(())
+                } else if meta.path.is_ident("name") {
+                    let v: syn::LitStr = meta.value()?.parse()?;
+                    name = Some(v.value());
+                    Ok(())
+                } else {
+                    Err(meta.error("unsupported relation property"))
+                }
+            });
+            
+            if let Err(e) = res {
+                return Err(e);
+            }
+            
+            let m_name = model_name.ok_or_else(|| syn::Error::new(attr.span(), "missing `model` in relation"))?;
+            let fk_name = foreign_key.ok_or_else(|| syn::Error::new(attr.span(), "missing `foreign_key` in relation"))?;
+            let rel_name = name.ok_or_else(|| syn::Error::new(attr.span(), "missing `name` in relation"))?;
+            
+            let model_ident = syn::Ident::new(&m_name, proc_macro2::Span::call_site());
+            let rel_ident = syn::Ident::new(&rel_name, proc_macro2::Span::call_site());
+            
+            if is_has_many {
+                let eager_ident = syn::Ident::new(&format!("eager_load_{}", rel_name), proc_macro2::Span::call_site());
+                relation_methods.push(quote! {
+                    /// Lazy-load: fetches related rows one-by-one (N+1).
+                    pub async fn #rel_ident(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<Vec<#model_ident>> {
+                        #model_ident::query().filter_eq(#fk_name, self.id).fetch_all(db).await
+                    }
+
+                    /// Eager-load: fetches related rows for many parents in a single IN query.
+                    /// Returns a HashMap keyed by parent id.
+                    pub async fn #eager_ident(
+                        db: &impl ::oxidite::db::Database,
+                        parents: &[Self],
+                    ) -> ::oxidite::db::Result<std::collections::HashMap<i64, Vec<#model_ident>>> {
+                        let ids: Vec<i64> = parents.iter().map(|p| p.id).collect();
+                        ::oxidite::db::HasMany::<Self, #model_ident>::eager_load(db, &ids, #fk_name).await
+                    }
+                });
+            } else if is_has_one {
+                let eager_ident = syn::Ident::new(&format!("eager_load_{}", rel_name), proc_macro2::Span::call_site());
+                relation_methods.push(quote! {
+                    /// Lazy-load: fetches related row one-by-one (N+1).
+                    pub async fn #rel_ident(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<Option<#model_ident>> {
+                        #model_ident::query().filter_eq(#fk_name, self.id).fetch_one(db).await
+                    }
+
+                    /// Eager-load: fetches related rows for many parents in a single IN query.
+                    /// Returns a HashMap keyed by parent id.
+                    pub async fn #eager_ident(
+                        db: &impl ::oxidite::db::Database,
+                        parents: &[Self],
+                    ) -> ::oxidite::db::Result<std::collections::HashMap<i64, Option<#model_ident>>> {
+                        let ids: Vec<i64> = parents.iter().map(|p| p.id).collect();
+                        ::oxidite::db::HasOne::<Self, #model_ident>::eager_load(db, &ids, #fk_name).await
+                    }
+                });
+            } else if is_belongs_to {
+                let fk_ident = syn::Ident::new(&fk_name, proc_macro2::Span::call_site());
+                relation_methods.push(quote! {
+                    pub async fn #rel_ident(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<Option<#model_ident>> {
+                        #model_ident::find(db, self.#fk_ident).await
+                    }
+                });
+            }
+        }
+    }
+
+    let final_expanded = quote! {
+        #expanded
+        
+        impl #name {
+            #(#relation_methods)*
+        }
+    };
+
+    Ok(final_expanded)
 }
 
 fn parse_table_name(input: &DeriveInput) -> syn::Result<Option<String>> {
@@ -410,4 +685,64 @@ fn is_option_i64_type(ty: &Type) -> bool {
     };
 
     is_i64_type(inner)
+}
+
+fn map_rust_type_to_column_type(ty: &Type) -> (proc_macro2::TokenStream, bool) {
+    if let Some(inner) = get_option_inner(ty) {
+        let (tokens, _) = map_rust_type_to_column_type(inner);
+        return (tokens, true);
+    }
+
+    if is_i64_type(ty) {
+        (quote!(BigInt), false)
+    } else if is_type(ty, "i32") {
+        (quote!(Int), false)
+    } else if is_string_type(ty) {
+        (quote!(Text), false)
+    } else if is_type(ty, "bool") {
+        (quote!(Boolean), false)
+    } else if is_type(ty, "f64") {
+        (quote!(Float), false)
+    } else if is_type(ty, "DateTime") {
+        (quote!(DateTime), false)
+    } else if is_type(ty, "Value") {
+        (quote!(Json), false)
+    } else if is_type(ty, "Uuid") {
+        (quote!(Uuid), false)
+    } else {
+        (quote!(Text), false)
+    }
+}
+
+fn get_option_inner(ty: &Type) -> Option<&Type> {
+    let Type::Path(tp) = ty else {
+        return None;
+    };
+
+    let last = tp.path.segments.last()?;
+    if last.ident != "Option" {
+        return None;
+    }
+
+    let syn::PathArguments::AngleBracketed(args) = &last.arguments else {
+        return None;
+    };
+
+    if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
+        Some(inner)
+    } else {
+        None
+    }
+}
+
+fn is_type(ty: &Type, name: &str) -> bool {
+    match ty {
+        Type::Path(tp) => tp
+            .path
+            .segments
+            .last()
+            .map(|s| s.ident == name)
+            .unwrap_or(false),
+        _ => false,
+    }
 }

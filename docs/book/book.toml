@@ -2,18 +2,30 @@
 authors = ["Meshack Bahati Ouma"]
 language = "en"
 src = "."
-title = "Oxidite Documentation"
+title = "Oxidite Documentation - Professional Rust Web Framework"
+description = "Comprehensive documentation for Oxidite, a high-performance, batteries-included web framework for Rust. Learn about routing, ORM, OpenAPI, real-time features, and more."
 
 [build]
 build-dir = "book"
 
 [output.html]
 default-theme = "light"
-git-repository-url = "https://github.com/meshackbahati/rust-oxidite/tree/main/docs/book"
+git-repository-url = "https://github.com/meshackbahati/rust-oxidite"
 edit-url-template = "https://github.com/meshackbahati/rust-oxidite/edit/main/docs/book/{path}"
-site-url = "/docs/book/book/"
+site-url = "https://oxidite.rs/docs/book/"
 additional-css = ["custom.css"]
 additional-js = ["branding.js"]
+google-analytics = "G-XXXXXXXXXX"
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+expand = true
+heading-split-level = 3
 
 [output.html.playground]
 editable = true

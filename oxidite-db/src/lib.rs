@@ -5,13 +5,23 @@ use sqlx::{
 use std::{fmt::Debug, future::Future, path::PathBuf};
 use thiserror::Error;
 
+#[cfg(test)]
+extern crate self as oxidite;
+
 pub use sqlx;
+
+pub mod db {
+    pub use crate::*;
+}
 
 pub mod migrations;
 pub use migrations::{Migration, MigrationManager};
 
 pub mod relations;
 pub use relations::{BelongsTo, HasMany, HasOne};
+
+pub mod schema;
+pub use schema::{TableSchema, ColumnSchema, ColumnType};
 
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
 pub type OrmResult<T> = std::result::Result<T, OrmError>;
@@ -133,6 +143,19 @@ pub trait Database: Send + Sync + Debug {
         &self,
         query: sqlx::query::Query<'q, sqlx::Any, sqlx::any::AnyArguments<'q>>,
     ) -> Result<Option<AnyRow>>;
+
+    /// Get a schema inspector for this database
+    fn inspector(&self) -> Box<dyn DbInspector>;
+}
+
+/// Trait for inspecting database schema
+#[async_trait]
+pub trait DbInspector: Send + Sync {
+    /// Get the schema for a specific table
+    async fn get_table_schema(&self, table_name: &str) -> Result<Option<TableSchema>>;
+    
+    /// List all user tables in the database
+    async fn list_tables(&self) -> Result<Vec<String>>;
 }
 
 /// Database connection pool wrapper
@@ -233,6 +256,7 @@ impl Database for DbPool {
         let tx = self.pool.begin().await?;
         Ok(DbTransaction {
             tx: Arc::new(Mutex::new(Some(tx))),
+            pool: self.pool.clone(),
             db_type: self.db_type,
         })
     }
@@ -260,6 +284,128 @@ impl Database for DbPool {
         let row = query.fetch_optional(&self.pool).await?;
         Ok(row)
     }
+
+    fn inspector(&self) -> Box<dyn DbInspector> {
+        Box::new(GenericInspector {
+            pool: self.pool.clone(),
+            db_type: self.db_type,
+        })
+    }
+}
+
+struct GenericInspector {
+    pool: AnyPool,
+    db_type: DatabaseType,
+}
+
+#[async_trait]
+impl DbInspector for GenericInspector {
+    async fn list_tables(&self) -> Result<Vec<String>> {
+        let sql = match self.db_type {
+            DatabaseType::Postgres => "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename != '_migrations'",
+            DatabaseType::MySql => "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name != '_migrations'",
+            DatabaseType::Sqlite => "SELECT name FROM sqlite_master WHERE type='table' AND name != '_migrations' AND name != 'sqlite_sequence'",
+        };
+        
+        let rows = sqlx::query(sql).fetch_all(&self.pool).await?;
+        let mut tables = Vec::new();
+        for row in rows {
+            use sqlx::Row;
+            let name: String = row.try_get(0)?;
+            tables.push(name);
+        }
+        Ok(tables)
+    }
+
+    async fn get_table_schema(&self, table_name: &str) -> Result<Option<TableSchema>> {
+        // Implement detailed column inspection here.
+        // For Postgres: information_schema.columns
+        // For SQLite: PRAGMA table_info(table_name)
+        
+        match self.db_type {
+            DatabaseType::Sqlite => {
+                let sql = format!("PRAGMA table_info({})", table_name);
+                let rows = sqlx::query(&sql).fetch_all(&self.pool).await?;
+                if rows.is_empty() { return Ok(None); }
+                
+                let mut columns = Vec::new();
+                for row in rows {
+                    use sqlx::Row;
+                    let name: String = row.try_get("name")?;
+                    let ty_str: String = row.try_get("type")?;
+                    let notnull: i32 = row.try_get("notnull")?;
+                    let pk: i32 = row.try_get("pk")?;
+                    
+                    columns.push(ColumnSchema {
+                        name,
+                        ty: self.parse_sqlite_type(&ty_str),
+                        nullable: notnull == 0,
+                        primary_key: pk > 0,
+                        default: None, // Simplified
+                    });
+                }
+                Ok(Some(TableSchema {
+                    name: table_name.to_string(),
+                    columns,
+                }))
+            },
+            _ => {
+                // Implement for PG/MySQL similarly using information_schema
+                let sql = format!(
+                    "SELECT column_name, data_type, is_nullable, column_default 
+                     FROM information_schema.columns 
+                     WHERE table_name = '{}' AND table_schema = current_schema()",
+                    table_name
+                );
+                let rows = sqlx::query(&sql).fetch_all(&self.pool).await?;
+                if rows.is_empty() { return Ok(None); }
+
+                let mut columns = Vec::new();
+                for row in rows {
+                    use sqlx::Row;
+                    let name: String = row.try_get("column_name")?;
+                    let ty_str: String = row.try_get("data_type")?;
+                    let nullable: String = row.try_get("is_nullable")?;
+                    
+                    columns.push(ColumnSchema {
+                        name,
+                        ty: self.parse_pg_type(&ty_str),
+                        nullable: nullable == "YES",
+                        primary_key: false, // Would need separate query for PKs in PG
+                        default: None,
+                    });
+                }
+                Ok(Some(TableSchema {
+                    name: table_name.to_string(),
+                    columns,
+                }))
+            }
+        }
+    }
+}
+
+impl GenericInspector {
+    fn parse_sqlite_type(&self, ty: &str) -> ColumnType {
+        let ty = ty.to_uppercase();
+        if ty.contains("INT") { ColumnType::BigInt }
+        else if ty.contains("CHAR") { ColumnType::Text }
+        else if ty.contains("TEXT") { ColumnType::Text }
+        else if ty.contains("REAL") || ty.contains("DOUB") { ColumnType::Float }
+        else if ty.contains("BOOL") { ColumnType::Boolean }
+        else { ColumnType::Text }
+    }
+
+    fn parse_pg_type(&self, ty: &str) -> ColumnType {
+        let ty = ty.to_lowercase();
+        if ty.contains("bigint") { ColumnType::BigInt }
+        else if ty.contains("integer") { ColumnType::Int }
+        else if ty.contains("boolean") { ColumnType::Boolean }
+        else if ty.contains("timestamp") { ColumnType::DateTime }
+        else if ty.contains("json") { ColumnType::Json }
+        else if ty.contains("uuid") { ColumnType::Uuid }
+        else if ty.contains("double") || ty.contains("numeric") { ColumnType::Float }
+        else { ColumnType::Text }
+    }
 }
 
 use std::sync::Arc;
@@ -269,6 +415,7 @@ use tokio::sync::Mutex;
 #[derive(Clone, Debug)]
 pub struct DbTransaction {
     tx: Arc<Mutex<Option<Transaction<'static, sqlx::Any>>>>,
+    pool: AnyPool,
     db_type: DatabaseType,
 }
 
@@ -354,6 +501,13 @@ impl Database for DbTransaction {
         Err(sqlx::Error::Configuration(
             "Nested transactions not supported".into(),
         ))
+    }
+
+    fn inspector(&self) -> Box<dyn DbInspector> {
+        Box::new(GenericInspector {
+            pool: self.pool.clone(),
+            db_type: self.db_type,
+        })
     }
 
     async fn execute_query<'q>(
@@ -480,6 +634,12 @@ impl From<serde_json::Value> for QueryValue {
 #[derive(Debug, Clone)]
 enum Filter {
     Eq { column: String, value: QueryValue },
+    NotEq { column: String, value: QueryValue },
+    Gt { column: String, value: QueryValue },
+    Gte { column: String, value: QueryValue },
+    Lt { column: String, value: QueryValue },
+    Lte { column: String, value: QueryValue },
+    In { column: String, values: Vec<QueryValue> },
     Like { column: String, value: String },
     IsNull { column: String },
     IsNotNull { column: String },
@@ -605,6 +765,96 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    pub fn filter_not_eq(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::NotEq {
+            column: column.to_string(),
+            value: value.into(),
+        });
+        self
+    }
+
+    pub fn filter_gt(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::Gt {
+            column: column.to_string(),
+            value: value.into(),
+        });
+        self
+    }
+
+    pub fn filter_gte(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::Gte {
+            column: column.to_string(),
+            value: value.into(),
+        });
+        self
+    }
+
+    pub fn filter_lt(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::Lt {
+            column: column.to_string(),
+            value: value.into(),
+        });
+        self
+    }
+
+    pub fn filter_lte(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::Lte {
+            column: column.to_string(),
+            value: value.into(),
+        });
+        self
+    }
+
+    pub fn filter_in(mut self, column: &str, values: Vec<impl Into<QueryValue>>) -> Self {
+        if !is_valid_identifier(column) {
+            self.build_error = Some(QueryBuildError::InvalidIdentifier {
+                kind: "column",
+                value: column.to_string(),
+            });
+            return self;
+        }
+        self.filters.push(Filter::In {
+            column: column.to_string(),
+            values: values.into_iter().map(|v| v.into()).collect(),
+        });
+        self
+    }
+
     pub fn filter_is_not_null(mut self, column: &str) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -684,6 +934,36 @@ impl<M: Model> ModelQuery<M> {
                 Filter::Eq { column, value } => {
                     clauses.push(format!("{column} = ?"));
                     binds.push(value.clone());
+                }
+                Filter::NotEq { column, value } => {
+                    clauses.push(format!("{column} != ?"));
+                    binds.push(value.clone());
+                }
+                Filter::Gt { column, value } => {
+                    clauses.push(format!("{column} > ?"));
+                    binds.push(value.clone());
+                }
+                Filter::Gte { column, value } => {
+                    clauses.push(format!("{column} >= ?"));
+                    binds.push(value.clone());
+                }
+                Filter::Lt { column, value } => {
+                    clauses.push(format!("{column} < ?"));
+                    binds.push(value.clone());
+                }
+                Filter::Lte { column, value } => {
+                    clauses.push(format!("{column} <= ?"));
+                    binds.push(value.clone());
+                }
+                Filter::In { column, values } => {
+                    let placeholders = std::iter::repeat("?")
+                        .take(values.len())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    clauses.push(format!("{column} IN ({placeholders})"));
+                    for v in values {
+                        binds.push(v.clone());
+                    }
                 }
                 Filter::Like { column, value } => {
                     clauses.push(format!("{column} LIKE ?"));
@@ -876,6 +1156,9 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     /// Get the table name
     fn table_name() -> &'static str;
 
+    /// Get the full schema metadata for this model
+    fn schema() -> TableSchema;
+
     /// Get the list of fields (columns)
     fn fields() -> &'static [&'static str];
 
@@ -977,7 +1260,8 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     async fn force_delete(&self, db: &impl Database) -> Result<()>;
 
     /// Validate the model fields
-    fn validate(&self) -> std::result::Result<(), String> {
+    async fn validate(&self, db: &impl Database) -> std::result::Result<(), String> {
+        let _ = db; // allow unused in default impl
         Ok(())
     }
 
@@ -989,7 +1273,7 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
 
     /// Save (create or update)
     async fn save(&mut self, db: &impl Database) -> Result<()> {
-        if let Err(e) = self.validate() {
+        if let Err(e) = self.validate(db).await {
             return Err(sqlx::Error::Protocol(e.into()));
         }
 
@@ -1002,7 +1286,7 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
 
     /// Validate and save using a typed ORM error surface.
     async fn save_checked(&mut self, db: &impl Database) -> OrmResult<()> {
-        if let Err(err) = self.validate() {
+        if let Err(err) = self.validate(db).await {
             return Err(OrmError::Validation(err));
         }
         self.save(db).await?;

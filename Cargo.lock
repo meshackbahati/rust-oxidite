@@ -200,7 +200,7 @@ checksum = "9035ad2d096bed7955a320ee7e2230574d28fd3c3a0f186cbea1ff3c7eed5dbb"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -891,7 +891,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -922,7 +922,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1280,7 +1280,7 @@ checksum = "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -1606,7 +1606,7 @@ checksum = "162ee34ebcb7c64a8abebc059ce0fee27c2262618d7b60ed8faf72fef13c3650"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -2764,9 +2764,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.21.3"
+version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "once_cell_polyfill"
@@ -2803,7 +2803,7 @@ checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -2838,7 +2838,7 @@ checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
 
 [[package]]
 name = "oxidite"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "chrono",
  "oxidite-auth",
@@ -2866,7 +2866,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-auth"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "argon2",
  "async-trait",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cache"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "redis",
@@ -2908,7 +2908,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cli"
-version = "2.1.0-gen"
+version = "2.2.0"
 dependencies = [
  "bytes",
  "chrono",
@@ -2934,13 +2934,16 @@ dependencies = [
  "oxidite-storage",
  "oxidite-template",
  "oxidite-utils",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
  "tempfile",
  "tokio",
 ]
 
 [[package]]
 name = "oxidite-config"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "dotenv",
  "notify",
@@ -2953,9 +2956,10 @@ dependencies = [
 
 [[package]]
 name = "oxidite-core"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
+ "base64 0.22.1",
  "bytes",
  "cookie",
  "futures-util",
@@ -2972,6 +2976,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+ "sha1",
  "thiserror 2.0.18",
  "tokio",
  "tokio-rustls 0.26.4",
@@ -2981,7 +2986,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-db"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -2999,7 +3004,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-graphql"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3017,19 +3022,19 @@ dependencies = [
 
 [[package]]
 name = "oxidite-macros"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "oxidite-db",
  "proc-macro2",
  "quote",
  "sqlx",
- "syn 2.0.114",
+ "syn 2.0.117",
  "trybuild",
 ]
 
 [[package]]
 name = "oxidite-mail"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3042,7 +3047,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-middleware"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -3063,7 +3068,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-openapi"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "oxidite-core",
  "serde",
@@ -3072,7 +3077,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-plugin"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3087,7 +3092,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-queue"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3103,7 +3108,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-realtime"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -3118,7 +3123,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-security"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
@@ -3131,13 +3136,14 @@ dependencies = [
 
 [[package]]
 name = "oxidite-storage"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-s3",
  "bytes",
  "mime_guess",
+ "once_cell",
  "thiserror 2.0.18",
  "tokio",
  "uuid 1.19.0",
@@ -3145,7 +3151,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-template"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "bytes",
  "http 1.4.0",
@@ -3161,7 +3167,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-testing"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3178,7 +3184,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-utils"
-version = "2.1.0"
+version = "2.2.0"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3454,9 +3460,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.43"
+version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc74d9a594b72ae6656596548f56f667211f8a97b3d4c3d467150794690dc40a"
+checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
 dependencies = [
  "proc-macro2",
 ]
@@ -4000,7 +4006,7 @@ checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4291,7 +4297,7 @@ dependencies = [
  "quote",
  "sqlx-core",
  "sqlx-macros-core",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4314,7 +4320,7 @@ dependencies = [
  "sqlx-mysql",
  "sqlx-postgres",
  "sqlx-sqlite",
- "syn 2.0.114",
+ "syn 2.0.117",
  "tokio",
  "url",
 ]
@@ -4444,7 +4450,6 @@ dependencies = [
  "cfg-if",
  "libc",
  "psm",
- "windows-sys 0.52.0",
  "windows-sys 0.59.0",
 ]
 
@@ -4490,9 +4495,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.114"
+version = "2.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4d107df263a3013ef9b1879b0df87d706ff80f65a86ea879bd9c31f9b307c2a"
+checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4516,7 +4521,7 @@ checksum = "728a70f3dbaf5bab7f0c4b1ac8d7ae5ea60a4b5549c8a5914361c99147a709d2"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4594,7 +4599,7 @@ checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4605,7 +4610,7 @@ checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4698,7 +4703,7 @@ checksum = "af407857209536a95c8e56f8231ef2c2e2aff839b22e07a1ffcbc617e9db9fa5"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -4902,7 +4907,7 @@ checksum = "7490cfa5ec963746568740651ac6781f701c9c5ea257c58e057f3ba8cf69e8da"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -5231,7 +5236,7 @@ dependencies = [
  "bumpalo",
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
  "wasm-bindgen-shared",
 ]
 
@@ -5331,7 +5336,7 @@ checksum = "053e2e040ab57b9dc951b72c264860db7eb3b0200ba345b4e4c3b14f67855ddf"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -5342,7 +5347,7 @@ checksum = "3f316c4a2570ba26bbec722032c4099d8c8bc095efccdc15688708623367e358"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -5720,7 +5725,7 @@ checksum = "b659052874eb698efe5b9e8cf382204678a0086ebf46982b79d6ca3182927e5d"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
  "synstructure",
 ]
 
@@ -5741,7 +5746,7 @@ checksum = "2c7962b26b0a8685668b671ee4b54d007a67d4eaf05fda79ac0ecf41e32270f1"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -5761,7 +5766,7 @@ checksum = "d71e5d6e06ab090c67b5e44993ec16b72dcbaabc526db883a360057678b48502"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
  "synstructure",
 ]
 
@@ -5801,7 +5806,7 @@ checksum = "eadce39539ca5cb3985590102671f2567e659fca9666581ad3411d59207951f3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.114",
+ "syn 2.0.117",
 ]
 
 [[package]]

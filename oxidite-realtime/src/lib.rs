@@ -11,7 +11,8 @@ pub mod websocket;
 pub use sse::{SseEvent, SseStream, SseConfig};
 pub use pubsub::{PubSub, Subscriber, Channel};
 pub use event::{Event, EventType};
-pub use websocket::{WebSocketConnection, WebSocketManager, Message as WsMessage, WebSocketError};
+pub use websocket::{WebSocketConnection, WebSocketManager, Message, WebSocketError};
+pub use tokio_tungstenite::WebSocketStream;
 
 use thiserror::Error;
 

@@ -3,12 +3,10 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Installation - Oxidite Documentation</title>
-
-
-        <!-- Custom HTML head -->
-
-        <meta name="description" content="">
+        <title>Installation Guide | Oxidite v2.2</title>
+        <meta name="description" content="Step-by-step guide to installing Oxidite CLI and setting up your first high-performance Rust web project.">
+        <meta name="keywords" content="Oxidite Installation, Rust Setup, Oxidite CLI, Rust Web Framework Setup">
+        <meta property="og:title" content="Installation Guide - Oxidite Framework">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -202,7 +200,7 @@ cargo install --path oxidite-cli
 cargo install oxidite-cli
 
 # Or pin this generated CLI build
-cargo install oxidite-cli --version 2.1.0-gen
+cargo install oxidite-cli --version 2.2.0
 </code></pre>
 <h2 id="creating-your-first-project"><a class="header" href="#creating-your-first-project">Creating Your First Project</a></h2>
 <p>Once you have the CLI installed, create a new project:</p>
@@ -214,14 +212,14 @@ oxidite --version
 <h2 id="manual-installation"><a class="header" href="#manual-installation">Manual Installation</a></h2>
 <p>If you prefer to add Oxidite to an existing project manually, add it to your <code>Cargo.toml</code>:</p>
 <pre><code class="language-toml">[dependencies]
-oxidite = { version = "2.1", features = ["full"] }
+oxidite = { version = "2.2", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 </code></pre>
 <h2 id="development-dependencies"><a class="header" href="#development-dependencies">Development Dependencies</a></h2>
 <p>For testing and development, you may also want to add:</p>
 <pre><code class="language-toml">[dev-dependencies]
-oxidite-testing = "2.0"
+oxidite-testing = "2.2"
 tokio-test = "0.4"
 </code></pre>
 <h2 id="verifying-installation"><a class="header" href="#verifying-installation">Verifying Installation</a></h2>

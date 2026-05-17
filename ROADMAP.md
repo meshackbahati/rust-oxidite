@@ -4,20 +4,19 @@ This roadmap tracks technical implementation work in this repository.
 
 ## Current release target
 
-- Framework release line: `2.1.0`
+- Framework release line: `2.2.0`
 - Stability: `beta`
 - Source of truth: this file (`ROADMAP.md`)
 
-## Completed modernization stream
+## Completed modernization stream (v2.2.0 Hardening)
 
-- ORM ergonomics and typed errors (`oxidite-db`, `oxidite-macros`)
-- Safer query APIs, pagination helpers, and relation eager loading
-- Typed migration errors + backend-specific migration table SQL
-- CLI hardening for model/migration/seed flows
-- Shared SQL script executor in CLI commands
-- CLI integration tests for project generation and generators
-- Static HTML docs deployment pipeline to `doc/book/book`
-- Beta-facing project messaging and roadmap-first README badges
+- **Advanced ORM Validation**: Async validations for Models (`length`, `range`, `email`, `url`, `regex`, `custom`, `unique`).
+- **N+1 Eager Loading**: Batch `IN` queries support in derive macros (`eager_load_posts`, `eager_load_profile`) alongside lazy-loading relations.
+- **Unified Cloud Storage**: Complete `StorageFacade` supporting Local, S3, Cloudinary, and ImageKit backends.
+- **Ignition-style Diagnostics**: Rich HTML trace pages for development-mode 500 exceptions.
+- **Interactive REPL (`oxidite tinker`)**: Full cargo-integrated interactive console CLI command.
+- **Compile-Time Router Verification**: Added `IntoHandler` trait and `handler_fn` route helper to verify extractors at compile time.
+- **State Injection DX**: Scaffolded controllers and generators to use `State<Arc<AppState>>` out of the box.
 
 ## Batch A (v1.1 carry-over)
 

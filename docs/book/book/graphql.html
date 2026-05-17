@@ -3,12 +3,12 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>GraphQL - Oxidite Documentation</title>
+        <title>GraphQL | Oxidite v2.2</title>
 
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
+        <meta name="description" content="GraphQL integration with schema definitions and resolvers.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
@@ -644,31 +644,23 @@ use serde::{Deserialize, Serialize};
 #[model(table = "graphql_users")]
 #[graphql(description = "A user in the system")]
 pub struct GraphqlUser {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub name: String,
-    #[model(unique, not_null)]
     pub email: String,
     pub age: i32,
-    #[model(created_at)]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 #[derive(Model, Serialize, Deserialize, juniper::GraphQLObject)]
 #[model(table = "graphql_posts")]
 #[graphql(description = "A blog post")]
 pub struct GraphqlPost {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(not_null)]
+    pub id: i64,
     pub title: String,
-    #[model(not_null)]
     pub content: String,
     pub author_id: i32,
     pub published: bool,
-    #[model(created_at)]
-    pub created_at: String,
+    pub created_at: i64,
 }
 
 // Enhanced context with database access
@@ -684,7 +676,7 @@ impl DbQueryRoot {
     /// Get a user by ID
     async fn user(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
         // In a real app, fetch from database
-        let user = GraphqlUser::find_by_id(id).await
+        let user = GraphqlUser::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(user)
@@ -692,7 +684,7 @@ impl DbQueryRoot {
     
     /// Get all users
     async fn users(context: &amp;DatabaseContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
-        let users = GraphqlUser::find_all().await
+        let users = GraphqlUser::all(&amp;db).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(users)
@@ -700,7 +692,7 @@ impl DbQueryRoot {
     
     /// Get a post by ID
     async fn post(id: i32, context: &amp;DatabaseContext) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
-        let post = GraphqlPost::find_by_id(id).await
+        let post = GraphqlPost::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(post)
@@ -711,7 +703,7 @@ impl DbQueryRoot {
         author_id: i32,
         context: &amp;DatabaseContext
     ) -&gt; FieldResult&lt;Vec&lt;GraphqlPost&gt;&gt; {
-        let posts = GraphqlPost::find_where(&amp;format!("author_id = {}", author_id)).await
+        let posts = GraphqlPost::query().filter_eq(&amp;format!("author_id = {}", author_id)).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
         
         Ok(posts)
@@ -752,7 +744,7 @@ impl DbMutationRoot {
         age: Option&lt;i32&gt;,
         context: &amp;DatabaseContext,
     ) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
-        if let Some(mut user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+        if let Some(mut user) = GraphqlUser::find(&amp;db, id).await.map_err(|e| {
             juniper::FieldError::new(e.to_string(), juniper::Value::null())
         })? {
             if let Some(new_name) = name {
@@ -779,7 +771,7 @@ impl DbMutationRoot {
         id: i32,
         context: &amp;DatabaseContext,
     ) -&gt; FieldResult&lt;bool&gt; {
-        if let Some(user) = GraphqlUser::find_by_id(id).await.map_err(|e| {
+        if let Some(user) = GraphqlUser::find(&amp;db, id).await.map_err(|e| {
             juniper::FieldError::new(e.to_string(), juniper::Value::null())
         })? {
             user.delete().await
@@ -825,7 +817,7 @@ impl SecuredQueryRoot {
     async fn users(context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Vec&lt;GraphqlUser&gt;&gt; {
         match &amp;context.user {
             Some(user) if is_admin_user(user) =&gt; {
-                GraphqlUser::find_all().await
+                GraphqlUser::all(&amp;db).await
                     .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
             }
             Some(_) =&gt; Err(juniper::FieldError::new(
@@ -842,7 +834,7 @@ impl SecuredQueryRoot {
     /// Get user by ID (public endpoint)
     async fn user(id: i32, context: &amp;AuthenticatedContext) -&gt; FieldResult&lt;Option&lt;GraphqlUser&gt;&gt; {
         // Anyone can view user profiles
-        GraphqlUser::find_by_id(id).await
+        GraphqlUser::find(&amp;db, id).await
             .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))
     }
 }
@@ -889,7 +881,7 @@ impl SecuredMutationRoot {
     ) -&gt; FieldResult&lt;Option&lt;GraphqlPost&gt;&gt; {
         match &amp;context.user {
             Some(current_user) =&gt; {
-                if let Some(mut post) = GraphqlPost::find_by_id(id).await
+                if let Some(mut post) = GraphqlPost::find(&amp;db, id).await
                     .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?
                 {
                     // Check if current user is the author
@@ -945,7 +937,7 @@ async fn graphql_auth_middleware(
             // Verify token and get user
             if let Ok(user_id) = verify_jwt_token(token).await {
                 // Fetch user from database
-                if let Ok(Some(user)) = GraphqlUser::find_by_id(user_id).await {
+                if let Ok(Some(user)) = GraphqlUser::find(&amp;db, user_id).await {
                     context.user = Some(user);
                 }
             }

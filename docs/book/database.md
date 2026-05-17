@@ -20,26 +20,14 @@ Define your database models using the `Model` derive macro:
 use oxidite::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Model, Serialize, Deserialize)]
+#[derive(Model, sqlx::FromRow, Serialize, Deserialize)]
 #[model(table = "users")]
 pub struct User {
-    #[model(primary_key)]
-    pub id: i32,
-    #[model(unique, not_null)]
+    pub id: i64,
     pub email: String,
-    #[model(not_null)]
     pub name: String,
-    #[model(default = "now")]
-    pub created_at: String,
-    #[model(updated_at)]
-    pub updated_at: String,
-    #[model(default = "false")]
-    pub active: bool,
-}
-
-// Helper function for default timestamp
-fn now() -> String {
-    chrono::Utc::now().to_rfc3339()
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 ```
 
@@ -48,36 +36,20 @@ fn now() -> String {
 ### Creating Records
 
 ```rust,ignore
-use oxidite::prelude::*;
+use oxidite_db::{DbPool, Model};
 
-async fn create_user() -> Result<()> {
+async fn create_user(db: &DbPool) -> Result<()> {
     let user = User {
-        id: 0, // Will be auto-generated
+        id: 0, 
         email: "john@example.com".to_string(),
         name: "John Doe".to_string(),
-        created_at: now(),
-        updated_at: now(),
-        active: true,
+        created_at: 0,
+        updated_at: 0,
     };
     
-    let saved_user = user.save().await?;
+    let saved_user = user.save(db).await?;
     println!("Created user with ID: {}", saved_user.id);
     
-    Ok(())
-}
-
-// Alternative: Using create method
-async fn create_user_alternative() -> Result<()> {
-    let user = User::create(User {
-        id: 0,
-        email: "jane@example.com".to_string(),
-        name: "Jane Smith".to_string(),
-        created_at: now(),
-        updated_at: now(),
-        active: true,
-    }).await?;
-    
-    println!("Created user: {}", user.name);
     Ok(())
 }
 ```
@@ -85,21 +57,21 @@ async fn create_user_alternative() -> Result<()> {
 ### Reading Records
 
 ```rust,ignore
-async fn find_users() -> Result<()> {
+async fn find_users(db: &DbPool) -> Result<()> {
     // Find all users
-    let all_users = User::find_all().await?;
+    let all_users = User::find_all(db).await?;
     println!("Found {} users", all_users.len());
     
     // Find user by ID
-    if let Some(user) = User::find_by_id(1).await? {
+    if let Some(user) = User::find_by_id(db, 1).await? {
         println!("Found user: {}", user.name);
-    } else {
-        println!("User not found");
     }
     
-    // Find users with conditions (simplified example)
-    let active_users = User::find_where("active = true").await?;
-    println!("Found {} active users", active_users.len());
+    // Find users with conditions
+    let active_users = User::query()
+        .filter_eq("active", true)
+        .fetch_all(db)
+        .await?;
     
     Ok(())
 }
@@ -108,26 +80,11 @@ async fn find_users() -> Result<()> {
 ### Updating Records
 
 ```rust,ignore
-async fn update_user() -> Result<()> {
-    if let Some(mut user) = User::find_by_id(1).await? {
+async fn update_user(db: &DbPool) -> Result<()> {
+    if let Some(mut user) = User::find_by_id(db, 1).await? {
         user.name = "John Updated".to_string();
-        user.updated_at = now();
-        
-        let updated_user = user.save().await?;
-        println!("Updated user: {}", updated_user.name);
+        let updated_user = user.save(db).await?;
     }
-    
-    Ok(())
-}
-
-// Bulk update
-async fn bulk_update() -> Result<()> {
-    let updated_count = User::update_where(
-        "active = false",
-        &[("updated_at", &now())]
-    ).await?;
-    
-    println!("Updated {} users", updated_count);
     Ok(())
 }
 ```
@@ -135,19 +92,10 @@ async fn bulk_update() -> Result<()> {
 ### Deleting Records
 
 ```rust,ignore
-async fn delete_user() -> Result<()> {
-    if let Some(user) = User::find_by_id(1).await? {
-        user.delete().await?;
-        println!("Deleted user: {}", user.name);
+async fn delete_user(db: &DbPool) -> Result<()> {
+    if let Some(user) = User::find_by_id(db, 1).await? {
+        user.delete(db).await?;
     }
-    
-    Ok(())
-}
-
-// Bulk delete
-async fn bulk_delete() -> Result<()> {
-    let deleted_count = User::delete_where("created_at < '2023-01-01'").await?;
-    println!("Deleted {} old users", deleted_count);
     Ok(())
 }
 ```
@@ -257,68 +205,32 @@ async fn execute_raw_query<T>(_sql: &str) -> Result<Vec<T>> {
 ```
 
 ## Migrations
+ 
+Oxidite uses SQL-based migrations managed by the `oxidite-cli`. 
+ 
+Create a migration:
+```bash
+oxidite generate migration create_users_table
+```
 
-Database migrations allow you to manage schema changes:
+This creates a `.sql` file in `migrations/`:
+```sql
+-- migrate:up
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    created_at BIGINT DEFAULT 0,
+    updated_at BIGINT DEFAULT 0
+);
 
-```rust,ignore
-use oxidite_db::Migration;
+-- migrate:down
+DROP TABLE users;
+```
 
-pub struct CreateUsersTable;
-
-impl Migration for CreateUsersTable {
-    fn version(&self) -> i64 {
-        20231201000001  // YYYYMMDDHHMMSS
-    }
-    
-    fn name(&self) -> &'static str {
-        "create_users_table"
-    }
-    
-    fn up(&self) -> &'static str {
-        r#"
-        CREATE TABLE users (
-            id SERIAL PRIMARY KEY,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            active BOOLEAN DEFAULT TRUE
-        )
-        "#
-    }
-    
-    fn down(&self) -> &'static str {
-        "DROP TABLE users"
-    }
-}
-
-pub struct CreatePostsTable;
-
-impl Migration for CreatePostsTable {
-    fn version(&self) -> i64 {
-        20231201000002
-    }
-    
-    fn name(&self) -> &'static str {
-        "create_posts_table"
-    }
-    
-    fn up(&self) -> &'static str {
-        r#"
-        CREATE TABLE posts (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            content TEXT NOT NULL,
-            user_id INTEGER REFERENCES users(id),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        "#
-    }
-    
-    fn down(&self) -> &'static str {
-        "DROP TABLE posts"
-    }
-}
+Run migrations:
+```bash
+oxidite migrate run
 ```
 
 ## Validation
