@@ -19,5 +19,5 @@ proc-macro2 = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"
-oxidite-db = { path = "../oxidite-db", version = "2.2.0" }
+oxidite-db = { path = "../oxidite-db" }
 sqlx = { version = "0.8.2", features = ["macros", "any"] }
