@@ -293,6 +293,7 @@ impl FromRequest for Body<Vec<u8>> {
 /// ```
 pub struct WebSocketUpgrade {
     pub key: String,
+    pub on_upgrade: Option<hyper::upgrade::OnUpgrade>,
 }
 
 impl WebSocketUpgrade {
@@ -320,14 +321,18 @@ impl WebSocketUpgrade {
 
 impl FromRequest for WebSocketUpgrade {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
-        let headers = req.headers();
-        let upgrade = headers.get(http::header::UPGRADE).and_then(|h| h.to_str().ok());
-        let _connection = headers.get(http::header::CONNECTION).and_then(|h| h.to_str().ok());
-        let key = headers.get(http::header::SEC_WEBSOCKET_KEY).and_then(|h| h.to_str().ok());
+        let (upgrade, key) = {
+            let headers = req.headers();
+            let upgrade = headers.get(http::header::UPGRADE).and_then(|h| h.to_str().ok()).map(|s| s.to_string());
+            let key = headers.get(http::header::SEC_WEBSOCKET_KEY).and_then(|h| h.to_str().ok()).map(|s| s.to_string());
+            (upgrade, key)
+        };
 
-        if upgrade == Some("websocket") && key.is_some() {
+        if upgrade.as_deref() == Some("websocket") && key.is_some() {
+            let on_upgrade = req.extensions_mut().remove::<hyper::upgrade::OnUpgrade>();
             Ok(WebSocketUpgrade {
-                key: key.unwrap().to_string(),
+                key: key.unwrap(),
+                on_upgrade,
             })
         } else {
             Err(Error::BadRequest("Expected WebSocket upgrade".to_string()))

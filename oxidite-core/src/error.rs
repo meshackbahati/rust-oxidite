@@ -209,7 +209,7 @@ pub fn render_ignition_error(error: &Error) -> String {
             </div>
         </div>
         <div class="footer">
-            <span>Oxidite Framework v2.2.0</span>
+            <span>Oxidite Framework v2.2.1</span>
             <span>Running in Development Mode</span>
         </div>
     </div>

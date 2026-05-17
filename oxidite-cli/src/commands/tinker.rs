@@ -2,6 +2,7 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
 use std::process::Command;
+use colored::Colorize;
 
 /// Run the interactive Oxidite console (tinker).
 ///
@@ -26,9 +27,9 @@ pub fn run_tinker() -> Result<(), Box<dyn std::error::Error>> {
 
     let tinker_path = Path::new("src/bin/_tinker.rs");
 
-    println!("🧪 Oxidite Tinker v2.2.0");
+    println!("🧪 Oxidite Tinker v2.2.1");
     println!("Type Rust expressions to evaluate them in your project's context.");
-    println!("Use `exit` or Ctrl-D to quit.\n");
+    println!("Type `help` or `?` for a guide, and `exit` or Ctrl-D to quit.\n");
 
     let stdin = io::stdin();
     let mut lines = stdin.lock().lines();
@@ -50,6 +51,27 @@ pub fn run_tinker() -> Result<(), Box<dyn std::error::Error>> {
         if trimmed == "exit" || trimmed == "quit" {
             break;
         }
+        if trimmed == "help" || trimmed == "?" || trimmed == "--help" {
+            println!("\n📖 Oxidite Tinker Help Guide:");
+            println!("-----------------------------");
+            println!("Oxidite Tinker evaluates Rust expressions inside your project's context.");
+            println!("Every line you type is compiled with all of your project's models and");
+            println!("dependencies pre-imported.\n");
+            println!("Commands:");
+            println!("  help, ?         Show this guide");
+            println!("  clear           Clear the terminal screen");
+            println!("  exit, quit      Exit the tinker session\n");
+            println!("Examples:");
+            println!("  1 + 2");
+            println!("  Config::load()");
+            println!("  Project::all(&db).await\n");
+            continue;
+        }
+        if trimmed == "clear" {
+            print!("\x1B[2J\x1B[1H");
+            io::stdout().flush()?;
+            continue;
+        }
 
         // Build a small main() that imports the project and runs the snippet
         let code = format!(
@@ -69,17 +91,21 @@ async fn main() {{
         fs::write(tinker_path, &code)?;
 
         // Compile and run
+        print!("{}", "  ⚙️  Evaluating...".green());
+        io::stdout().flush()?;
+
         let output = Command::new("cargo")
             .args(["run", "--bin", "_tinker", "--quiet"])
             .output();
 
+        // Clear the "Evaluating..." loader line
+        print!("\r\x1B[K");
+        io::stdout().flush()?;
+
         match output {
             Ok(out) => {
-                if !out.stdout.is_empty() {
-                    io::stdout().write_all(&out.stdout)?;
-                }
-                if !out.stderr.is_empty() {
-                    // Filter out "Compiling" and "Finished" noise
+                if !out.status.success() {
+                    println!("{}", "  ❌ Evaluation failed:".red().bold());
                     let stderr = String::from_utf8_lossy(&out.stderr);
                     for line in stderr.lines() {
                         if line.trim_start().starts_with("Compiling")
@@ -88,12 +114,16 @@ async fn main() {{
                         {
                             continue;
                         }
-                        eprintln!("{}", line);
+                        eprintln!("{}", line.red());
+                    }
+                } else {
+                    if !out.stdout.is_empty() {
+                        io::stdout().write_all(&out.stdout)?;
                     }
                 }
             }
             Err(e) => {
-                eprintln!("Failed to run snippet: {}", e);
+                eprintln!("{}", format!("Failed to run snippet: {}", e).red());
             }
         }
     }

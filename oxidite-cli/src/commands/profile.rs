@@ -6,7 +6,7 @@ use tokio::task::JoinHandle;
 /// Runs a performance benchmark profile against an HTTP target
 pub async fn run(url: &str, concurrency: usize, total_requests: usize) {
     println!("{}", "=========================================================".cyan());
-    println!("  🚀 Oxidite Performance Profiler (v2.2.0-beta)");
+    println!("  🚀 Oxidite Performance Profiler (v2.2.1)");
     println!("  Target:      {}", url.yellow().bold());
     println!("  Concurrency: {}", concurrency.to_string().green());
     println!("  Requests:    {}", total_requests.to_string().green());
