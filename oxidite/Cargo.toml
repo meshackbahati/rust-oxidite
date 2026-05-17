@@ -1,6 +1,6 @@
 [package]
 name = "oxidite"
-version = "2.2.1"
+version = "2.2.2"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "A modern, high-performance framework for Rust."
@@ -14,14 +14,14 @@ readme = "README.md"
 
 [dependencies]
 # Core functionality - Always included
-oxidite-core = { version = "2.2.1", path = "../oxidite-core" }
-oxidite-middleware = { version = "2.2.1", path = "../oxidite-middleware" }
+oxidite-core = { version = "2.2.2", path = "../oxidite-core" }
+oxidite-middleware = { version = "2.2.2", path = "../oxidite-middleware" }
 oxidite-config = { version = "2.2.1", path = "../oxidite-config" }
 tokio = { version = "1.48", features = ["full", "test-util"] }
 
 # Optional features
 oxidite-db = { version = "2.2.1", path = "../oxidite-db", optional = true }
-oxidite-auth = { version = "2.2.1", path = "../oxidite-auth", optional = true }
+oxidite-auth = { version = "2.2.2", path = "../oxidite-auth", optional = true }
 oxidite-security = { version = "2.2.1", path = "../oxidite-security", optional = true }
 oxidite-queue = { version = "2.2.1", path = "../oxidite-queue", optional = true }
 oxidite-cache = { version = "2.2.1", path = "../oxidite-cache", optional = true }
@@ -31,7 +31,7 @@ oxidite-mail = { version = "2.2.1", path = "../oxidite-mail", optional = true }
 oxidite-storage = { version = "2.2.1", path = "../oxidite-storage", optional = true }
 oxidite-macros = { version = "2.2.1", path = "../oxidite-macros", optional = true }
 oxidite-utils = { version = "2.2.1", path = "../oxidite-utils", optional = true }
-oxidite-openapi = { version = "2.2.1", path = "../oxidite-openapi", optional = true }
+oxidite-openapi = { version = "2.2.2", path = "../oxidite-openapi", optional = true }
 oxidite-graphql = { version = "2.2.1", path = "../oxidite-graphql", optional = true }
 oxidite-plugin = { version = "2.2.1", path = "../oxidite-plugin", optional = true }
 serde = "1.0.228"
@@ -39,7 +39,7 @@ serde_json = "1.0.149"
 chrono = { version = "0.4", features = ["serde"] }
 
 [dev-dependencies]
-oxidite-testing = { version = "2.2.1", path = "../oxidite-testing" }
+oxidite-testing = { version = "2.2.2", path = "../oxidite-testing" }
 
 [features]
 default = ["full"]
