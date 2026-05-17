@@ -19,3 +19,5 @@ uuid = { version = "1.11", features = ["v4", "serde"] }
 base64 = "0.22"
 rand = "0.9"
 regex = "1.11"
+once_cell = "1.19"
+parking_lot = "0.12"

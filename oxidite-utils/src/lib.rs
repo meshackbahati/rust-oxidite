@@ -17,3 +17,6 @@ pub use validation::{
     is_email, is_url, is_phone, is_alphanumeric, is_numeric, min_length, max_length,
     length_between,
 };
+
+pub mod metrics;
+pub use metrics::{GLOBAL_METRICS, MetricsRegistry, RouteMetrics};

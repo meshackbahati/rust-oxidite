@@ -12,6 +12,8 @@ pub mod timeout;
 pub mod server_header;
 pub mod cache;
 
+pub mod metrics;
+
 pub use logger::LoggerLayer;
 pub use request_id::{RequestIdLayer, RequestIdMiddleware};
 pub use security_headers::{SecurityHeadersLayer, SecurityHeadersConfig, FrameOptions};
@@ -20,6 +22,7 @@ pub use rate_limit::{RateLimiter, RateLimitConfig};
 pub use timeout::{TimeoutMiddleware, TimeoutError};
 pub use server_header::add_server_header;
 pub use cache::{CacheLayer, CacheMiddleware, CacheConfig, CacheLayerBuilder};
+pub use metrics::{Metrics, MetricsLayer};
 
 // Re-export ServiceBuilder for convenience
 pub use tower::ServiceBuilder;

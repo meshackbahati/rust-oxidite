@@ -294,6 +294,22 @@ oxidite> exit
 
 Under the hood, Tinker generates a temporary `src/bin/_tinker.rs` file, compiles it with `cargo run`, and displays the result. The temporary file is cleaned up automatically when you exit.
 
+## Performance Profiler
+
+```bash
+# Profile a local HTTP endpoint with default concurrency (10) and total requests (100)
+oxidite profile http://localhost:3000/
+
+# Profile with custom concurrency and request count
+oxidite profile http://localhost:3000/users -c 20 -r 500
+```
+
+The `profile` command spawns concurrent asynchronous HTTP workers using `reqwest` to measure:
+- Total execution time
+- Successful vs. failed requests (HTTP 2xx)
+- Request throughput (Requests per second / RPS)
+- Detailed latency percentiles (min, max, average, p50, p90, p99)
+
 ## Diagnostics
 
 ```bash

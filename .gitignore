@@ -40,3 +40,6 @@ docs/book/book-output/
 coverage/
 tmp/
 dist/
+
+# Release / Publish script
+publish.sh

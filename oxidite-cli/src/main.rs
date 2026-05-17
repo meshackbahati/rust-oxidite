@@ -136,6 +136,17 @@ enum Commands {
     Version,
     /// Open an interactive console (REPL) for your project
     Tinker,
+    /// Benchmark/profile an HTTP target URL
+    Profile {
+        /// Target URL to benchmark
+        url: String,
+        /// Concurrency level (number of parallel workers)
+        #[arg(short, long, default_value_t = 10)]
+        concurrency: usize,
+        /// Total number of requests to perform
+        #[arg(short, long, default_value_t = 100)]
+        requests: usize,
+    },
 }
 
 #[derive(Subcommand)]
@@ -360,6 +371,10 @@ async fn main() -> Result<()> {
         Commands::Tinker => {
             commands::tinker::run_tinker()
                 .map_err(|err| Error::InternalServerError(err.to_string()))?;
+            Ok(())
+        }
+        Commands::Profile { url, concurrency, requests } => {
+            commands::profile::run(&url, concurrency, requests).await;
             Ok(())
         }
     }

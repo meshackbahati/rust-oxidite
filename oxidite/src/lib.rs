@@ -91,6 +91,7 @@ pub mod prelude {
     pub use oxidite_middleware::{
         ServiceBuilder, LoggerLayer, CorsLayer, CompressionLayer,
         CacheLayer, CacheMiddleware, CacheConfig, CacheLayerBuilder,
+        MetricsLayer,
     };
     
     pub use oxidite_config::Config;

@@ -20,6 +20,7 @@ base64 = "0.22.1"
 rand = "0.9.1"
 thiserror = "2.0"
 oxidite-db = { version = "2.2.0", path = "../oxidite-db" }
+oxidite-utils = { version = "2.2.0", path = "../oxidite-utils" }
 chrono = "0.4"
 http = "1.2.0"
 http-body-util = "0.1.0"

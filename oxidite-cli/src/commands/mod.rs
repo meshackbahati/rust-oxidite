@@ -7,5 +7,6 @@ pub mod queue;
 pub mod seed;
 pub mod sql_script;
 pub mod tinker;
+pub mod profile;
 
 pub use new::create_project;
