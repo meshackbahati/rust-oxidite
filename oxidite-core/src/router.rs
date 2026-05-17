@@ -205,6 +205,7 @@ impl Router {
     }
 
     pub async fn handle(&self, mut req: OxiditeRequest) -> Result<OxiditeResponse> {
+        req.extensions_mut().insert(self.extensions.clone());
         let method = req.method().clone();
         let path = req.uri().path().to_string();
 
