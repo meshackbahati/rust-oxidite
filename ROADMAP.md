@@ -8,6 +8,14 @@ This roadmap tracks technical implementation work in this repository.
 - Stability: `beta`
 - Source of truth: this file (`ROADMAP.md`)
 
+## Completed Enterprise Scalability (v2.3.0 Stabilization) — COMPLETE
+
+- [X] **Expanded Handler Capacity**: Support for up to 12 extractors per handler.
+- [X] **Global Router Layering**: Unified middleware application via `Router::layer()`.
+- [X] **Authenticated WebSockets**: Context preservation during protocol upgrades.
+- [X] **Raw SQL Access**: Public accessors for underlying `sqlx` pools.
+- [X] **Universal Primary Keys**: `Uuid` and `String` support in `Model` derive.
+
 ## Completed modernization stream (v2.2.0 Hardening) — COMPLETE
 
 - [X] **Advanced ORM Validation**: Async validations for Models (`length`, `range`, `email`, `url`, `regex`, `custom`, `unique`).

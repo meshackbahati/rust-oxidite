@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-05-26
+
+### Added
+- **Expanded Handler Capacity**: Handlers now support up to 12 extractors (previously limited to 3), enabling complex production controllers without workarounds.
+- **Global Router Layering**: Introduced `Router::layer()` and `Router::with_layer()` for applying Tower-compatible middleware globally across all routes.
+- **Authenticated WebSocket Support**: Enhanced `WebSocketUpgrade` to capture and preserve request extensions (auth state, etc.) during the protocol upgrade.
+- **Direct Database Access**: Added `.pool()`, `.inner()`, and `.as_sqlx_pool()` to `DbPool`, providing raw `sqlx` access for advanced queries.
+- **Universal Model IDs**: The `Model` derive macro now supports `Uuid` and `String` for primary keys, in addition to `i64`.
+- **Streamlined API Discoverability**: Re-exported `extract`, `middleware`, and `config` modules at the crate root of `oxidite`.
+- **CORS Config Integration**: Added native CORS method and header configuration support in `oxidite.toml`.
+- **Enhanced Prelude**: Included `PathParams` in the prelude for easier custom extractor implementation.
+
+### Changed
+- **ORM Error Surface**: Refactored `OrmError::NotFound` to store IDs as `String` for universal compatibility across ID types.
+- **Developer Documentation**: Significantly improved `FromRequest` trait documentation with real-world implementation examples.
+
+### Fixed
+- **State Resolution**: Resolved a critical issue where global router state was sometimes inaccessible within certain handler contexts.
+- **WebSocket Context Loss**: Fixed architectural bug where extracted auth context was lost during the WebSocket handshake.
+
 ## [2.2.0] - 2026-05-16
 
 ### Added

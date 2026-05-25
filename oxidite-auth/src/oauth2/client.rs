@@ -12,6 +12,7 @@ pub struct OAuth2Config {
     pub redirect_uri: String,
     pub authorization_endpoint: String,
     pub token_endpoint: String,
+    pub userinfo_endpoint: Option<String>,
     pub scopes: Vec<String>,
 }
 
@@ -69,14 +70,34 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         let token_response: TokenResponse = response
             .json()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         Ok(token_response)
+    }
+
+    /// Get user info from the provider's userinfo endpoint
+    pub async fn get_userinfo(&self, access_token: &str) -> Result<serde_json::Value> {
+        let endpoint = self.config.userinfo_endpoint.as_ref()
+            .ok_or_else(|| AuthError::TokenError("Userinfo endpoint not configured".to_string()))?;
+
+        let response = self.http_client
+            .get(endpoint)
+            .bearer_auth(access_token)
+            .send()
+            .await
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
+
+        let userinfo = response
+            .json::<serde_json::Value>()
+            .await
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
+
+        Ok(userinfo)
     }
 
     /// Refresh access token
@@ -93,12 +114,12 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         let token_response: TokenResponse = response
             .json()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         Ok(token_response)
     }

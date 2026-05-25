@@ -8,7 +8,7 @@ To enable OpenAPI support, add the `openapi` feature to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite = { version = "2.2", features = ["full", "openapi"] }
+oxidite = { version = "2.3", features = ["full", "openapi"] }
 ```
 
 ## Configuration

@@ -22,4 +22,5 @@ members = [
     "oxidite-graphql",
     "oxidite-plugin",
     "examples/*",
+    "tests/*",
 ]
