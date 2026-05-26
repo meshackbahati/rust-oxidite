@@ -10,7 +10,7 @@ pub mod versioning;
 pub mod cookie;
 
 pub use error::{Error, Result};
-pub use extract::{FromRequest, Json, Path, Query, State, Form, Cookies, Body, WebSocketUpgrade};
+pub use extract::{FromRequest, Json, Path, Query, State, Form, Cookies, Body, WebSocketUpgrade, PathParams};
 pub use http::{StatusCode, Method, HeaderMap, HeaderValue};
 pub use tokio::sync::mpsc;
 pub use http_body_util::BodyExt;

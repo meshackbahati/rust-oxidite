@@ -53,8 +53,34 @@ pub struct Query<T>(pub T);
 /// ```
 pub struct Json<T>(pub T);
 
-/// Extractor trait - allows types to be extracted from requests
+/// Extractor trait - allows types to be extracted from requests.
+///
+/// Types implementing this trait can be used as arguments in handler functions.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use oxidite::prelude::*;
+///
+/// struct MyExtractor(String);
+///
+/// impl FromRequest for MyExtractor {
+///     async fn from_request(req: &mut Request) -> Result<Self> {
+///         let header = req.headers()
+///             .get("X-Custom-Header")
+///             .and_then(|h| h.to_str().ok())
+///             .ok_or_else(|| Error::BadRequest("Missing X-Custom-Header".to_string()))?;
+///
+///         Ok(MyExtractor(header.to_string()))
+///     }
+/// }
+///
+/// async fn handler(MyExtractor(val): MyExtractor) -> Result<Response> {
+///     Ok(Response::text(format!("Received: {}", val)))
+/// }
+/// ```
 pub trait FromRequest: Sized {
+    /// Perform the extraction from the request.
     fn from_request(req: &mut OxiditeRequest) -> impl std::future::Future<Output = Result<Self>> + Send;
 }
 
@@ -294,6 +320,7 @@ impl FromRequest for Body<Vec<u8>> {
 pub struct WebSocketUpgrade {
     pub key: String,
     pub on_upgrade: Option<hyper::upgrade::OnUpgrade>,
+    pub extensions: http::Extensions,
 }
 
 impl WebSocketUpgrade {
@@ -317,6 +344,29 @@ impl WebSocketUpgrade {
             
         Response::new(res)
     }
+
+    /// Perform the upgrade and call the handler with the socket and captured extensions
+    pub fn on_upgrade<F, Fut>(self, callback: F) -> Response
+    where
+        F: FnOnce(hyper::upgrade::Upgraded, http::Extensions) -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = ()> + Send + 'static,
+    {
+        let response = self.response();
+        if let Some(on_upgrade) = self.on_upgrade {
+            let extensions = self.extensions;
+            tokio::spawn(async move {
+                match on_upgrade.await {
+                    Ok(upgraded) => {
+                        callback(upgraded, extensions).await;
+                    }
+                    Err(e) => {
+                        eprintln!("WebSocket upgrade error: {}", e);
+                    }
+                }
+            });
+        }
+        response
+    }
 }
 
 impl FromRequest for WebSocketUpgrade {
@@ -330,9 +380,12 @@ impl FromRequest for WebSocketUpgrade {
 
         if upgrade.as_deref() == Some("websocket") && key.is_some() {
             let on_upgrade = req.extensions_mut().remove::<hyper::upgrade::OnUpgrade>();
+            let extensions = req.extensions().clone();
+
             Ok(WebSocketUpgrade {
                 key: key.unwrap(),
                 on_upgrade,
+                extensions,
             })
         } else {
             Err(Error::BadRequest("Expected WebSocket upgrade".to_string()))

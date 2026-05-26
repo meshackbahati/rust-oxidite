@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::{
     parse_macro_input, spanned::Spanned, Data, DeriveInput, Fields, LitStr, Type,
 };
@@ -67,14 +67,22 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     let has_updated_at = field_names_str.iter().any(|f| f == "updated_at");
     let has_deleted_at = field_names_str.iter().any(|f| f == "deleted_at");
 
-    if let Some(id_field) = find_field("id") {
-        if !is_i64_type(&id_field.ty) {
+    let id_type = if let Some(id_field) = find_field("id") {
+        if is_i64_type(&id_field.ty) {
+            quote!(i64)
+        } else if is_type(&id_field.ty, "Uuid") {
+            quote!(::oxidite::db::sqlx::types::Uuid)
+        } else if is_string_type(&id_field.ty) {
+            quote!(String)
+        } else {
             return Err(syn::Error::new(
                 id_field.ty.span(),
-                "Model derive requires `id` to be of type i64",
+                "Model derive requires `id` to be of type i64, Uuid, or String",
             ));
         }
-    }
+    } else {
+        quote!(i64)
+    };
 
     if has_created_at {
         let field = find_field("created_at")
@@ -419,6 +427,14 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         }
     });
 
+    let is_persisted_logic = if id_type.to_string().contains("i64") {
+        quote! { self.id > 0 }
+    } else if id_type.to_string().contains("Uuid") {
+        quote! { !self.id.is_nil() }
+    } else {
+        quote! { !self.id.is_empty() }
+    };
+
     let expanded = quote! {
         #[::oxidite::db::async_trait]
         impl ::oxidite::db::Model for #name {
@@ -483,7 +499,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             }
 
             fn is_persisted(&self) -> bool {
-                self.id > 0
+                #is_persisted_logic
             }
         }
     };

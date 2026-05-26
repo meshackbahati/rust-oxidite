@@ -52,6 +52,7 @@ impl ProviderConfig {
             redirect_uri,
             authorization_endpoint: self.authorization_endpoint.clone(),
             token_endpoint: self.token_endpoint.clone(),
+            userinfo_endpoint: self.userinfo_endpoint.clone(),
             scopes: self.default_scopes.clone(),
         }
     }

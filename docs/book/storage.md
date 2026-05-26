@@ -60,7 +60,7 @@ Oxidite includes built-in support for S3-compatible APIs.
 
 ```toml
 # Cargo.toml
-oxidite = { version = "2.2", features = ["storage-s3"] }
+oxidite = { version = "2.3", features = ["storage-s3"] }
 ```
 
 ```rust

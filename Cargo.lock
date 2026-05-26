@@ -2838,7 +2838,7 @@ checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
 
 [[package]]
 name = "oxidite"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "chrono",
  "oxidite-auth",
@@ -2866,7 +2866,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-auth"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "argon2",
  "async-trait",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cache"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "redis",
@@ -2908,7 +2908,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cli"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "bytes",
  "chrono",
@@ -2944,7 +2944,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-config"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "dotenv",
  "notify",
@@ -2957,7 +2957,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-core"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2982,12 +2982,13 @@ dependencies = [
  "tokio",
  "tokio-rustls 0.26.4",
  "tower",
+ "tower-http",
  "tower-service",
 ]
 
 [[package]]
 name = "oxidite-db"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3005,7 +3006,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-graphql"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3023,7 +3024,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-macros"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "oxidite-db",
  "proc-macro2",
@@ -3035,7 +3036,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-mail"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3048,7 +3049,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-middleware"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -3070,7 +3071,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-openapi"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "oxidite-core",
  "serde",
@@ -3079,7 +3080,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-plugin"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3094,7 +3095,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-queue"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3110,7 +3111,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-realtime"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "futures",
@@ -3125,7 +3126,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-security"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
@@ -3138,7 +3139,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-storage"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -3153,7 +3154,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-template"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "bytes",
  "http 1.4.0",
@@ -3169,7 +3170,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-testing"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3186,7 +3187,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-utils"
-version = "2.2.1"
+version = "2.3.0"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -3659,6 +3660,17 @@ name = "regex-syntax"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
+
+[[package]]
+name = "regression_2_3"
+version = "0.1.0"
+dependencies = [
+ "oxidite",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid 1.19.0",
+]
 
 [[package]]
 name = "reqwest"
@@ -5116,6 +5128,17 @@ dependencies = [
  "js-sys",
  "serde_core",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "v2_3_showcase"
+version = "0.1.0"
+dependencies = [
+ "oxidite",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid 1.19.0",
 ]
 
 [[package]]
