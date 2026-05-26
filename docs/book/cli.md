@@ -9,7 +9,7 @@ The Oxidite CLI package is `oxidite-cli`, and the installed executable is `oxidi
 cargo install oxidite-cli
 
 # Install this generated build explicitly
-cargo install oxidite-cli --version 2.2.0
+cargo install oxidite-cli --version 2.3.0
 
 # Install from the workspace checkout
 cargo install --path oxidite-cli
@@ -275,7 +275,7 @@ oxidite tinker
 **Example session:**
 
 ```
-🧪 Oxidite Tinker v2.2.0
+🧪 Oxidite Tinker v2.3.0
 Type Rust expressions to evaluate them in your project's context.
 Use `exit` or Ctrl-D to quit.
 

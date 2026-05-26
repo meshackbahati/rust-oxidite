@@ -36,8 +36,9 @@ Oxidite now features a native `WebSocketUpgrade` extractor that handles protocol
 use oxidite::prelude::*;
 
 async fn ws_handler(ws: WebSocketUpgrade) -> Result<Response> {
-    Ok(ws.on_upgrade(|socket| async move {
-        // Handle full-duplex communication here
+    Ok(ws.on_upgrade(|socket, extensions| async move {
+        // Handle authenticated full-duplex communication here
+        let user = extensions.get::<AuthenticatedUser>();
     }))
 }
 ```

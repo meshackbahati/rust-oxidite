@@ -28,7 +28,7 @@ cargo install --path oxidite-cli
 cargo install oxidite-cli
 
 # Or pin this generated CLI build
-cargo install oxidite-cli --version 2.2.0
+cargo install oxidite-cli --version 2.3.0
 ```
 
 ## Creating Your First Project
@@ -49,7 +49,7 @@ If you prefer to add Oxidite to an existing project manually, add it to your `Ca
 
 ```toml
 [dependencies]
-oxidite = { version = "2.2", features = ["full"] }
+oxidite = { version = "2.3", features = ["full"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 ```
@@ -60,7 +60,7 @@ For testing and development, you may also want to add:
 
 ```toml
 [dev-dependencies]
-oxidite-testing = "2.2"
+oxidite-testing = "2.3"
 tokio-test = "0.4"
 ```
 

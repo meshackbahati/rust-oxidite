@@ -12,6 +12,7 @@ pub struct OAuth2Config {
     pub redirect_uri: String,
     pub authorization_endpoint: String,
     pub token_endpoint: String,
+    pub userinfo_endpoint: Option<String>,
     pub scopes: Vec<String>,
 }
 
@@ -50,6 +51,14 @@ impl OAuth2Client {
         Ok(url.to_string())
     }
 
+    /// Exchange authorization code for access token with state validation
+    pub async fn exchange_code_with_state(&self, code: &str, state: &str, expected_state: &str, code_verifier: Option<&str>) -> Result<TokenResponse> {
+        if state != expected_state {
+            return Err(AuthError::TokenError("Invalid OAuth2 state".to_string()));
+        }
+        self.exchange_code(code, code_verifier).await
+    }
+
     /// Exchange authorization code for access token
     pub async fn exchange_code(&self, code: &str, code_verifier: Option<&str>) -> Result<TokenResponse> {
         let mut params = vec![
@@ -69,14 +78,34 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         let token_response: TokenResponse = response
             .json()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         Ok(token_response)
+    }
+
+    /// Get user info from the provider's userinfo endpoint
+    pub async fn get_userinfo(&self, access_token: &str) -> Result<serde_json::Value> {
+        let endpoint = self.config.userinfo_endpoint.as_ref()
+            .ok_or_else(|| AuthError::TokenError("Userinfo endpoint not configured".to_string()))?;
+
+        let response = self.http_client
+            .get(endpoint)
+            .bearer_auth(access_token)
+            .send()
+            .await
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
+
+        let userinfo = response
+            .json::<serde_json::Value>()
+            .await
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
+
+        Ok(userinfo)
     }
 
     /// Refresh access token
@@ -93,12 +122,12 @@ impl OAuth2Client {
             .form(&params)
             .send()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         let token_response: TokenResponse = response
             .json()
             .await
-            .map_err(|e| AuthError::HashError(e.to_string()))?;
+            .map_err(|e| AuthError::TokenError(e.to_string()))?;
 
         Ok(token_response)
     }

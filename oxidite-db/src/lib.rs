@@ -33,7 +33,7 @@ pub enum OrmError {
     #[error("validation failed: {0}")]
     Validation(String),
     #[error("model `{model}` with id `{id}` was not found")]
-    NotFound { model: &'static str, id: i64 },
+    NotFound { model: &'static str, id: String },
     #[error("invalid SQL identifier `{value}` for {kind}")]
     InvalidIdentifier { kind: &'static str, value: String },
     #[error("invalid pagination: {0}")]
@@ -204,6 +204,21 @@ impl DbPool {
         let db_type = parse_database_type(url)?;
 
         Ok(Self { pool, db_type })
+    }
+
+    /// Get a reference to the underlying sqlx pool
+    pub fn pool(&self) -> &AnyPool {
+        &self.pool
+    }
+
+    /// Get a reference to the underlying sqlx pool (alias for .pool())
+    pub fn as_sqlx_pool(&self) -> &AnyPool {
+        &self.pool
+    }
+
+    /// Get a reference to the underlying sqlx pool
+    pub fn inner(&self) -> &AnyPool {
+        &self.pool
     }
 
     /// Execute a closure within a transaction and automatically commit or rollback.
@@ -1065,7 +1080,7 @@ impl<M: Model> ModelQuery<M> {
         let row = db.fetch_one(query).await?;
         let row = row.ok_or(OrmError::NotFound {
             model: M::table_name(),
-            id: 0,
+            id: "unknown".to_string(),
         })?;
         Ok(row.try_get::<i64, _>("count")?)
     }
@@ -1173,12 +1188,15 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     }
 
     /// Find a record by ID
-    async fn find(db: &impl Database, id: i64) -> Result<Option<Self>> {
-        let mut query = format!("SELECT * FROM {} WHERE id = ?", Self::table_name());
+    async fn find<I>(db: &impl Database, id: I) -> Result<Option<Self>>
+    where
+        I: Send + for<'q> sqlx::Encode<'q, sqlx::Any> + sqlx::Type<sqlx::Any>,
+    {
+        let mut query_str = format!("SELECT * FROM {} WHERE id = ?", Self::table_name());
         if Self::has_soft_delete() {
-            query.push_str(" AND deleted_at IS NULL");
+            query_str.push_str(" AND deleted_at IS NULL");
         }
-        let row = db.fetch_one(sqlx::query(&query).bind(id)).await?;
+        let row = db.fetch_one(sqlx::query(&query_str).bind(id)).await?;
 
         match row {
             Some(row) => Ok(Some(Self::from_row(&row)?)),
@@ -1188,11 +1206,11 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
 
     /// Find all records
     async fn all(db: &impl Database) -> Result<Vec<Self>> {
-        let mut query = format!("SELECT * FROM {}", Self::table_name());
+        let mut query_str = format!("SELECT * FROM {}", Self::table_name());
         if Self::has_soft_delete() {
-            query.push_str(" WHERE deleted_at IS NULL");
+            query_str.push_str(" WHERE deleted_at IS NULL");
         }
-        let rows = db.fetch_all(sqlx::query(&query)).await?;
+        let rows = db.fetch_all(sqlx::query(&query_str)).await?;
 
         let mut models = Vec::new();
         for row in rows {
@@ -1202,10 +1220,14 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     }
 
     /// Find a record by ID and return a typed not-found error when missing.
-    async fn find_or_fail(db: &impl Database, id: i64) -> OrmResult<Self> {
+    async fn find_or_fail<I>(db: &impl Database, id: I) -> OrmResult<Self>
+    where
+        I: Send + for<'q> sqlx::Encode<'q, sqlx::Any> + sqlx::Type<sqlx::Any> + std::fmt::Display,
+    {
+        let id_str = id.to_string();
         Self::find(db, id).await?.ok_or(OrmError::NotFound {
             model: Self::table_name(),
-            id,
+            id: id_str,
         })
     }
 
@@ -1215,7 +1237,10 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     }
 
     /// Find multiple rows by id.
-    async fn find_many(db: &impl Database, ids: &[i64]) -> Result<Vec<Self>> {
+    async fn find_many<I>(db: &impl Database, ids: &[I]) -> Result<Vec<Self>>
+    where
+        I: Send + Sync + for<'q> sqlx::Encode<'q, sqlx::Any> + sqlx::Type<sqlx::Any>,
+    {
         if ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -1224,19 +1249,19 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
             .take(ids.len())
             .collect::<Vec<_>>()
             .join(", ");
-        let mut query = format!(
+        let mut query_str = format!(
             "SELECT * FROM {} WHERE id IN ({})",
             Self::table_name(),
             placeholders
         );
 
         if Self::has_soft_delete() {
-            query.push_str(" AND deleted_at IS NULL");
+            query_str.push_str(" AND deleted_at IS NULL");
         }
 
-        let mut sql_query = sqlx::query(&query);
+        let mut sql_query = sqlx::query(&query_str);
         for id in ids {
-            sql_query = sql_query.bind(*id);
+            sql_query = sql_query.bind(id);
         }
 
         let rows = db.fetch_all(sql_query).await?;
