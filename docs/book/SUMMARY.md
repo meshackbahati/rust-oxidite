@@ -61,3 +61,4 @@
 - [PDF Export Guide](./pdf-export.md)
 
 [Appendix](./appendix.md)
+- [Migration Guide 2.2 to 2.3](migration_2_2_to_2_3.md)

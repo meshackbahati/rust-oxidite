@@ -49,6 +49,9 @@ pub enum AuthError {
     
     #[error("Hash error: {0}")]
     HashError(String),
+
+    #[error("Token error: {0}")]
+    TokenError(String),
     
     #[error("JWT error: {0}")]
     JwtError(#[from] jsonwebtoken::errors::Error),

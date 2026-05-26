@@ -45,8 +45,10 @@
 
 // Re-export core types
 pub use oxidite_core::*;
-pub use oxidite_middleware;
-pub use oxidite_config;
+pub use oxidite_core::extract;
+pub use oxidite_middleware as middleware;
+pub use oxidite_config as config;
+pub use oxidite_core::types::{OxiditeRequest, OxiditeResponse};
 
 #[cfg(feature = "database")]
 pub use oxidite_db as db;
@@ -85,7 +87,7 @@ pub mod prelude {
         Error, Result,
         Request, Response,
         StatusCode, mpsc, BodyExt,
-        extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body, WebSocketUpgrade},
+        extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body, WebSocketUpgrade, PathParams},
     };
     
     pub use oxidite_middleware::{

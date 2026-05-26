@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-core"
-version = "2.2.2"
+version = "2.3.0"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "High-performance HTTP kernel and routing engine for the Oxidite framework."
@@ -11,6 +11,7 @@ categories = ["web-programming", "asynchronous"]
 
 [dependencies]
 async-trait = "0.1.89"
+tower-http = { version = "0.6", features = ["full"] }
 bytes = "1.11.0"
 futures-util = "0.3.31"
 http = "1.4.0"
