@@ -21,9 +21,7 @@ projects/*
 #.idea/
 demo.db
 
-# Generated docs deployment output
-doc/book/book/
-docs/book/book-output/
+
 
 # Local env and editor artifacts
 .env
@@ -41,5 +39,5 @@ coverage/
 tmp/
 dist/
 
-# Release / Publish script
+# Release 
 publish.sh
