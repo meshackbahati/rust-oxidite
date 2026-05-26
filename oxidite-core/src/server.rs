@@ -87,6 +87,7 @@ where
 
 pub struct Server<S> {
     service: S,
+    addr: Option<SocketAddr>,
 }
 
 impl<S> Server<S>
@@ -97,7 +98,18 @@ where
     pub fn new(service: S) -> Self {
         Self {
             service,
+            addr: None,
         }
+    }
+
+    pub fn bind(mut self, addr: SocketAddr) -> Self {
+        self.addr = Some(addr);
+        self
+    }
+
+    pub async fn run(self) -> Result<()> {
+        let addr = self.addr.unwrap_or_else(|| "127.0.0.1:3000".parse().unwrap());
+        self.listen(addr).await
     }
 
     pub async fn listen(self, addr: SocketAddr) -> Result<()> {

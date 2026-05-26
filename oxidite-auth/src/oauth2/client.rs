@@ -51,6 +51,14 @@ impl OAuth2Client {
         Ok(url.to_string())
     }
 
+    /// Exchange authorization code for access token with state validation
+    pub async fn exchange_code_with_state(&self, code: &str, state: &str, expected_state: &str, code_verifier: Option<&str>) -> Result<TokenResponse> {
+        if state != expected_state {
+            return Err(AuthError::TokenError("Invalid OAuth2 state".to_string()));
+        }
+        self.exchange_code(code, code_verifier).await
+    }
+
     /// Exchange authorization code for access token
     pub async fn exchange_code(&self, code: &str, code_verifier: Option<&str>) -> Result<TokenResponse> {
         let mut params = vec![

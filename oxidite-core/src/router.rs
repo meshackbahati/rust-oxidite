@@ -615,7 +615,19 @@ impl Router {
             return route.handler.call(req).await;
         }
 
-        // 2. If HEAD, try GET
+        // 2. If OPTIONS, return empty success response for CORS if no explicit handler
+        if method == Method::OPTIONS {
+            if let Some(_route) = try_match(&Method::OPTIONS, &mut req) {
+                // Explicit handler exists, will be handled by step 1
+            } else {
+                return Ok(OxiditeResponse::new(hyper::Response::builder()
+                    .status(http::StatusCode::OK)
+                    .body(crate::types::BoxBody::default())
+                    .unwrap()));
+            }
+        }
+
+        // 3. If HEAD, try GET
         if method == Method::HEAD {
             if let Some(route) = try_match(&Method::GET, &mut req) {
                 // Add router extensions to request so State extractor can find global state
