@@ -120,4 +120,7 @@ pub mod prelude {
     pub use oxidite_plugin::{PluginManager, Plugin, PluginInfo};
     
     pub use serde::{Serialize, Deserialize};
+    pub use crate::config_helper::cors_layer_from_config;
 }
+pub mod config_helper;
+pub use config_helper::cors_layer_from_config;

@@ -87,10 +87,10 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     if has_created_at {
         let field = find_field("created_at")
             .ok_or_else(|| syn::Error::new(input.span(), "missing `created_at` field"))?;
-        if !is_i64_type(&field.ty) {
+        if !is_i64_type(&field.ty) && !is_datetime_type(&field.ty) {
             return Err(syn::Error::new(
                 field.ty.span(),
-                "`created_at` must be i64 for automatic timestamp support",
+                "`created_at` must be i64 or DateTime for automatic timestamp support",
             ));
         }
     }
@@ -98,10 +98,10 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     if has_updated_at {
         let field = find_field("updated_at")
             .ok_or_else(|| syn::Error::new(input.span(), "missing `updated_at` field"))?;
-        if !is_i64_type(&field.ty) {
+        if !is_i64_type(&field.ty) && !is_datetime_type(&field.ty) {
             return Err(syn::Error::new(
                 field.ty.span(),
-                "`updated_at` must be i64 for automatic timestamp support",
+                "`updated_at` must be i64 or DateTime for automatic timestamp support",
             ));
         }
     }
@@ -109,10 +109,10 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     if has_deleted_at {
         let field = find_field("deleted_at")
             .ok_or_else(|| syn::Error::new(input.span(), "missing `deleted_at` field"))?;
-        if !is_option_i64_type(&field.ty) {
+        if !is_option_i64_type(&field.ty) && !is_option_datetime_type(&field.ty) {
             return Err(syn::Error::new(
                 field.ty.span(),
-                "`deleted_at` must be Option<i64> for soft-delete support",
+                "`deleted_at` must be Option<i64> or Option<DateTime> for soft-delete support",
             ));
         }
     }
@@ -175,9 +175,15 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
     let delete_impl = if has_deleted_at {
         let soft_delete_query = format!("UPDATE {} SET deleted_at = $1 WHERE id = $2", table_name);
+        let field = find_field("deleted_at").unwrap();
+        let now_logic = if is_option_datetime_type(&field.ty) {
+            quote! { ::oxidite::db::chrono::Utc::now() }
+        } else {
+            quote! { ::oxidite::db::chrono::Utc::now().timestamp() }
+        };
         quote! {
-            async fn delete(&self, db: &impl oxidite_db::Database) -> oxidite_db::Result<()> {
-                let now = oxidite_db::chrono::Utc::now().timestamp();
+            async fn delete(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let now = #now_logic;
                 let query = ::oxidite::db::sqlx::query(#soft_delete_query)
                     .bind(now)
                     .bind(&self.id);
@@ -197,30 +203,57 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     };
 
     let created_at_logic = if has_created_at {
-        quote! {
-            let now = ::oxidite::db::chrono::Utc::now().timestamp();
-            self.created_at = now;
-            let query = query.bind(now);
+        let field = find_field("created_at").unwrap();
+        if is_datetime_type(&field.ty) {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now();
+                self.created_at = now;
+                let query = query.bind(now);
+            }
+        } else {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now().timestamp();
+                self.created_at = now;
+                let query = query.bind(now);
+            }
         }
     } else {
         quote! {}
     };
 
     let updated_at_create_logic = if has_updated_at {
-        quote! {
-            let now = ::oxidite::db::chrono::Utc::now().timestamp();
-            self.updated_at = now;
-            let query = query.bind(now);
+        let field = find_field("updated_at").unwrap();
+        if is_datetime_type(&field.ty) {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now();
+                self.updated_at = now;
+                let query = query.bind(now);
+            }
+        } else {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now().timestamp();
+                self.updated_at = now;
+                let query = query.bind(now);
+            }
         }
     } else {
         quote! {}
     };
 
     let updated_at_update_logic = if has_updated_at {
-        quote! {
-            let now = ::oxidite::db::chrono::Utc::now().timestamp();
-            self.updated_at = now;
-            let query = query.bind(now);
+        let field = find_field("updated_at").unwrap();
+        if is_datetime_type(&field.ty) {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now();
+                self.updated_at = now;
+                let query = query.bind(now);
+            }
+        } else {
+            quote! {
+                let now = ::oxidite::db::chrono::Utc::now().timestamp();
+                self.updated_at = now;
+                let query = query.bind(now);
+            }
         }
     } else {
         quote! {}
@@ -663,6 +696,18 @@ fn is_string_type(ty: &Type) -> bool {
     }
 }
 
+fn is_datetime_type(ty: &Type) -> bool {
+    match ty {
+        Type::Path(tp) => tp
+            .path
+            .segments
+            .last()
+            .map(|s| s.ident == "DateTime")
+            .unwrap_or(false),
+        _ => false,
+    }
+}
+
 fn is_i64_type(ty: &Type) -> bool {
     match ty {
         Type::Path(tp) => tp
@@ -673,6 +718,34 @@ fn is_i64_type(ty: &Type) -> bool {
             .unwrap_or(false),
         _ => false,
     }
+}
+
+fn is_option_datetime_type(ty: &Type) -> bool {
+    let Type::Path(tp) = ty else {
+        return false;
+    };
+
+    let Some(last) = tp.path.segments.last() else {
+        return false;
+    };
+
+    if last.ident != "Option" {
+        return false;
+    }
+
+    let syn::PathArguments::AngleBracketed(args) = &last.arguments else {
+        return false;
+    };
+
+    if args.args.len() != 1 {
+        return false;
+    }
+
+    let Some(syn::GenericArgument::Type(inner)) = args.args.first() else {
+        return false;
+    };
+
+    is_datetime_type(inner)
 }
 
 fn is_option_i64_type(ty: &Type) -> bool {
