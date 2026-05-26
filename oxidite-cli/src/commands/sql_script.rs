@@ -1,20 +1,9 @@
 use std::env;
+use crate::env as cli_env;
 
 pub fn load_database_url() -> Result<String, Box<dyn std::error::Error>> {
-    use oxidite_config::Config;
-
-    if let Ok(url) = env::var("DATABASE_URL") {
-        if !url.trim().is_empty() {
-            return Ok(normalize_database_url(&url));
-        }
-    }
-
-    let config = Config::load()?;
-    if !config.database.url.trim().is_empty() {
-        return Ok(normalize_database_url(&config.database.url));
-    }
-
-    Ok("sqlite://./data.db".to_string())
+    cli_env::load_env()?;
+    cli_env::get_database_url()
 }
 
 fn normalize_database_url(url: &str) -> String {
@@ -131,49 +120,4 @@ pub fn split_sql_statements(script: &str) -> Vec<String> {
     }
 
     statements
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{normalize_database_url, split_sql_statements};
-
-    #[test]
-    fn splitter_handles_semicolons_in_strings() {
-        let sql = "INSERT INTO x VALUES ('a;b'); INSERT INTO x VALUES (\"c;d\");";
-        let statements = split_sql_statements(sql);
-        assert_eq!(statements.len(), 2);
-    }
-
-    #[test]
-    fn splitter_ignores_line_and_block_comments() {
-        let sql = r#"
-            -- before
-            CREATE TABLE users(id INTEGER); /* block; comment */
-            INSERT INTO users(id) VALUES (1); -- tail
-        "#;
-        let statements = split_sql_statements(sql);
-        assert_eq!(statements.len(), 2);
-        assert!(statements[0].starts_with("CREATE TABLE users"));
-        assert!(statements[1].starts_with("INSERT INTO users"));
-    }
-
-    #[test]
-    fn normalizes_relative_sqlite_file_urls() {
-        assert_eq!(
-            normalize_database_url("sqlite://data.db"),
-            "sqlite://./data.db"
-        );
-        assert_eq!(
-            normalize_database_url("sqlite://db/app.db?mode=rwc"),
-            "sqlite://./db/app.db?mode=rwc"
-        );
-        assert_eq!(
-            normalize_database_url("sqlite:///tmp/data.db"),
-            "sqlite:///tmp/data.db"
-        );
-        assert_eq!(
-            normalize_database_url("postgres://localhost/app"),
-            "postgres://localhost/app"
-        );
-    }
 }

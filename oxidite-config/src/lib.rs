@@ -288,7 +288,7 @@ impl Config {
     }
 
     pub fn load() -> Result<Self, ConfigError> {
-        let _ = dotenv::dotenv();
+        let _ = dotenvy::dotenv();
         let env_val = env::var("OXIDITE_ENV")
             .or_else(|_| env::var("ENVIRONMENT"))
             .unwrap_or_else(|_| "development".to_string());
@@ -306,7 +306,7 @@ impl Config {
     }
 
     pub fn load_from(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
-        let _ = dotenv::dotenv();
+        let _ = dotenvy::dotenv();
         let env_name = env::var("OXIDITE_ENV")
             .or_else(|_| env::var("ENVIRONMENT"))
             .unwrap_or_else(|_| "development".to_string());
