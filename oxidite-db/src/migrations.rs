@@ -225,11 +225,23 @@ impl MigrationManager {
         self.ensure_migrations_table(db).await?;
 
         let timestamp = chrono::Utc::now().timestamp();
-        let query = sqlx::query("INSERT INTO _migrations (version, applied_at) VALUES (?, ?)")
+        
+        // Use database-specific placeholder syntax
+        let query_sql = match db.db_type() {
+            crate::DatabaseType::Postgres => "INSERT INTO _migrations (version, applied_at) VALUES ($1, $2)",
+            crate::DatabaseType::MySql => "INSERT INTO _migrations (version, applied_at) VALUES (?, ?)",
+            crate::DatabaseType::Sqlite => "INSERT INTO _migrations (version, applied_at) VALUES (?, ?)",
+        };
+        
+        let query = sqlx::query(query_sql)
             .bind(version)
             .bind(timestamp);
-        db.execute_query(query).await?;
-        Ok(())
+        db.execute_query(query).await
+            .map(|_| ())
+            .map_err(|e| {
+                eprintln!("[WARN] Migration tracking failed for '{}': {}", version, e);
+                e
+            })
     }
 
     /// Remove migration record (for rollback)
@@ -238,9 +250,20 @@ impl MigrationManager {
         db: &impl crate::Database,
         version: &str,
     ) -> crate::Result<()> {
-        let query = sqlx::query("DELETE FROM _migrations WHERE version = ?").bind(version);
-        db.execute_query(query).await?;
-        Ok(())
+        // Use database-specific placeholder syntax
+        let query_sql = match db.db_type() {
+            crate::DatabaseType::Postgres => "DELETE FROM _migrations WHERE version = $1",
+            crate::DatabaseType::MySql => "DELETE FROM _migrations WHERE version = ?",
+            crate::DatabaseType::Sqlite => "DELETE FROM _migrations WHERE version = ?",
+        };
+        
+        let query = sqlx::query(query_sql).bind(version);
+        db.execute_query(query).await
+            .map(|_| ())
+            .map_err(|e| {
+                eprintln!("[WARN] Migration revert failed for '{}': {}", version, e);
+                e
+            })
     }
 
     /// Get pending migrations
@@ -264,6 +287,188 @@ impl MigrationManager {
             .collect();
 
         Ok(pending)
+    }
+
+    /// Apply all pending migrations.
+    /// Each migration's SQL is executed directly, then recorded in the tracking table.
+    /// Note: For transactional execution, use `DbPool::with_transaction()` manually.
+    pub async fn apply_pending_migrations(
+        &self,
+        db: &impl crate::Database,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        self.apply_pending_migrations_checked(db).await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+    }
+
+    pub async fn apply_pending_migrations_checked(
+        &self,
+        db: &impl crate::Database,
+    ) -> crate::OrmResult<Vec<String>> {
+        let pending = self.get_pending_migrations_checked(db).await
+            .map_err(|e| crate::OrmError::Database(sqlx::Error::Protocol(e.to_string().into())))?;
+        let mut applied_versions = Vec::new();
+
+        for migration in &pending {
+            // Execute up SQL
+            if !migration.up_sql.is_empty() {
+                // Split into individual statements
+                for stmt in migration.up_sql.split(';') {
+                    let stmt = stmt.trim();
+                    if stmt.is_empty() {
+                        continue;
+                    }
+                    db.execute(stmt).await?;
+                }
+            }
+
+            // Mark as applied
+            self.mark_migration_applied(db, &migration.version).await?;
+            applied_versions.push(migration.version.clone());
+        }
+
+        Ok(applied_versions)
+    }
+
+    /// Rollback the last N applied migrations
+    pub async fn rollback_migrations(
+        &self,
+        db: &impl crate::Database,
+        steps: usize,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+        self.rollback_migrations_checked(db, steps).await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+    }
+
+    pub async fn rollback_migrations_checked(
+        &self,
+        db: &impl crate::Database,
+        steps: usize,
+    ) -> crate::OrmResult<Vec<String>> {
+        if steps == 0 {
+            return Ok(Vec::new());
+        }
+
+        let applied = self.get_applied_migrations(db).await?;
+        if applied.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // Get the last N applied versions (in reverse order)
+        let to_rollback: Vec<String> = applied
+            .iter()
+            .rev()
+            .take(steps)
+            .cloned()
+            .collect();
+
+        let mut reverted_versions = Vec::new();
+
+        for version in &to_rollback {
+            // Find the corresponding migration file
+            let all_migrations = self.list_migrations_checked().map_err(|e| {
+                crate::OrmError::Database(sqlx::Error::Protocol(e.to_string().into()))
+            })?;
+            let migration = all_migrations
+                .iter()
+                .find(|m| m.version == *version)
+                .ok_or_else(|| crate::OrmError::NotFound {
+                    model: "migration",
+                    id: version.clone(),
+                })?;
+
+            if migration.down_sql.is_empty() {
+                return Err(crate::OrmError::Validation(format!(
+                    "migration {} has no down SQL, cannot rollback",
+                    version
+                )));
+            }
+
+            // Execute down SQL
+            for stmt in migration.down_sql.split(';') {
+                let stmt = stmt.trim();
+                if stmt.is_empty() {
+                    continue;
+                }
+                db.execute(stmt).await?;
+            }
+
+            // Remove from tracking
+            self.mark_migration_reverted(db, &migration.version).await?;
+            reverted_versions.push(version.clone());
+        }
+
+        Ok(reverted_versions)
+    }
+
+    /// Apply a single migration by version
+    pub async fn apply_migration(
+        &self,
+        db: &impl crate::Database,
+        version: &str,
+    ) -> MigrationResult<()> {
+        let all_migrations = self.list_migrations_checked()?;
+        let migration = all_migrations
+            .iter()
+            .find(|m| m.version == version)
+            .ok_or_else(|| MigrationError::InvalidFilename {
+                filename: version.to_string(),
+            })?;
+
+        let applied = self.get_applied_migrations(db).await?;
+        if applied.contains(&migration.version) {
+            return Ok(()); // Already applied
+        }
+
+        // Execute up SQL
+        if !migration.up_sql.is_empty() {
+            for stmt in migration.up_sql.split(';') {
+                let stmt = stmt.trim();
+                if stmt.is_empty() {
+                    continue;
+                }
+                db.execute(stmt).await?;
+            }
+        }
+
+        // Mark as applied
+        self.mark_migration_applied(db, &migration.version).await?;
+
+        Ok(())
+    }
+
+    /// Rollback a single migration by version
+    pub async fn rollback_migration(
+        &self,
+        db: &impl crate::Database,
+        version: &str,
+    ) -> MigrationResult<()> {
+        let all_migrations = self.list_migrations_checked()?;
+        let migration = all_migrations
+            .iter()
+            .find(|m| m.version == version)
+            .ok_or_else(|| MigrationError::InvalidFilename {
+                filename: version.to_string(),
+            })?;
+
+        if migration.down_sql.is_empty() {
+            return Err(MigrationError::InvalidFilename {
+                filename: format!("migration {} has no down SQL", version),
+            });
+        }
+
+        // Execute down SQL
+        for stmt in migration.down_sql.split(';') {
+            let stmt = stmt.trim();
+            if stmt.is_empty() {
+                continue;
+            }
+            db.execute(stmt).await?;
+        }
+
+        // Remove from tracking
+        self.mark_migration_reverted(db, &migration.version).await?;
+
+        Ok(())
     }
 }
 
@@ -378,5 +583,45 @@ mod tests {
 
         let err = Migration::from_file_checked(&path).unwrap_err().to_string();
         assert!(err.contains("invalid migration filename"));
+    }
+
+    #[test]
+    fn migration_from_file_parses_up_and_down_sql() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("20240101120000_create_users.sql");
+        std::fs::write(
+            &path,
+            "-- migrate:up\nCREATE TABLE users (id INT);\n\n-- migrate:down\nDROP TABLE users;",
+        )
+        .unwrap();
+
+        let migration = Migration::from_file_checked(&path).unwrap();
+        assert!(migration.up_sql.contains("CREATE TABLE users"));
+        assert!(migration.down_sql.contains("DROP TABLE users"));
+        assert_eq!(migration.version, "20240101120000_create_users");
+        assert_eq!(migration.name, "create_users");
+    }
+
+    #[test]
+    fn migration_manager_lists_and_filters_pending() {
+        let dir = tempfile::tempdir().unwrap();
+        let migrations_dir = dir.path().join("migrations");
+        std::fs::create_dir(&migrations_dir).unwrap();
+
+        // Create two migration files
+        std::fs::write(
+            migrations_dir.join("20240101120000_create_users.sql"),
+            "-- migrate:up\nCREATE TABLE users (id INT);\n-- migrate:down\nDROP TABLE users;",
+        ).unwrap();
+        std::fs::write(
+            migrations_dir.join("20240102120000_create_posts.sql"),
+            "-- migrate:up\nCREATE TABLE posts (id INT);\n-- migrate:down\nDROP TABLE posts;",
+        ).unwrap();
+
+        let manager = MigrationManager::new(&migrations_dir);
+        let migrations = manager.list_migrations_checked().unwrap();
+        assert_eq!(migrations.len(), 2);
+        assert_eq!(migrations[0].name, "create_users");
+        assert_eq!(migrations[1].name, "create_posts");
     }
 }

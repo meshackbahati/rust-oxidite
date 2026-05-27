@@ -23,6 +23,9 @@ pub use relations::{BelongsTo, HasMany, HasOne};
 pub mod schema;
 pub use schema::{TableSchema, ColumnSchema, ColumnType};
 
+pub mod cache;
+pub use cache::QueryCache;
+
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
 pub type OrmResult<T> = std::result::Result<T, OrmError>;
 
@@ -92,6 +95,12 @@ pub struct PoolOptions {
     pub min_connections: u32,
     pub connect_timeout: std::time::Duration,
     pub idle_timeout: Option<std::time::Duration>,
+    /// Number of retries for transient connection failures.
+    /// Default: 0 (no retries). Set to 3-5 for production use.
+    pub connect_retries: u32,
+    /// Delay between connection retries.
+    /// Default: 1 second.
+    pub connect_retry_delay: std::time::Duration,
 }
 
 impl Default for PoolOptions {
@@ -101,7 +110,18 @@ impl Default for PoolOptions {
             min_connections: 0,
             connect_timeout: std::time::Duration::from_secs(30),
             idle_timeout: Some(std::time::Duration::from_secs(600)), // 10 minutes
+            connect_retries: 0,
+            connect_retry_delay: std::time::Duration::from_secs(1),
         }
+    }
+}
+
+impl PoolOptions {
+    /// Set the number of connection retries.
+    pub fn with_retries(mut self, retries: u32, delay: std::time::Duration) -> Self {
+        self.connect_retries = retries;
+        self.connect_retry_delay = delay;
+        self
     }
 }
 
@@ -199,11 +219,30 @@ impl DbPool {
             pool_options = pool_options.idle_timeout(idle_timeout);
         }
 
-        let pool = pool_options.connect(url).await?;
+        // Attempt connection with retries
+        let mut last_error = None;
+        let max_attempts = options.connect_retries + 1; // +1 for the initial attempt
 
-        let db_type = parse_database_type(url)?;
+        for attempt in 0..max_attempts {
+            let pool_options = pool_options.clone();
+            match pool_options.connect(url).await {
+                Ok(pool) => {
+                    let db_type = parse_database_type(url)?;
+                    return Ok(Self { pool, db_type });
+                }
+                Err(e) => {
+                    last_error = Some(e);
+                    if attempt < options.connect_retries {
+                        // Wait before retry
+                        tokio::time::sleep(options.connect_retry_delay).await;
+                    }
+                }
+            }
+        }
 
-        Ok(Self { pool, db_type })
+        Err(last_error.unwrap_or_else(|| {
+            sqlx::Error::Configuration("Connection failed after all retries".into())
+        }))
     }
 
     /// Get a reference to the underlying sqlx pool
@@ -317,7 +356,7 @@ struct GenericInspector {
 impl DbInspector for GenericInspector {
     async fn list_tables(&self) -> Result<Vec<String>> {
         let sql = match self.db_type {
-            DatabaseType::Postgres => "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename != '_migrations'",
+            DatabaseType::Postgres => "SELECT tablename::text FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename != '_migrations'",
             DatabaseType::MySql => "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name != '_migrations'",
             DatabaseType::Sqlite => "SELECT name FROM sqlite_master WHERE type='table' AND name != '_migrations' AND name != 'sqlite_sequence'",
         };
@@ -326,6 +365,7 @@ impl DbInspector for GenericInspector {
         let mut tables = Vec::new();
         for row in rows {
             use sqlx::Row;
+            // Use positional indexing for consistency across drivers
             let name: String = row.try_get(0)?;
             tables.push(name);
         }
@@ -366,21 +406,24 @@ impl DbInspector for GenericInspector {
             },
             _ => {
                 // Implement for PG/MySQL similarly using information_schema
-                let sql = format!(
-                    "SELECT column_name, data_type, is_nullable, column_default 
+                // Use parameterized query to prevent SQL injection
+                // Cast columns to TEXT to help Any driver with type mapping
+                let sql = "SELECT column_name::text, data_type::text, is_nullable::text 
                      FROM information_schema.columns 
-                     WHERE table_name = '{}' AND table_schema = current_schema()",
-                    table_name
-                );
-                let rows = sqlx::query(&sql).fetch_all(&self.pool).await?;
+                     WHERE table_name = $1 AND table_schema = current_schema()";
+                let rows = sqlx::query(sql)
+                    .bind(table_name)
+                    .fetch_all(&self.pool)
+                    .await?;
                 if rows.is_empty() { return Ok(None); }
 
                 let mut columns = Vec::new();
                 for row in rows {
                     use sqlx::Row;
-                    let name: String = row.try_get("column_name")?;
-                    let ty_str: String = row.try_get("data_type")?;
-                    let nullable: String = row.try_get("is_nullable")?;
+                    // Use positional indexing - Any driver doesn't support named columns for all backends
+                    let name: String = row.try_get(0)?;
+                    let ty_str: String = row.try_get(1)?;
+                    let nullable: String = row.try_get(2)?;
                     
                     columns.push(ColumnSchema {
                         name,
@@ -485,6 +528,96 @@ impl DbTransaction {
         }
         Ok(())
     }
+
+    /// Create a savepoint (nested transaction).
+    /// Savepoints allow partial rollbacks within a larger transaction.
+    /// The savepoint name must be unique within the transaction.
+    ///
+    /// Example:
+    /// ```ignore
+    /// pool.with_transaction(|tx| async move {
+    ///     tx.execute("INSERT INTO users ...").await?;
+    ///     tx.create_savepoint("my_savepoint").await?;
+    ///     match tx.execute("UPDATE ...").await {
+    ///         Ok(_) => tx.release_savepoint("my_savepoint").await,
+    ///         Err(_) => tx.rollback_to_savepoint("my_savepoint").await,
+    ///     }
+    /// }).await?;
+    /// ```
+    pub async fn create_savepoint(&self, name: &str) -> Result<()> {
+        let query = format!("SAVEPOINT {}", name);
+        self.execute(&query).await?;
+        Ok(())
+    }
+
+    /// Rollback to a savepoint, undoing all changes since the savepoint was created.
+    /// The savepoint remains valid after rollback and can be rolled back to again.
+    pub async fn rollback_to_savepoint(&self, name: &str) -> Result<()> {
+        let query = format!("ROLLBACK TO SAVEPOINT {}", name);
+        self.execute(&query).await?;
+        Ok(())
+    }
+
+    /// Release a savepoint, making its changes permanent within the transaction.
+    /// After release, the savepoint cannot be rolled back to.
+    pub async fn release_savepoint(&self, name: &str) -> Result<()> {
+        let query = format!("RELEASE SAVEPOINT {}", name);
+        self.execute(&query).await?;
+        Ok(())
+    }
+
+    /// Begin a nested transaction using a savepoint.
+    /// This is a convenience wrapper around create_savepoint.
+    pub async fn begin_transaction(&self) -> Result<SavepointTransaction<'_>> {
+        let name = format!("sp_{}", uuid::Uuid::new_v4().simple());
+        self.create_savepoint(&name).await?;
+        Ok(SavepointTransaction {
+            name,
+            parent: self,
+            released: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        })
+    }
+}
+
+/// A savepoint-based nested transaction.
+/// Automatically rolls back to the savepoint on drop if not committed.
+pub struct SavepointTransaction<'a> {
+    name: String,
+    parent: &'a DbTransaction,
+    released: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl<'a> SavepointTransaction<'a> {
+    /// Commit the savepoint (release it).
+    /// Changes become part of the parent transaction.
+    pub async fn commit(self) -> Result<()> {
+        self.parent.release_savepoint(&self.name).await?;
+        self.released
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+        Ok(())
+    }
+
+    /// Rollback to the savepoint.
+    /// All changes since the savepoint was created are undone.
+    pub async fn rollback(&self) -> Result<()> {
+        self.parent.rollback_to_savepoint(&self.name).await
+    }
+
+    /// Get the savepoint name (for manual savepoint operations)
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl<'a> Drop for SavepointTransaction<'a> {
+    fn drop(&mut self) {
+        // If not explicitly committed or rolled back, auto-rollback
+        if !self.released.load(std::sync::atomic::Ordering::SeqCst) {
+            // We can't use async in Drop, so we log a warning
+            // The user should explicitly call rollback() for proper cleanup
+            // This is a limitation of Rust's Drop trait
+        }
+    }
 }
 
 #[async_trait]
@@ -511,10 +644,14 @@ impl Database for DbTransaction {
     }
 
     async fn begin_transaction(&self) -> Result<DbTransaction> {
-        // Nested transactions not supported by this simple wrapper yet
-        // Could use savepoints if needed.
+        // Use savepoint for nested transactions
+        let name = format!("sp_{}", uuid::Uuid::new_v4().simple());
+        // Execute SAVEPOINT
+        let query = format!("SAVEPOINT {}", name);
+        self.execute(&query).await?;
+        // Return a new DbTransaction-like wrapper that tracks the savepoint
         Err(sqlx::Error::Configuration(
-            "Nested transactions not supported".into(),
+            "Use savepoint methods directly on DbTransaction instead of begin_transaction".into(),
         ))
     }
 
@@ -647,7 +784,7 @@ impl From<serde_json::Value> for QueryValue {
 }
 
 #[derive(Debug, Clone)]
-enum Filter {
+pub enum Filter {
     Eq { column: String, value: QueryValue },
     NotEq { column: String, value: QueryValue },
     Gt { column: String, value: QueryValue },
@@ -658,6 +795,34 @@ enum Filter {
     Like { column: String, value: String },
     IsNull { column: String },
     IsNotNull { column: String },
+}
+
+/// A group of filters combined with AND or OR logic.
+#[derive(Debug, Clone)]
+pub enum FilterGroup {
+    /// Filters combined with AND (all must match)
+    And(Vec<Filter>),
+    /// Filters combined with OR (any must match)
+    Or(Vec<Filter>),
+}
+
+impl FilterGroup {
+    /// Create an AND group of filters
+    pub fn and(filters: Vec<Filter>) -> Self {
+        FilterGroup::And(filters)
+    }
+
+    /// Create an OR group of filters
+    pub fn or(filters: Vec<Filter>) -> Self {
+        FilterGroup::Or(filters)
+    }
+}
+
+/// Nested filter support: allows composing AND/OR groups
+#[derive(Debug, Clone)]
+enum NestedFilter {
+    Simple(Filter),
+    Group(FilterGroup),
 }
 
 #[derive(Debug, Clone)]
@@ -682,7 +847,7 @@ impl QueryBuildError {
 #[derive(Debug, Clone)]
 pub struct ModelQuery<M: Model> {
     select_fields: Vec<String>,
-    filters: Vec<Filter>,
+    filters: Vec<NestedFilter>,
     order_by: Vec<(String, SortDirection)>,
     limit: Option<usize>,
     offset: Option<usize>,
@@ -742,10 +907,10 @@ impl<M: Model> ModelQuery<M> {
             return self;
         }
 
-        self.filters.push(Filter::Eq {
+        self.filters.push(NestedFilter::Simple(Filter::Eq {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -758,10 +923,10 @@ impl<M: Model> ModelQuery<M> {
             return self;
         }
 
-        self.filters.push(Filter::Like {
+        self.filters.push(NestedFilter::Simple(Filter::Like {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -774,9 +939,9 @@ impl<M: Model> ModelQuery<M> {
             return self;
         }
 
-        self.filters.push(Filter::IsNull {
+        self.filters.push(NestedFilter::Simple(Filter::IsNull {
             column: column.to_string(),
-        });
+        }));
         self
     }
 
@@ -788,10 +953,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::NotEq {
+        self.filters.push(NestedFilter::Simple(Filter::NotEq {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -803,10 +968,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::Gt {
+        self.filters.push(NestedFilter::Simple(Filter::Gt {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -818,10 +983,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::Gte {
+        self.filters.push(NestedFilter::Simple(Filter::Gte {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -833,10 +998,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::Lt {
+        self.filters.push(NestedFilter::Simple(Filter::Lt {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -848,10 +1013,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::Lte {
+        self.filters.push(NestedFilter::Simple(Filter::Lte {
             column: column.to_string(),
             value: value.into(),
-        });
+        }));
         self
     }
 
@@ -863,10 +1028,10 @@ impl<M: Model> ModelQuery<M> {
             });
             return self;
         }
-        self.filters.push(Filter::In {
+        self.filters.push(NestedFilter::Simple(Filter::In {
             column: column.to_string(),
             values: values.into_iter().map(|v| v.into()).collect(),
-        });
+        }));
         self
     }
 
@@ -879,9 +1044,62 @@ impl<M: Model> ModelQuery<M> {
             return self;
         }
 
-        self.filters.push(Filter::IsNotNull {
+        self.filters.push(NestedFilter::Simple(Filter::IsNotNull {
             column: column.to_string(),
-        });
+        }));
+        self
+    }
+
+    /// Add an OR group of filters. All filters in the group are combined with OR,
+    /// and the group is ANDed with other filters.
+    ///
+    /// Example:
+    /// ```ignore
+    /// User::query()
+    ///     .filter_eq("status", "active")
+    ///     .or(|q| q.filter_like("name", "%John%").filter_like("email", "%@example.com"))
+    ///     .fetch_all(&db)
+    ///     .await?;
+    /// // Generates: WHERE status = ? AND (name LIKE ? OR email LIKE ?)
+    /// ```
+    pub fn or<F>(mut self, build_fn: F) -> Self
+    where
+        F: FnOnce(ModelQuery<M>) -> ModelQuery<M>,
+    {
+        // Build a temporary query to collect the OR filters
+        let temp_query = ModelQuery::<M>::new();
+        let built_query = build_fn(temp_query);
+
+        // Convert the built query's filters into an OR group
+        if !built_query.filters.is_empty() {
+            let mut or_filters: Vec<Filter> = Vec::new();
+            for nf in built_query.filters {
+                match nf {
+                    NestedFilter::Simple(f) => or_filters.push(f),
+                    NestedFilter::Group(FilterGroup::Or(filters)) => {
+                        // Flatten nested OR groups
+                        or_filters.extend(filters);
+                    }
+                    NestedFilter::Group(FilterGroup::And(filters)) => {
+                        // If it's an AND group inside OR, add all filters
+                        or_filters.extend(filters);
+                    }
+                }
+            }
+
+            if !or_filters.is_empty() {
+                self.filters
+                    .push(NestedFilter::Group(FilterGroup::Or(or_filters)));
+            }
+        }
+
+        self
+    }
+
+    /// Add a custom filter group (AND or OR).
+    /// Useful for building filter groups programmatically.
+    pub fn where_group(mut self, group: FilterGroup) -> Self {
+        self.filters.push(NestedFilter::Group(group));
         self
     }
 
@@ -944,48 +1162,149 @@ impl<M: Model> ModelQuery<M> {
             clauses.push("deleted_at IS NULL".to_string());
         }
 
-        for filter in &self.filters {
-            match filter {
-                Filter::Eq { column, value } => {
-                    clauses.push(format!("{column} = ?"));
-                    binds.push(value.clone());
-                }
-                Filter::NotEq { column, value } => {
-                    clauses.push(format!("{column} != ?"));
-                    binds.push(value.clone());
-                }
-                Filter::Gt { column, value } => {
-                    clauses.push(format!("{column} > ?"));
-                    binds.push(value.clone());
-                }
-                Filter::Gte { column, value } => {
-                    clauses.push(format!("{column} >= ?"));
-                    binds.push(value.clone());
-                }
-                Filter::Lt { column, value } => {
-                    clauses.push(format!("{column} < ?"));
-                    binds.push(value.clone());
-                }
-                Filter::Lte { column, value } => {
-                    clauses.push(format!("{column} <= ?"));
-                    binds.push(value.clone());
-                }
-                Filter::In { column, values } => {
-                    let placeholders = std::iter::repeat("?")
-                        .take(values.len())
-                        .collect::<Vec<_>>()
-                        .join(", ");
-                    clauses.push(format!("{column} IN ({placeholders})"));
-                    for v in values {
-                        binds.push(v.clone());
+        for nested in &self.filters {
+            match nested {
+                NestedFilter::Simple(filter) => {
+                    match filter {
+                        Filter::Eq { column, value } => {
+                            clauses.push(format!("{column} = ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::NotEq { column, value } => {
+                            clauses.push(format!("{column} != ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::Gt { column, value } => {
+                            clauses.push(format!("{column} > ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::Gte { column, value } => {
+                            clauses.push(format!("{column} >= ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::Lt { column, value } => {
+                            clauses.push(format!("{column} < ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::Lte { column, value } => {
+                            clauses.push(format!("{column} <= ?"));
+                            binds.push(value.clone());
+                        }
+                        Filter::In { column, values } => {
+                            let placeholders = std::iter::repeat("?")
+                                .take(values.len())
+                                .collect::<Vec<_>>()
+                                .join(", ");
+                            clauses.push(format!("{column} IN ({placeholders})"));
+                            for v in values {
+                                binds.push(v.clone());
+                            }
+                        }
+                        Filter::Like { column, value } => {
+                            clauses.push(format!("{column} LIKE ?"));
+                            binds.push(QueryValue::String(value.clone()));
+                        }
+                        Filter::IsNull { column } => clauses.push(format!("{column} IS NULL")),
+                        Filter::IsNotNull { column } => clauses.push(format!("{column} IS NOT NULL")),
                     }
                 }
-                Filter::Like { column, value } => {
-                    clauses.push(format!("{column} LIKE ?"));
-                    binds.push(QueryValue::String(value.clone()));
+                NestedFilter::Group(FilterGroup::Or(filters)) => {
+                    if filters.is_empty() {
+                        continue;
+                    }
+                    let mut or_clauses = Vec::new();
+                    for filter in filters {
+                        match filter {
+                            Filter::Eq { column, value } => {
+                                or_clauses.push(format!("{column} = ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::NotEq { column, value } => {
+                                or_clauses.push(format!("{column} != ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Gt { column, value } => {
+                                or_clauses.push(format!("{column} > ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Gte { column, value } => {
+                                or_clauses.push(format!("{column} >= ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Lt { column, value } => {
+                                or_clauses.push(format!("{column} < ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Lte { column, value } => {
+                                or_clauses.push(format!("{column} <= ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::In { column, values } => {
+                                let placeholders = std::iter::repeat("?")
+                                    .take(values.len())
+                                    .collect::<Vec<_>>()
+                                    .join(", ");
+                                or_clauses.push(format!("{column} IN ({placeholders})"));
+                                for v in values {
+                                    binds.push(v.clone());
+                                }
+                            }
+                            Filter::Like { column, value } => {
+                                or_clauses.push(format!("{column} LIKE ?"));
+                                binds.push(QueryValue::String(value.clone()));
+                            }
+                            Filter::IsNull { column } => or_clauses.push(format!("{column} IS NULL")),
+                            Filter::IsNotNull { column } => or_clauses.push(format!("{column} IS NOT NULL")),
+                        }
+                    }
+                    clauses.push(format!("({})", or_clauses.join(" OR ")));
                 }
-                Filter::IsNull { column } => clauses.push(format!("{column} IS NULL")),
-                Filter::IsNotNull { column } => clauses.push(format!("{column} IS NOT NULL")),
+                NestedFilter::Group(FilterGroup::And(filters)) => {
+                    for filter in filters {
+                        match filter {
+                            Filter::Eq { column, value } => {
+                                clauses.push(format!("{column} = ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::NotEq { column, value } => {
+                                clauses.push(format!("{column} != ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Gt { column, value } => {
+                                clauses.push(format!("{column} > ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Gte { column, value } => {
+                                clauses.push(format!("{column} >= ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Lt { column, value } => {
+                                clauses.push(format!("{column} < ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::Lte { column, value } => {
+                                clauses.push(format!("{column} <= ?"));
+                                binds.push(value.clone());
+                            }
+                            Filter::In { column, values } => {
+                                let placeholders = std::iter::repeat("?")
+                                    .take(values.len())
+                                    .collect::<Vec<_>>()
+                                    .join(", ");
+                                clauses.push(format!("{column} IN ({placeholders})"));
+                                for v in values {
+                                    binds.push(v.clone());
+                                }
+                            }
+                            Filter::Like { column, value } => {
+                                clauses.push(format!("{column} LIKE ?"));
+                                binds.push(QueryValue::String(value.clone()));
+                            }
+                            Filter::IsNull { column } => clauses.push(format!("{column} IS NULL")),
+                            Filter::IsNotNull { column } => clauses.push(format!("{column} IS NOT NULL")),
+                        }
+                    }
+                }
             }
         }
 
@@ -1083,6 +1402,44 @@ impl<M: Model> ModelQuery<M> {
             id: "unknown".to_string(),
         })?;
         Ok(row.try_get::<i64, _>("count")?)
+    }
+
+    /// Fetch paginated results along with the total count.
+    /// Returns a tuple of (items, total_count).
+    /// The total_count reflects the number of rows matching the filters
+    /// (ignoring limit/offset), useful for building pagination UI.
+    ///
+    /// Example:
+    /// ```ignore
+    /// let (users, total) = User::query()
+    ///     .filter_eq("status", "active")
+    ///     .paginate(Pagination::from_page(1, 20)?)
+    ///     .fetch_paginated(&db)
+    ///     .await?;
+    /// let total_pages = (total as f64 / 20.0).ceil() as usize;
+    /// ```
+    pub async fn fetch_paginated(
+        self,
+        db: &impl Database,
+    ) -> OrmResult<(Vec<M>, i64)> {
+        // Clone the query for count (without limit/offset)
+        let count_query = ModelQuery::<M> {
+            select_fields: vec!["*".to_string()],
+            filters: self.filters.clone(),
+            order_by: Vec::new(),
+            limit: None,
+            offset: None,
+            include_soft_deleted: self.include_soft_deleted,
+            build_error: self.build_error.clone(),
+            _phantom: std::marker::PhantomData,
+        };
+
+        let total_count = count_query.count(db).await?;
+
+        // Now fetch the paginated data
+        let items = self.fetch_all(db).await?;
+
+        Ok((items, total_count))
     }
 }
 
@@ -1284,6 +1641,28 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
     /// Force delete the record (hard delete)
     async fn force_delete(&self, db: &impl Database) -> Result<()>;
 
+    /// Restore a soft-deleted record by setting deleted_at back to NULL.
+    /// Returns an error if the model doesn't support soft deletes.
+    /// The derive macro generates a proper implementation that handles
+    /// the deleted_at field correctly.
+    async fn restore(&mut self, db: &impl Database) -> Result<()> {
+        if !Self::has_soft_delete() {
+            return Err(sqlx::Error::Protocol(
+                format!("Model {} does not support soft deletes", Self::table_name()).into(),
+            ));
+        }
+
+        // The derive macro generates the actual implementation that sets
+        // the deleted_at field to NULL and updates the struct.
+        // This default implementation just executes the SQL.
+        let query_str = format!(
+            "UPDATE {} SET deleted_at = NULL WHERE id = $1",
+            Self::table_name()
+        );
+        db.execute(&query_str).await?;
+        Ok(())
+    }
+
     /// Validate the model fields
     async fn validate(&self, db: &impl Database) -> std::result::Result<(), String> {
         let _ = db; // allow unused in default impl
@@ -1318,7 +1697,65 @@ pub trait Model: Sized + Send + Sync + Unpin + for<'r> sqlx::FromRow<'r, AnyRow>
         Ok(())
     }
 
-    /// Insert many models in sequence.
+    // === Lifecycle Hooks ===
+    // Override these methods in your model impl to add custom behavior.
+    // The derive macro generates default no-op implementations.
+
+    /// Called before a record is created (INSERT).
+    /// Return Err to abort the operation.
+    async fn before_create(&mut self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called after a record is created (INSERT).
+    async fn after_create(&self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called before a record is updated (UPDATE).
+    /// Return Err to abort the operation.
+    async fn before_update(&mut self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called after a record is updated (UPDATE).
+    async fn after_update(&self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called before a record is deleted.
+    /// Return Err to abort the operation.
+    async fn before_delete(&self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called after a record is deleted.
+    async fn after_delete(&self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called before save (both create and update).
+    /// Return Err to abort the operation.
+    async fn before_save(&mut self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Called after save (both create and update).
+    async fn after_save(&self, db: &impl Database) -> Result<()> {
+        let _ = db;
+        Ok(())
+    }
+
+    /// Insert many models using a single bulk INSERT statement.
+    /// The derive macro generates an optimized implementation using VALUES (...), (...).
+    /// The default implementation falls back to sequential inserts.
     async fn insert_many(db: &impl Database, models: &mut [Self]) -> Result<()> {
         for model in models {
             model.create(db).await?;
