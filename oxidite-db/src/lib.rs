@@ -5,6 +5,11 @@ use sqlx::{
 use std::{fmt::Debug, future::Future, path::PathBuf};
 use thiserror::Error;
 
+// Concrete pool types for escape hatches
+use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
+use sqlx::mysql::{MySqlPool, MySqlPoolOptions, MySqlRow};
+use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteRow};
+
 #[cfg(test)]
 extern crate self as oxidite;
 
@@ -183,6 +188,10 @@ pub trait DbInspector: Send + Sync {
 pub struct DbPool {
     pool: AnyPool,
     db_type: DatabaseType,
+    // Concrete pools for escape hatches (enables query_as with FromRow)
+    pg_pool: Option<PgPool>,
+    mysql_pool: Option<MySqlPool>,
+    sqlite_pool: Option<SqlitePool>,
 }
 
 impl DbPool {
@@ -210,6 +219,48 @@ impl DbPool {
             }
         }
 
+        let db_type = parse_database_type(url)?;
+
+        // Create concrete pool for escape hatch (enables query_as with FromRow)
+        let pg_pool = if matches!(db_type, DatabaseType::Postgres) {
+            let mut opts = PgPoolOptions::new()
+                .max_connections(max_conns)
+                .min_connections(options.min_connections)
+                .acquire_timeout(options.connect_timeout);
+            if let Some(idle_timeout) = options.idle_timeout {
+                opts = opts.idle_timeout(idle_timeout);
+            }
+            Some(opts.connect(url).await?)
+        } else {
+            None
+        };
+
+        let mysql_pool = if matches!(db_type, DatabaseType::MySql) {
+            let mut opts = MySqlPoolOptions::new()
+                .max_connections(max_conns)
+                .min_connections(options.min_connections)
+                .acquire_timeout(options.connect_timeout);
+            if let Some(idle_timeout) = options.idle_timeout {
+                opts = opts.idle_timeout(idle_timeout);
+            }
+            Some(opts.connect(url).await?)
+        } else {
+            None
+        };
+
+        let sqlite_pool = if matches!(db_type, DatabaseType::Sqlite) {
+            let mut opts = SqlitePoolOptions::new()
+                .max_connections(max_conns)
+                .min_connections(options.min_connections)
+                .acquire_timeout(options.connect_timeout);
+            if let Some(idle_timeout) = options.idle_timeout {
+                opts = opts.idle_timeout(idle_timeout);
+            }
+            Some(opts.connect(url).await?)
+        } else {
+            None
+        };
+
         let mut pool_options = AnyPoolOptions::new()
             .max_connections(max_conns)
             .min_connections(options.min_connections)
@@ -226,9 +277,14 @@ impl DbPool {
         for attempt in 0..max_attempts {
             let pool_options = pool_options.clone();
             match pool_options.connect(url).await {
-                Ok(pool) => {
-                    let db_type = parse_database_type(url)?;
-                    return Ok(Self { pool, db_type });
+                Ok(any_pool) => {
+                    return Ok(Self {
+                        pool: any_pool,
+                        db_type,
+                        pg_pool,
+                        mysql_pool,
+                        sqlite_pool,
+                    });
                 }
                 Err(e) => {
                     last_error = Some(e);
@@ -258,6 +314,92 @@ impl DbPool {
     /// Get a reference to the underlying sqlx pool
     pub fn inner(&self) -> &AnyPool {
         &self.pool
+    }
+
+    // ==========================================
+    // Concrete pool accessors (escape hatches)
+    // ==========================================
+
+    /// Get the underlying PostgreSQL pool when connected to PostgreSQL.
+    /// Returns `None` if the database is MySQL or SQLite.
+    /// 
+    /// This enables use of `sqlx::query_as::<_, T>()` with `#[derive(FromRow)]`
+    /// models that use PostgreSQL-specific types (JSONB, arrays, etc.).
+    /// 
+    /// # Example
+    /// ```rust,ignore
+    /// let pg_pool = state.db.postgres_pool().expect("PostgreSQL required");
+    /// let users: Vec<User> = sqlx::query_as::<_, User>("SELECT * FROM users")
+    ///     .fetch_all(pg_pool)
+    ///     .await?;
+    /// ```
+    pub fn postgres_pool(&self) -> Option<&PgPool> {
+        self.pg_pool.as_ref()
+    }
+
+    /// Get the underlying MySQL pool when connected to MySQL.
+    /// Returns `None` if the database is PostgreSQL or SQLite.
+    pub fn mysql_pool(&self) -> Option<&MySqlPool> {
+        self.mysql_pool.as_ref()
+    }
+
+    /// Get the underlying SQLite pool when connected to SQLite.
+    /// Returns `None` if the database is PostgreSQL or MySQL.
+    pub fn sqlite_pool(&self) -> Option<&SqlitePool> {
+        self.sqlite_pool.as_ref()
+    }
+
+    // ==========================================
+    // Convenience methods for typed queries
+    // ==========================================
+
+    /// Fetch all rows as a typed struct using the concrete PostgreSQL pool.
+    /// Returns an error if not connected to PostgreSQL.
+    /// 
+    /// # Example
+    /// ```rust,ignore
+    /// #[derive(sqlx::FromRow, Serialize)]
+    /// struct User { id: i64, email: String }
+    /// 
+    /// let users: Vec<User> = db.fetch_all_as(
+    ///     "SELECT * FROM users WHERE status = $1",
+    ///     |q| q.bind("active")
+    /// ).await?;
+    /// ```
+    pub async fn fetch_all_as<T, F>(&self, sql: &str, binder: F) -> Result<Vec<T>>
+    where
+        T: for<'r> sqlx::FromRow<'r, PgRow> + Send + Unpin,
+        F: FnOnce(sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments>) -> sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments> + Send,
+    {
+        let pool = self.postgres_pool()
+            .ok_or(sqlx::Error::Configuration("Not connected to PostgreSQL".into()))?;
+        
+        let query = binder(sqlx::query_as(sql));
+        query.fetch_all(pool).await
+    }
+
+    /// Fetch one row as a typed struct using the concrete PostgreSQL pool.
+    /// Returns `None` if no rows match.
+    pub async fn fetch_optional_as<T, F>(&self, sql: &str, binder: F) -> Result<Option<T>>
+    where
+        T: for<'r> sqlx::FromRow<'r, PgRow> + Send + Unpin,
+        F: FnOnce(sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments>) -> sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments> + Send,
+    {
+        let pool = self.postgres_pool()
+            .ok_or(sqlx::Error::Configuration("Not connected to PostgreSQL".into()))?;
+        
+        let query = binder(sqlx::query_as(sql));
+        query.fetch_optional(pool).await
+    }
+
+    /// Fetch one row as a typed struct, or return an error if no rows match.
+    pub async fn fetch_one_as<T, F>(&self, sql: &str, binder: F) -> Result<T>
+    where
+        T: for<'r> sqlx::FromRow<'r, PgRow> + Send + Unpin,
+        F: FnOnce(sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments>) -> sqlx::query::QueryAs<'_, sqlx::Postgres, T, sqlx::postgres::PgArguments> + Send,
+    {
+        self.fetch_optional_as(sql, binder).await?
+            .ok_or(sqlx::Error::RowNotFound)
     }
 
     /// Execute a closure within a transaction and automatically commit or rollback.

@@ -42,7 +42,8 @@ ws.on_upgrade(|socket, extensions| async move {
 })
 ```
 
-## 4. DbPool Accessors
+## 4. DbPool Accessors and Concrete Pool Support
+
 `DbPool` now exposes the underlying `sqlx` pool through `.pool()`, `.inner()`, and `.as_sqlx_pool()` methods. Use these to execute raw SQL queries that require `sqlx` specific features.
 
 ```rust
@@ -51,6 +52,30 @@ let users = sqlx::query_as!(User, "SELECT * FROM users WHERE ...")
     .fetch_all(pool)
     .await?;
 ```
+
+### Concrete Pool Access (New in 2.3.1)
+
+For database-specific features like PostgreSQL JSONB, arrays, or `#[derive(FromRow)]` with complex types, you can now access the concrete pool directly:
+
+```rust
+// Get PostgreSQL-specific pool
+let pg_pool = db.postgres_pool().expect("PostgreSQL required");
+
+// Use with sqlx::query_as for complex types
+let logs = sqlx::query_as::<_, AdminAuditLog>(
+    "SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT $1"
+)
+.bind(20i64)
+.fetch_all(pg_pool)
+.await?;
+```
+
+Convenience methods are also available:
+- `db.fetch_all_as(sql, |q| q.bind(...))`
+- `db.fetch_optional_as(sql, |q| q.bind(...))`
+- `db.fetch_one_as(sql, |q| q.bind(...))`
+
+**Note**: Using concrete pools doubles the connection count (creates both `AnyPool` and `PgPool`). Configure `max_connections` accordingly.
 
 ## 5. Model ID Flexibility
 The `Model` derive macro now supports `i64`, `Uuid`, and `String` for the `id` field. `OrmError::NotFound` now stores the ID as a `String`.

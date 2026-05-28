@@ -433,6 +433,96 @@ async fn init_database(_config: DatabaseConfig) -> Result<()> {
 }
 ```
 
+## Concrete Pool Access (v2.3.1+)
+
+`DbPool` now stores concrete connection pools alongside the `AnyPool` abstraction, enabling use of PostgreSQL/MySQL/SQLite-specific features that the `Any` driver doesn't support.
+
+### Why This Matters
+
+The `Any` database abstraction is great for write-once-run-anywhere code, but it has limitations:
+
+- Doesn't support `#[derive(sqlx::FromRow)]` for complex types (JSONB, arrays, custom types)
+- No PostgreSQL-specific operators (JSONB queries, array operations, etc.)
+- Limited type mapping for database-specific features
+
+**Solution**: Access the concrete pool directly when you need database-specific features.
+
+### API
+
+```rust,ignore
+use oxidite_db::DbPool;
+
+// Get the concrete pool for your database
+let pg_pool = db.postgres_pool().expect("PostgreSQL required");
+let mysql_pool = db.mysql_pool();  // Option<&MySqlPool>
+let sqlite_pool = db.sqlite_pool();  // Option<&SqlitePool>
+```
+
+### Using PostgreSQL Pool with `query_as`
+
+```rust,ignore
+use oxidite_db::DbPool;
+use sqlx::FromRow;
+use serde::{Serialize, Deserialize};
+
+#[derive(FromRow, Serialize, Deserialize)]
+struct AdminAuditLog {
+    id: i64,
+    admin_id: i64,
+    action: String,
+    target_type: String,
+    old_values: Option<String>,  // JSON stored as string
+    new_values: Option<String>,
+    reason: Option<String>,
+    created_at: i64,
+}
+
+async fn get_audit_logs(db: &DbPool) -> Result<Vec<AdminAuditLog>, sqlx::Error> {
+    let pg_pool = db.postgres_pool()
+        .ok_or(sqlx::Error::Configuration("PostgreSQL required".into()))?;
+    
+    sqlx::query_as::<_, AdminAuditLog>(
+        "SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+    )
+    .bind(20i64)
+    .bind(0i64)
+    .fetch_all(pg_pool)
+    .await
+}
+```
+
+### Convenience Methods
+
+For common patterns, `DbPool` provides typed query helpers:
+
+```rust,ignore
+// fetch_all_as - fetch all rows as typed struct
+let users: Vec<User> = db.fetch_all_as(
+    "SELECT * FROM users WHERE status = $1",
+    |q| q.bind("active")
+).await?;
+
+// fetch_optional_as - fetch one row or None
+let user: Option<User> = db.fetch_optional_as(
+    "SELECT * FROM users WHERE email = $1",
+    |q| q.bind("user@example.com")
+).await?;
+
+// fetch_one_as - fetch one row or error
+let user: User = db.fetch_one_as(
+    "SELECT * FROM users WHERE id = $1",
+    |q| q.bind(123i64)
+).await?;
+```
+
+### Trade-offs
+
+**Connection Usage**: When using PostgreSQL, `DbPool` creates two connection pools:
+1. `AnyPool` - for backward compatibility with the `Database` trait
+2. `PgPool` - for escape hatch access
+
+This doubles the connection count but enables type-safe queries while maintaining API compatibility. Configure via `PoolOptions::max_connections`.
+
 ## Error Handling
 
 Handle database errors appropriately:
