@@ -103,7 +103,21 @@ pub mod prelude {
     pub use oxidite_core::response::helpers::{json, text, html, ok, no_content};
     
     #[cfg(feature = "database")]
-    pub use oxidite_db::{Database, Model, Migration};
+    pub use oxidite_db::{Database, Model, Migration, DbPool, DbTransaction, Result as DbResult, OrmError, Pagination, SortDirection};
+    
+    // Re-export commonly used sqlx items so users don't need to know about sqlx
+    #[cfg(feature = "database")]
+    pub use oxidite_db::sqlx::{
+        query, query_as, query_scalar,
+        FromRow, Row,
+        Encode, Decode, Type,
+        AnyPool, Any,
+        postgres::{PgPool, PgRow},
+        mysql::{MySqlPool, MySqlRow},
+        sqlite::{SqlitePool, SqliteRow},
+        Column,
+        Acquire, Executor,
+    };
     
     #[cfg(feature = "auth")]
     pub use oxidite_auth::{Permission, Role};
