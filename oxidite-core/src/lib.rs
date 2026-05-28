@@ -15,9 +15,14 @@ pub use http::{StatusCode, Method, HeaderMap, HeaderValue};
 pub use tokio::sync::mpsc;
 pub use http_body_util::BodyExt;
 
-pub use router::{Handler, Router, IntoHandler, handler_fn};
+pub use router::{Handler, Router, IntoHandler, handler_fn, CorsConfig};
 pub use server::Server;
 pub use types::{OxiditeRequest, OxiditeResponse};
 pub use types::OxiditeResponse as Response;
 pub use types::OxiditeRequest as Request;
 pub use versioning::{ApiVersion, VersionedRouter};
+
+/// Re-export response helpers for convenient access.
+///
+/// These provide cleaner syntax: `json!({...})`, `text("...")`, `html("...")`
+pub use response::helpers::{json, text, html};

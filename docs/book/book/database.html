@@ -671,6 +671,81 @@ async fn configure_database_advanced() -&gt; oxidite::db::Result&lt;DbPool&gt; {
     
     Ok(db)
 }</code></pre>
+<h2 id="concrete-pool-access"><a class="header" href="#concrete-pool-access">Concrete Pool Access (v2.3.1+)</a></h2>
+<p><code>DbPool</code> now stores concrete connection pools alongside the <code>AnyPool</code> abstraction, enabling use of PostgreSQL/MySQL/SQLite-specific features that the <code>Any</code> driver doesn't support.</p>
+<h3 id="why-this-matters"><a class="header" href="#why-this-matters">Why This Matters</a></h3>
+<p>The <code>Any</code> database abstraction is great for write-once-run-anywhere code, but it has limitations:</p>
+<ul>
+<li>Doesn't support <code>#[derive(FromRow)]</code> for complex types (JSONB, arrays, custom types)</li>
+<li>No PostgreSQL-specific operators (JSONB queries, array operations, etc.)</li>
+<li>Limited type mapping for database-specific features</li>
+</ul>
+<p><strong>Solution</strong>: Access the concrete pool directly when you need database-specific features.</p>
+<h3 id="api"><a class="header" href="#api">API</a></h3>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+// Get the concrete pool for your database
+let pg_pool = db.postgres_pool().expect("PostgreSQL required");
+let mysql_pool = db.mysql_pool();  // Option&lt;MySqlPool&gt;
+let sqlite_pool = db.sqlite_pool();  // Option&lt;SqlitePool&gt;
+</code></pre>
+<h3 id="using-postgresql-pool-with-query_as"><a class="header" href="#using-postgresql-pool-with-query_as">Using PostgreSQL Pool with <code>query_as</code></a></h3>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+use serde::{Serialize, Deserialize};
+
+#[derive(FromRow, Serialize, Deserialize)]
+struct AdminAuditLog {
+    id: i64,
+    admin_id: i64,
+    action: String,
+    target_type: String,
+    old_values: Option&lt;String&gt;,  // JSON stored as string
+    new_values: Option&lt;String&gt;,
+    reason: Option&lt;String&gt;,
+    created_at: i64,
+}
+
+async fn get_audit_logs(db: &amp;DbPool) -&gt; Result&lt;Vec&lt;AdminAuditLog&gt;&gt; {
+    let pg_pool = db.postgres_pool()
+        .ok_or(Error::InternalServerError("PostgreSQL required".into()))?;
+    
+    sqlx::query_as::&lt;_, AdminAuditLog&gt;(
+        "SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+    )
+    .bind(20i64)
+    .bind(0i64)
+    .fetch_all(pg_pool)
+    .await
+}
+</code></pre>
+<h3 id="convenience-methods"><a class="header" href="#convenience-methods">Convenience Methods</a></h3>
+<p>For common patterns, <code>DbPool</code> provides typed query helpers:</p>
+<pre><code class="language-rust ignore">// fetch_all_as - fetch all rows as typed struct
+let users: Vec&lt;User&gt; = db.fetch_all_as(
+    "SELECT * FROM users WHERE status = $1",
+    |q| q.bind("active")
+).await?;
+
+// fetch_optional_as - fetch one row or None
+let user: Option&lt;User&gt; = db.fetch_optional_as(
+    "SELECT * FROM users WHERE email = $1",
+    |q| q.bind("user@example.com")
+).await?;
+
+// fetch_one_as - fetch one row or error
+let user: User = db.fetch_one_as(
+    "SELECT * FROM users WHERE id = $1",
+    |q| q.bind(123i64)
+).await?;
+</code></pre>
+<h3 id="trade-offs"><a class="header" href="#trade-offs">Trade-offs</a></h3>
+<p><strong>Connection Usage</strong>: When using PostgreSQL, <code>DbPool</code> creates two connection pools:</p>
+<ol>
+<li><code>AnyPool</code> - for backward compatibility with the <code>Database</code> trait</li>
+<li><code>PgPool</code> - for escape hatch access</li>
+</ol>
+<p>This doubles the connection count but enables type-safe queries while maintaining API compatibility. Configure via <code>PoolOptions::max_connections</code>.</p>
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <p>Handle database errors appropriately:</p>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;

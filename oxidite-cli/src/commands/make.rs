@@ -193,8 +193,8 @@ pub fn make_middleware(name: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     let file_stem = to_snake_case(name);
     let template = format!(
-        r#"use oxidite::oxidite_middleware::tower::{{Layer, Service}};
-use oxidite::{{Error, OxiditeRequest, OxiditeResponse}};
+        r#"use oxidite::middleware::tower::{{Layer, Service}};
+use oxidite::{{Error, Request, Response}};
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{{Context, Poll}};
@@ -213,9 +213,9 @@ impl<S> {name}<S> {{
     }}
 }}
 
-impl<S> Service<OxiditeRequest> for {name}<S>
+impl<S> Service<Request> for {name}<S>
 where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = Error> + Clone + Send + 'static,
+    S: Service<Request, Response = Response, Error = Error> + Clone + Send + 'static,
     S::Future: Send + 'static,
 {{
     type Response = S::Response;
@@ -226,7 +226,7 @@ where
         self.inner.poll_ready(cx)
     }}
 
-    fn call(&mut self, req: OxiditeRequest) -> Self::Future {{
+    fn call(&mut self, req: Request) -> Self::Future {{
         let mut inner = self.inner.clone();
 
         Box::pin(async move {{

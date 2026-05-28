@@ -6,3 +6,9 @@ port = 8080
 
 [database]
 url = "sqlite://data.db"
+
+[env]
+# Custom environment variables — accessible via std::env::var() at runtime.
+# OS env vars and .env entries override these values.
+# Leave blank here and set in .env for per-developer secrets.
+# WATU_API_KEY = ""

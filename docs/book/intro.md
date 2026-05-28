@@ -4,45 +4,70 @@
   <img src="assets/oxidite.svg" alt="Oxidite Logo" width="180">
 </p>
 
-Welcome to the comprehensive guide to Oxidite, a modern, high-performance web framework for Rust. This guide takes you from installation to advanced features, covering everything needed to build production-ready applications.
+Welcome to the Oxidite documentation. This guide covers everything from installation to advanced features.
 
 ## What is Oxidite?
 
-Oxidite is a batteries-included web framework that combines Rust's performance with developer-friendly APIs. It provides a complete ecosystem for building scalable web applications, from REST APIs to fullstack server-side rendered apps.
+Oxidite is a batteries-included web framework for Rust. It wraps existing Rust libraries (hyper, sqlx, tokio, serde) and adds code generation to reduce boilerplate.
+
+### What It Actually Does
+
+- **Less boilerplate**: The `#[derive(Model)]` macro generates CRUD methods you'd write anyway
+- **Convention over configuration**: Standard file structure, naming, and defaults
+- **CLI tools**: Generate code, run migrations, hot-reload during development
+- **Full-stack features**: ORM, auth, queues, caching, templates, websockets - all included
+
+### What It Doesn't Do
+
+- **It won't make Rust easy**: You still need to understand lifetimes, ownership, async, and error handling
+- **It won't hide the metal**: You can drop to raw SQL, raw hyper, or raw sqlx at any time
+- **It won't prevent bad code**: The framework won't save you from N+1 queries, memory leaks, or bad architecture
+- **It won't compile fast**: All those derive macros and generics add to compile times
 
 ### Key Features
 
-- **High Performance**: Built on `hyper` and `tokio` for blazing speed
-- **Advanced ORM**: Complete database layer with relationships, soft deletes, validation
-- **Powerful CLI**: Scaffolding, migrations, hot-reload dev server, code generators
-- **Batteries Included**: RBAC/PBAC, API Keys, Queues, Caching, Email, Storage, Plugins
-- **Enterprise Security**: Password hashing, JWT, OAuth2, 2FA, rate limiting
-- **Template Engine**: Jinja2-style templates with inheritance and auto-escaping
-- **Real-time**: WebSockets and Redis pub/sub support
-- **Type-Safe**: Strong typing for requests, responses, and database queries
-- **Auto-Documentation**: OpenAPI/Swagger UI generation
+- **Performance**: Built on hyper and tokio for native Rust speed
+- **ORM**: Convention-based with escape hatches to raw SQL when you need them
+- **CLI**: Scaffolding, migrations, dev server. Saves typing, doesn't save you from thinking
+- **Auth**: JWT, OAuth2, API keys, RBAC. You still need to configure them correctly
+- **Queues**: Background jobs with retry logic. Redis or in-memory
+- **Templates**: Jinja2-style with inheritance. Server-side rendering
+- **WebSockets**: Real-time connections. You handle the message protocol
 
 ### Philosophy
 
-Oxidite follows the philosophy of "convention over configuration" while maintaining the flexibility to build everything from simple APIs to complex full-stack applications. The framework provides sensible defaults while allowing customization where needed.
+"Convention over configuration" means: follow the patterns and things work smoothly. Fight the patterns and you'll write more code than if you started from scratch.
 
-## Who Should Read This Guide?
+This is **not** a framework that makes decisions for you. It's a framework that gives you sensible defaults so you can focus on your actual application logic.
 
-This guide is designed for:
+### Who Should Use This?
 
-- Rust developers looking to build web applications
-- Developers familiar with frameworks like Express.js, FastAPI, or Laravel who want to leverage Rust's performance
-- Teams building scalable web services
-- Anyone interested in modern web development patterns with type safety
+- **Rust developers** who are tired of writing the same boilerplate for every project
+- **Teams** who want a standard starting point for new services
+- **Anyone** who wants batteries-included but refuses to give up control
+
+### Who Should NOT Use This?
+
+- **Rust beginners** - Learn Rust first, then learn this framework
+- **People wanting "magic"** - This is code generation, not runtime reflection
+- **Projects needing ultra-fast compile times** - All those macros take time
+
+### The Trade-offs
+
+| You Get | You Pay |
+|---------|---------|
+| Less boilerplate | Longer compile times |
+| Conventions | Must follow the conventions |
+| Full control | Must understand the underlying libraries |
+| Type safety | More upfront type definitions |
+| No runtime overhead | More compile-time complexity |
 
 ## How to Use This Guide
 
-This guide is structured to take you from beginner to advanced concepts:
+This documentation explains what each feature does, how to use it, and where the limitations are.
 
-1. Start with the Getting Started section to learn the basics
-2. Move through Core Concepts to understand the fundamentals
-3. Explore Advanced Features to unlock the full power of Oxidite
-4. Learn about the Ecosystem to integrate with other tools
-5. Review Deployment sections to prepare for production
-
-Each chapter builds on the previous ones, but you can also jump to specific sections as needed.
+Each chapter covers:
+- What the feature does
+- How to use it
+- Where it falls short
+- How to work around limitations

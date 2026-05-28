@@ -461,8 +461,7 @@ let sqlite_pool = db.sqlite_pool();  // Option<&SqlitePool>
 ### Using PostgreSQL Pool with `query_as`
 
 ```rust,ignore
-use oxidite_db::DbPool;
-use sqlx::FromRow;
+use oxidite::prelude::*;
 use serde::{Serialize, Deserialize};
 
 #[derive(FromRow, Serialize, Deserialize)]
@@ -477,9 +476,9 @@ struct AdminAuditLog {
     created_at: i64,
 }
 
-async fn get_audit_logs(db: &DbPool) -> Result<Vec<AdminAuditLog>, sqlx::Error> {
+async fn get_audit_logs(db: &DbPool) -> Result<Vec<AdminAuditLog>> {
     let pg_pool = db.postgres_pool()
-        .ok_or(sqlx::Error::Configuration("PostgreSQL required".into()))?;
+        .ok_or(Error::InternalServerError("PostgreSQL required".into()))?;
     
     sqlx::query_as::<_, AdminAuditLog>(
         "SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2"
@@ -496,6 +495,8 @@ async fn get_audit_logs(db: &DbPool) -> Result<Vec<AdminAuditLog>, sqlx::Error> 
 For common patterns, `DbPool` provides typed query helpers:
 
 ```rust,ignore
+use oxidite::prelude::*;
+
 // fetch_all_as - fetch all rows as typed struct
 let users: Vec<User> = db.fetch_all_as(
     "SELECT * FROM users WHERE status = $1",

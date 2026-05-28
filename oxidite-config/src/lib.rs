@@ -60,6 +60,11 @@ pub struct Config {
     pub queue: QueueConfig,
     #[serde(default)]
     pub security: SecurityConfig,
+    /// Custom environment variables defined in `[env]` of `oxidite.toml`.
+    /// These are injected into the process environment at load time so that
+    /// `env::var("WATU_API_KEY")` and similar calls work.
+    #[serde(default)]
+    pub env: HashMap<String, String>,
     #[serde(default)]
     pub custom: HashMap<String, toml::Value>,
 }
@@ -234,12 +239,30 @@ impl Default for Config {
             cache: CacheConfig::default(),
             queue: QueueConfig::default(),
             security: SecurityConfig::default(),
+            env: HashMap::new(),
             custom: HashMap::new(),
         }
     }
 }
 
 impl Config {
+    /// Inject `[env]` entries from the config into the process environment.
+    ///
+    /// Real OS env vars take precedence over `[env]` values.  A variable is
+    /// considered "set" only if it exists in the environment **and** is not
+    /// empty, so blank `.env` entries like `WATU_API_KEY=` still allow the
+    /// `oxidite.toml` fallback to apply.
+    fn inject_env_vars(&self) {
+        for (key, value) in &self.env {
+            let already_set = env::var(key)
+                .map(|v| !v.is_empty())
+                .unwrap_or(false);
+            if !already_set {
+                env::set_var(key, value);
+            }
+        }
+    }
+
     fn apply_env_overrides(&mut self) -> Result<(), ConfigError> {
         if let Ok(val) = env::var("APP_NAME") {
             self.app.name = val;
@@ -288,7 +311,11 @@ impl Config {
     }
 
     pub fn load() -> Result<Self, ConfigError> {
-        let _ = dotenv::dotenv();
+        // Load .env only if OXIDITE_SKIP_DOTENV is not set
+        if env::var("OXIDITE_SKIP_DOTENV").is_err() {
+            let _ = dotenv::dotenv();
+        }
+
         let env_val = env::var("OXIDITE_ENV")
             .or_else(|_| env::var("ENVIRONMENT"))
             .unwrap_or_else(|_| "development".to_string());
@@ -300,13 +327,22 @@ impl Config {
             Config::default()
         };
 
+        // Inject [env] vars from oxidite.toml into the process environment.
+        // Real OS env vars take precedence, so inject_env_vars only sets
+        // variables that are not already defined.
+        config.inject_env_vars();
+
         config.apply_env_overrides()?;
         config.app.environment = env_val;
         Ok(config)
     }
 
     pub fn load_from(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
-        let _ = dotenv::dotenv();
+        // Load .env only if OXIDITE_SKIP_DOTENV is not set
+        if env::var("OXIDITE_SKIP_DOTENV").is_err() {
+            let _ = dotenv::dotenv();
+        }
+
         let env_name = env::var("OXIDITE_ENV")
             .or_else(|_| env::var("ENVIRONMENT"))
             .unwrap_or_else(|_| "development".to_string());
@@ -317,6 +353,9 @@ impl Config {
         } else {
             Config::default()
         };
+
+        // Inject [env] vars from oxidite.toml into the process environment
+        config.inject_env_vars();
 
         config.app.environment = env_name;
         config.apply_env_overrides()?;

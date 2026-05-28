@@ -92,3 +92,107 @@ impl From<Error> for OxiditeResponse {
         Self(res)
     }
 }
+
+/// Helper functions for creating responses.
+///
+/// Use these for cleaner response creation without needing to call
+/// `Response::json(serde_json::json!(...))` directly.
+///
+/// # Examples
+///
+/// ```rust
+/// use oxidite_core::response::{json, text, html};
+///
+/// // Create a JSON response with inline data
+/// async fn handler() -> Result<OxiditeResponse> {
+///     Ok(json!({
+///         "status": "ok",
+///         "count": 42
+///     }))
+/// }
+///
+/// // Create a text response
+/// async fn text_handler() -> Result<OxiditeResponse> {
+///     Ok(text("Hello, world!"))
+/// }
+///
+/// // Create an HTML response
+/// async fn html_handler() -> Result<OxiditeResponse> {
+///     Ok(html("<h1>Hello</h1>"))
+/// }
+/// ```
+pub mod helpers {
+    use crate::types::OxiditeResponse;
+
+    /// Create a JSON response from any serializable value.
+    ///
+    /// This is a convenience wrapper around `Response::json()` that also
+    /// accepts `serde_json::json!()` macro output for inline JSON.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// // With inline JSON (most common)
+    /// use oxidite_core::response::json;
+    /// async fn handler() -> OxiditeResponse {
+    ///     json!({
+    ///         "message": "Hello",
+    ///         "count": 42
+    ///     })
+    /// }
+    ///
+    /// // With a struct
+    /// use oxidite_core::response::json;
+    /// #[derive(serde::Serialize)]
+    /// struct MyData { message: String }
+    /// async fn handler2() -> OxiditeResponse {
+    ///     json(MyData { message: "Hello".into() })
+    /// }
+    /// ```
+    #[inline]
+    pub fn json<T: serde::Serialize>(data: T) -> OxiditeResponse {
+        OxiditeResponse::json(data)
+    }
+
+    /// Create a plain text response.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use oxidite_core::response::text;
+    /// async fn handler() -> OxiditeResponse {
+    ///     text("Hello, world!")
+    /// }
+    /// ```
+    #[inline]
+    pub fn text(body: impl Into<String>) -> OxiditeResponse {
+        OxiditeResponse::text(body)
+    }
+
+    /// Create an HTML response.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use oxidite_core::response::html;
+    /// async fn handler() -> OxiditeResponse {
+    ///     html("<h1>Hello</h1>")
+    /// }
+    /// ```
+    #[inline]
+    pub fn html(body: impl Into<String>) -> OxiditeResponse {
+        OxiditeResponse::html(body)
+    }
+
+    /// Create an empty 200 OK response.
+    #[inline]
+    pub fn ok() -> OxiditeResponse {
+        OxiditeResponse::ok()
+    }
+
+    /// Create an empty 204 No Content response.
+    #[inline]
+    pub fn no_content() -> OxiditeResponse {
+        OxiditeResponse::no_content()
+    }
+}

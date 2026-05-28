@@ -17,8 +17,8 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
 fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = &input.ident;
 
-    let default_table_name = format!("{}s", name.to_string().to_lowercase());
-    let table_name = parse_table_name(input)?.unwrap_or(default_table_name);
+    let _default_table_name = format!("{}s", name.to_string().to_lowercase());
+    let (table_name, primary_keys) = parse_model_attributes(input)?;
 
     let named_fields = match &input.data {
         Data::Struct(data) => match &data.fields {
@@ -56,33 +56,63 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             .find(|field| field.ident.as_ref().map(|id| id == name).unwrap_or(false))
     };
 
-    if !field_names_str.iter().any(|f| f == "id") {
+    // Check for primary key: either `id` field or #[model(primary_key = "...")]
+    let has_id_field = field_names_str.iter().any(|f| f == "id");
+    let is_composite_pk = !primary_keys.is_empty();
+
+    if !has_id_field && !is_composite_pk {
         return Err(syn::Error::new(
             input.span(),
-            "Model derive requires an `id` field",
+            "Model derive requires an `id` field or #[model(primary_key = \"field1\", \"field2\")] for composite keys",
         ));
     }
+
+    // Determine primary key fields for queries
+    let pk_fields = if is_composite_pk {
+        primary_keys
+    } else if has_id_field {
+        vec!["id".to_string()]
+    } else {
+        vec![]
+    };
+
+    // For composite PK, validate that all pk fields exist
+    if is_composite_pk {
+        for pk in &pk_fields {
+            if !field_names_str.iter().any(|f| f == pk) {
+                return Err(syn::Error::new(
+                    input.span(),
+                    format!("Primary key field `{}` not found in struct", pk),
+                ));
+            }
+        }
+    }
+
+    let id_type = if !is_composite_pk && has_id_field {
+        if let Some(id_field) = find_field("id") {
+            if is_i64_type(&id_field.ty) {
+                quote!(i64)
+            } else if is_type(&id_field.ty, "Uuid") {
+                quote!(::oxidite::db::sqlx::types::Uuid)
+            } else if is_string_type(&id_field.ty) {
+                quote!(String)
+            } else {
+                return Err(syn::Error::new(
+                    id_field.ty.span(),
+                    "Model derive requires `id` to be of type i64, Uuid, or String",
+                ));
+            }
+        } else {
+            quote!(i64)
+        }
+    } else {
+        // Composite PK - no single id type
+        quote!(())
+    };
 
     let has_created_at = field_names_str.iter().any(|f| f == "created_at");
     let has_updated_at = field_names_str.iter().any(|f| f == "updated_at");
     let has_deleted_at = field_names_str.iter().any(|f| f == "deleted_at");
-
-    let id_type = if let Some(id_field) = find_field("id") {
-        if is_i64_type(&id_field.ty) {
-            quote!(i64)
-        } else if is_type(&id_field.ty, "Uuid") {
-            quote!(::oxidite::db::sqlx::types::Uuid)
-        } else if is_string_type(&id_field.ty) {
-            quote!(String)
-        } else {
-            return Err(syn::Error::new(
-                id_field.ty.span(),
-                "Model derive requires `id` to be of type i64, Uuid, or String",
-            ));
-        }
-    } else {
-        quote!(i64)
-    };
 
     if has_created_at {
         let field = find_field("created_at")
@@ -124,7 +154,7 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             !matches!(
                 field_name.as_str(),
                 "id" | "created_at" | "updated_at" | "deleted_at"
-            )
+            ) && !pk_fields.contains(&field_name)
         })
         .collect();
 
@@ -183,23 +213,50 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         };
         quote! {
             async fn delete(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                // Lifecycle hooks: before_delete
+                self.before_delete(db).await?;
+
                 let now = #now_logic;
                 let query = ::oxidite::db::sqlx::query(#soft_delete_query)
                     .bind(now)
                     .bind(&self.id);
                 db.execute_query(query).await?;
+
+                // Lifecycle hooks: after_delete
+                self.after_delete(db).await?;
                 Ok(())
             }
         }
     } else {
         quote! {
             async fn delete(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                // Lifecycle hooks: before_delete
+                self.before_delete(db).await?;
+
                 let query = ::oxidite::db::sqlx::query(#hard_delete_query)
                     .bind(&self.id);
                 db.execute_query(query).await?;
+
+                // Lifecycle hooks: after_delete
+                self.after_delete(db).await?;
                 Ok(())
             }
         }
+    };
+
+    let restore_impl = if has_deleted_at {
+        let restore_query = format!("UPDATE {} SET deleted_at = NULL WHERE id = $1", table_name);
+        quote! {
+            async fn restore(&mut self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                let query = ::oxidite::db::sqlx::query(#restore_query)
+                    .bind(&self.id);
+                db.execute_query(query).await?;
+                self.deleted_at = None;
+                Ok(())
+            }
+        }
+    } else {
+        quote! {}
     };
 
     let created_at_logic = if has_created_at {
@@ -460,7 +517,14 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
         }
     });
 
-    let is_persisted_logic = if id_type.to_string().contains("i64") {
+    let is_persisted_logic = if is_composite_pk {
+        // For composite PK, check if all PK fields have non-default values
+        let pk_checks: Vec<_> = pk_fields.iter().map(|pk| {
+            let pk_ident = syn::Ident::new(pk, proc_macro2::Span::call_site());
+            quote! { self.#pk_ident != Default::default() }
+        }).collect();
+        quote! { #(#pk_checks)&&* }
+    } else if id_type.to_string().contains("i64") {
         quote! { self.id > 0 }
     } else if id_type.to_string().contains("Uuid") {
         quote! { !self.id.is_nil() }
@@ -493,6 +557,10 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
             }
 
             async fn create(&mut self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                // Lifecycle hooks: before_save, before_create
+                self.before_save(db).await?;
+                self.before_create(db).await?;
+
                 let query = ::oxidite::db::sqlx::query(#create_query);
                 #(
                     let query = query.bind(&self.#non_id_names);
@@ -501,10 +569,18 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 #updated_at_create_logic
 
                 db.execute_query(query).await?;
+
+                // Lifecycle hooks: after_create, after_save
+                self.after_create(db).await?;
+                self.after_save(db).await?;
                 Ok(())
             }
 
             async fn update(&mut self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<()> {
+                // Lifecycle hooks: before_save, before_update
+                self.before_save(db).await?;
+                self.before_update(db).await?;
+
                 let query = ::oxidite::db::sqlx::query(#update_query);
                 #(
                     let query = query.bind(&self.#non_id_names);
@@ -513,6 +589,10 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
 
                 let query = query.bind(&self.id);
                 db.execute_query(query).await?;
+
+                // Lifecycle hooks: after_update, after_save
+                self.after_update(db).await?;
+                self.after_save(db).await?;
                 Ok(())
             }
 
@@ -524,6 +604,8 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 db.execute_query(query).await?;
                 Ok(())
             }
+
+            #restore_impl
 
             async fn validate(&self, db: &impl ::oxidite::db::Database) -> std::result::Result<(), String> {
                 let _ = db; // silence unused warning if there are no db validations
@@ -616,18 +698,54 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
                 });
             } else if is_belongs_to {
                 let fk_ident = syn::Ident::new(&fk_name, proc_macro2::Span::call_site());
+                let eager_ident = syn::Ident::new(&format!("eager_load_{}", rel_name), proc_macro2::Span::call_site());
                 relation_methods.push(quote! {
+                    /// Lazy-load: fetches parent one-by-one (N+1).
                     pub async fn #rel_ident(&self, db: &impl ::oxidite::db::Database) -> ::oxidite::db::Result<Option<#model_ident>> {
                         #model_ident::find(db, self.#fk_ident).await
+                    }
+
+                    /// Eager-load: fetches parents for many children in a single IN query.
+                    /// Returns a HashMap keyed by the foreign key value (parent id).
+                    pub async fn #eager_ident(
+                        db: &impl ::oxidite::db::Database,
+                        children: &[Self],
+                    ) -> ::oxidite::db::Result<std::collections::HashMap<i64, Option<#model_ident>>> {
+                        let ids: Vec<i64> = children.iter().map(|c| c.#fk_ident).collect();
+                        ::oxidite::db::BelongsTo::<Self, #model_ident>::eager_load(db, &ids).await
                     }
                 });
             }
         }
     }
 
+    // Generate column constants module
+    let columns_mod_name = syn::Ident::new("columns", proc_macro2::Span::call_site());
+    let column_consts: Vec<_> = field_names_str
+        .iter()
+        .map(|f| syn::Ident::new(&f.to_ascii_uppercase(), proc_macro2::Span::call_site()))
+        .collect();
+    let column_names: Vec<_> = field_names_str.clone();
+
     let final_expanded = quote! {
         #expanded
-        
+
+        /// Typed column references for type-safe query building.
+        /// Use these instead of string literals for IDE autocomplete and compile-time checking.
+        ///
+        /// Example:
+        /// ```ignore
+        /// User::query()
+        ///     .filter_eq(User::columns::EMAIL, "test@example.com")
+        ///     .fetch_all(&db)
+        ///     .await?;
+        /// ```
+        pub mod #columns_mod_name {
+            #(
+                pub const #column_consts: &'static str = #column_names;
+            )*
+        }
+
         impl #name {
             #(#relation_methods)*
         }
@@ -636,6 +754,70 @@ fn derive_model_impl(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStrea
     Ok(final_expanded)
 }
 
+fn parse_model_attributes(input: &DeriveInput) -> syn::Result<(String, Vec<String>)> {
+    let mut table_name = None;
+    let mut table_alias = None;
+    let mut primary_keys = Vec::new();
+
+    for attr in &input.attrs {
+        if !attr.path().is_ident("model") {
+            continue;
+        }
+
+        attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("table_name") {
+                if table_name.is_some() {
+                    return Err(meta.error("duplicate `table_name` in #[model(...)]"));
+                }
+                let lit: LitStr = meta.value()?.parse()?;
+                table_name = Some(lit.value());
+                return Ok(());
+            }
+
+            if meta.path.is_ident("table") {
+                if table_alias.is_some() {
+                    return Err(meta.error("duplicate `table` in #[model(...)]"));
+                }
+                let lit: LitStr = meta.value()?.parse()?;
+                table_alias = Some(lit.value());
+                return Ok(());
+            }
+
+            if meta.path.is_ident("primary_key") {
+                if let Ok(value) = meta.value() {
+                    let lit: LitStr = value.parse()?;
+                    primary_keys.push(lit.value());
+                    return Ok(());
+                }
+                return Ok(());
+            }
+
+            Err(meta.error(
+                "unsupported model attribute; expected `table_name = \"...\"`, `table = \"...\"`, or `primary_key = \"...\"`",
+            ))
+        })?;
+    }
+
+    if table_name.is_some() && table_alias.is_some() {
+        return Err(syn::Error::new(
+            input.span(),
+            "use either `table_name` or `table` in #[model(...)], not both",
+        ));
+    }
+
+    let final_table_name = if table_name.is_some() {
+        table_name.unwrap()
+    } else if table_alias.is_some() {
+        table_alias.unwrap()
+    } else {
+        let name = &input.ident;
+        format!("{}s", name.to_string().to_lowercase())
+    };
+
+    Ok((final_table_name, primary_keys))
+}
+
+#[allow(dead_code)]
 fn parse_table_name(input: &DeriveInput) -> syn::Result<Option<String>> {
     let mut table_name = None;
     let mut table_alias = None;

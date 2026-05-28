@@ -181,13 +181,13 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="framework-guide-building-real-applications-with-oxidite"><a class="header" href="#framework-guide-building-real-applications-with-oxidite">Framework Guide: Building Real Applications with Oxidite</a></h1>
+                        <h1 id="framework-guide-building-real-applications-with-oxidite-v231"><a class="header" href="#framework-guide-building-real-applications-with-oxidite-v231">Framework Guide: Building Real Applications with Oxidite (v2.3.1)</a></h1>
 <p>This guide is a practical map for building production services with Oxidite.</p>
 <h2 id="how-oxidite-is-structured"><a class="header" href="#how-oxidite-is-structured">How Oxidite is structured</a></h2>
 <p>At a high level:</p>
 <ol>
 <li><code>oxidite-core</code> handles HTTP primitives (request/response/router/server).</li>
-<li>feature crates layer capabilities (db/auth/queue/realtime/cache/storage/etc).</li>
+<li>Feature crates layer capabilities (db/auth/queue/realtime/cache/storage/etc).</li>
 <li><code>oxidite</code> umbrella crate re-exports these capabilities behind feature flags.</li>
 </ol>
 <h2 id="typical-project-structure"><a class="header" href="#typical-project-structure">Typical project structure</a></h2>
@@ -207,6 +207,39 @@
 <li>models/repositories: persistence logic</li>
 <li>jobs: async/background flows</li>
 </ul>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
+<p>Oxidite uses <code>oxidite.toml</code> as its primary config file, with optional <code>.env</code> support for secrets and per-developer overrides.</p>
+<h3 id="oxiditetoml"><a class="header" href="#oxiditetoml">oxidite.toml</a></h3>
+<pre><code class="language-toml">[server]
+host = &quot;127.0.0.1&quot;
+port = 3000
+
+[database]
+url = &quot;postgres://localhost/myapp_dev&quot;
+
+[env]
+WATU_API_KEY = &quot;sk-abc123&quot;
+STRIPE_SECRET = &quot;whsec_test&quot;
+</code></pre>
+<p>The <code>[env]</code> table injects variables into the process environment so <code>std::env::var(&quot;WATU_API_KEY&quot;)</code> works anywhere in your code.</p>
+<h3 id="loading-config-in-code"><a class="header" href="#loading-config-in-code">Loading config in code</a></h3>
+<pre><code class="language-rust">use oxidite::prelude::*;
+use oxidite_config::Config;
+
+let config = Config::load()?;
+let db_url = &amp;config.database.url;
+let port = config.server.port;
+let api_key = std::env::var(&quot;WATU_API_KEY&quot;).ok();
+</code></pre>
+<h3 id="override-precedence-highest-wins"><a class="header" href="#override-precedence-highest-wins">Override precedence (highest wins)</a></h3>
+<ol>
+<li>OS environment variables (exported in shell)</li>
+<li><code>.env</code> file values</li>
+<li><code>oxidite.toml [env]</code> table</li>
+<li><code>oxidite.toml</code> section defaults</li>
+<li>Hardcoded defaults</li>
+</ol>
+<p>Blank <code>.env</code> entries (<code>KEY=</code>) are treated as unset, so the <code>[env]</code> fallback applies. Set <code>OXIDITE_SKIP_DOTENV=1</code> to skip <code>.env</code> loading entirely.</p>
 <h2 id="request-lifecycle"><a class="header" href="#request-lifecycle">Request lifecycle</a></h2>
 <ol>
 <li>Router matches method + path.</li>

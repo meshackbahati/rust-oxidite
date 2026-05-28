@@ -158,7 +158,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-oxidite = "2.1.0"
+oxidite = "2.3.1"
 tokio = {{ version = "1", features = ["full"] }}
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"

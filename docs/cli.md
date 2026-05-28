@@ -8,94 +8,126 @@ The CLI package name is `oxidite-cli`. The installed executable is `oxidite`.
 # Install from crates.io
 cargo install oxidite-cli
 
-# Install this generated CLI build explicitly
-cargo install oxidite-cli --version 2.1.0-gen
-
 # Install from this repository
 cargo install --path oxidite-cli
 ```
 
+After installation, the first time you run `oxidite`, it will suggest adding an alias for shorter commands.
+
+**Recommended**: Add this to your shell config:
+
+```bash
+# For bash
+echo "alias oxi='oxidite'" >> ~/.bashrc
+source ~/.bashrc
+
+# For zsh
+echo "alias oxi='oxidite'" >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Windows users:**
+
+```powershell
+# PowerShell - add to your $PROFILE
+Set-Alias oxi oxidite
+
+# CMD (temporary, per session)
+doskey oxi=oxidite
+```
+
+After this, you can use `oxi` instead of `oxidite` for all commands.
+
+## What the CLI Actually Does
+
+The CLI is a **code generation and project management tool**. It:
+
+- Creates project scaffolding with standard structure
+- Generates boilerplate code (models, routes, controllers, migrations)
+- Runs and manages database migrations
+- Starts dev servers with file watching
+- Manages background processes
+
+It does **not**:
+
+- Compile your code faster than `cargo build`
+- Prevent you from writing bad code
+- Replace understanding of Rust, cargo, or the underlying libraries
+
 ## Project Creation
 
 ```bash
-oxidite new my-project
-oxidite new my-api --project-type api
-oxidite new my-api --type api
-oxidite new my-web --template web
-oxidite new my-minimal --template minimal
+oxi new my-project
+oxi new my-api --project-type api
+oxi new my-web --template web
 ```
 
-Generated projects include:
+Generated projects include a standard directory structure. You can reorganize it, but the CLI tools expect this layout.
 
 ```text
 my-project/
 ├── Cargo.toml
-├── README.md
 ├── oxidite.toml
 ├── migrations/
-├── seeds/
 ├── src/
 │   ├── main.rs
-│   ├── controllers/
-│   ├── events/
-│   ├── jobs/
-│   ├── middleware/
 │   ├── models/
-│   ├── policies/
 │   ├── routes/
-│   ├── services/
-│   └── validators/
+│   └── controllers/
 └── tests/
 ```
 
-## Generators
+## Code Generators
 
-Use `generate` for new workflows. `make` remains as a hidden compatibility alias.
+Generators create files with boilerplate code. They won't overwrite existing files without asking.
 
 ```bash
-oxidite generate model User
-oxidite generate model User email:string age:integer
-oxidite generate route users
-oxidite generate controller UserController
-oxidite generate middleware AuthMiddleware
-oxidite generate service Billing
-oxidite generate validator CreateUser
-oxidite generate job SendDigest
-oxidite generate policy Post
-oxidite generate event UserSignedUp
-oxidite generate migration create_users_table
-oxidite generate seeder users_seed
+oxi generate model User
+oxi generate model User email:string age:integer
+oxi generate route users
+oxi generate controller UserController
+oxi generate middleware AuthMiddleware
 ```
 
-Supported model field types:
+**Supported generators:**
 
-- `string`
-- `text`
-- `integer`
-- `float`
-- `decimal`
-- `boolean`
-- `uuid`
-- `json`
-- `timestamp`
+| Generator | Creates | Notes |
+|-----------|---------|-------|
+| `model` | Struct with `#[derive(Model)]` | Generates CRUD methods, queries, validation |
+| `route` | Route module | Basic router with handlers |
+| `controller` | Controller struct | REST-style endpoint handlers |
+| `middleware` | Middleware impl | Tower-style middleware |
+| `service` | Service struct | Business logic layer |
+| `validator` | Validator struct | Request validation |
+| `job` | Background job | Queue job handler |
+| `policy` | Authorization policy | RBAC/PBAC rules |
+| `event` | Domain event | Event struct + handlers |
+| `migration` | SQL migration file | Template with up/down sections |
+| `seeder` | Database seeder | Seed data script |
+
+**Model field types:**
+
+`string`, `text`, `integer`, `float`, `decimal`, `boolean`, `uuid`, `json`, `timestamp`
+
+The generated code is yours to modify. The generators are one-time scaffolding tools.
 
 ## Migrations
 
 ```bash
-oxidite migrate create create_users_table
-oxidite generate migration create_users_table
+# Create and run
+oxi migrate create create_users_table
+oxi migrate run
 
-# Run pending migrations
-oxidite migrate
-oxidite migrate run
+# Check status and rollback
+oxi migrate status
+oxi migrate revert
 
-# Inspect or revert
-oxidite migrate status
-oxidite migrate revert
-oxidite migrate:rollback
+# Auto-generate from model changes
+oxi make-migrations
+oxi make-migrations add_email_field --dry-run
 ```
 
-Migration files use the following format:
+Migration files are plain SQL:
 
 ```sql
 -- migrate:up
@@ -108,74 +140,118 @@ CREATE TABLE users (
 DROP TABLE users;
 ```
 
-## Seeders
+**Limitations:**
+- Migrations are tracked by filename, not content hash
+- No auto-detection of destructive changes (dropping columns)
+- Rollback only reverts the last migration, not arbitrary ones
+- `make-migrations` generates SQL based on model differences but may miss complex schema changes
+
+## Database Seeders
 
 ```bash
-oxidite seed create users_seed
-oxidite generate seeder users_seed
-oxidite seed
-oxidite seed run
-oxidite db:seed
+oxi seed create users_seed
+oxi seed run
 ```
+
+Seeders run your code against the database. You write the insertion logic yourself.
 
 ## Queue Management
 
-Canonical commands:
-
 ```bash
-oxidite queue work --workers 4
-oxidite queue list
-oxidite queue dlq
-oxidite queue clear
+oxi queue work --workers 4
+oxi queue list
+oxi queue dlq
+oxi queue clear
 ```
 
-Compatibility aliases:
+Queues require Redis for production. The in-memory backend is for development only and loses data on restart.
+
+## Development Server
 
 ```bash
-oxidite queue:work --workers 4
-oxidite queue:list
-oxidite queue:dlq
-oxidite queue:clear
+oxi dev
+oxi dev --port 8080
+oxi dev --watch src --watch templates
+oxi dev --no-hot-reload
 ```
 
-## Development
+The dev server:
+- Watches files and recompiles on changes
+- Uses `cargo run` under the hood (not faster than cargo)
+- Passes environment variables from `.env` and `oxidite.toml`
+- Can be slow on large projects (full recompile each change)
+
+## Run Single Files
+
+Execute a Rust file directly without creating a full project:
 
 ```bash
-oxidite dev
-oxidite dev --port 8080
-oxidite dev --host 0.0.0.0 --env development
-oxidite dev --watch src --watch templates
-oxidite dev --ignore dist
-oxidite dev --no-hot-reload
+# Standalone file (creates temp project, runs, cleans up)
+oxi run hello.rs
+
+# File inside project (copies to src/bin/)
+oxi run src/bin/script.rs
+
+# With extra dependencies
+oxi run api.rs --deps serde,chrono
 ```
 
-The CLI passes host, port, and environment overrides to the app through:
+**How it works:**
+- **Standalone mode**: Creates a temporary Cargo project in `/tmp`, compiles with oxidite dependencies, runs, then deletes the temp directory
+- **Project mode**: Places the file in `src/bin/` and runs via `cargo run --bin`
+- Compile errors display directly in your terminal
+- Not meant for production - use `oxi build` for deployable binaries
 
-- `SERVER_HOST`
-- `SERVER_PORT`
-- `OXIDITE_ENV`
+## Process Management
 
-## Build And Serve
+Manage long-running oxidite processes:
 
 ```bash
-oxidite build
-oxidite build --release
-oxidite build --profile release
-oxidite build --target x86_64-unknown-linux-musl
-oxidite build --features "database,queue"
-oxidite build --verbose
-
-oxidite serve
-oxidite serve --addr 0.0.0.0:8080
-oxidite serve --env production
+oxi pm2 start
+oxi pm2 start my-api --release
+oxi pm2 stop my-api
+oxi pm2 restart my-api
+oxi pm2 list
+oxi pm2 info my-api
+oxi pm2 monitor
 ```
+
+Process state is stored in `.oxidite_procs.json` in the current directory. This is **not** a replacement for systemd, Docker, or proper process managers in production.
+
+## Debug Logging
+
+Enable verbose output:
+
+```bash
+OXIDITE_DEBUG=1 oxi dev
+OXIDITE_DEBUG=true oxi serve
+```
+
+Shows environment loading, configuration details, file paths, and internal operations.
+
+## Colored Output
+
+Errors display in red, success in green, warnings in yellow, info in blue. Error messages are categorized by type (compile errors, runtime errors, permission errors).
+
+## Build and Deploy
+
+```bash
+oxi build --release
+oxi serve --env production
+```
+
+`oxi build` runs `cargo build` with your specified flags. It doesn't optimize beyond what cargo already does.
 
 ## Diagnostics
 
 ```bash
-oxidite doctor
-oxidite --help
-oxidite migrate --help
-oxidite --version
-oxidite version
+oxi doctor
 ```
+
+Checks for:
+- Rust and Cargo installation
+- Required project files (`Cargo.toml`, `oxidite.toml`)
+- Migration directory
+- Common environment variables
+
+It reports what it finds but doesn't fix issues automatically.

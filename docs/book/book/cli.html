@@ -365,23 +365,52 @@ oxidite dev --watch src --watch templates
 oxidite dev --ignore dist
 oxidite dev --no-hot-reload
 </code></pre>
-<p>The CLI forwards these overrides to the generated app via:</p>
-<ul>
-<li><code>SERVER_HOST</code></li>
-<li><code>SERVER_PORT</code></li>
-<li><code>OXIDITE_ENV</code></li>
-</ul>
 <p>Start the current project in release mode:</p>
 <pre><code class="language-bash">oxidite serve
 oxidite serve --addr 0.0.0.0:8080
 oxidite serve --env production
 </code></pre>
+<h3 id="environment-variable-handling"><a class="header" href="#environment-variable-handling">Environment Variable Handling</a></h3>
+<p>The CLI loads environment variables in this precedence order (highest wins):</p>
+<ol>
+<li><strong>CLI flags</strong> (<code>--host</code>, <code>--port</code>, <code>--env</code>)</li>
+<li><strong>OS environment variables</strong> (exported in your shell)</li>
+<li><strong><code>.env</code> file</strong> in the project root</li>
+<li><strong><code>oxidite.toml [env]</code> table</strong></li>
+<li><strong><code>oxidite.toml</code> section defaults</strong> (<code>[server]</code>, <code>[database]</code>, etc.)</li>
+<li><strong>Hardcoded defaults</strong></li>
+</ol>
+<pre><code class="language-toml"># oxidite.toml
+[server]
+host = &quot;127.0.0.1&quot;
+port = 3000
+
+[database]
+url = &quot;postgres://localhost/myapp&quot;
+
+[env]
+WATU_API_KEY = &quot;sk-abc123&quot;
+STRIPE_SECRET = &quot;whsec_test&quot;
+MY_FEATURE_FLAG = &quot;true&quot;
+</code></pre>
+<p>All variables defined in <code>[env]</code> become accessible via <code>std::env::var()</code> at runtime. If the same key exists in <code>.env</code> <em>and</em> <code>[env]</code>, the <code>.env</code> value wins. Blank <code>.env</code> entries (<code>KEY=</code>) are treated as unset, so the <code>[env]</code> fallback applies.</p>
+<p><strong>Skip <code>.env</code> entirely:</strong> Set <code>OXIDITE_SKIP_DOTENV=1</code> to rely solely on <code>oxidite.toml</code> and OS env vars:</p>
+<pre><code class="language-bash">OXIDITE_SKIP_DOTENV=1 oxidite dev
+OXIDITE_SKIP_DOTENV=1 oxidite serve
+</code></pre>
+<p>The CLI forwards these overrides to the spawned <code>cargo run</code> process:</p>
+<ul>
+<li><code>SERVER_HOST</code> (from <code>--host</code>)</li>
+<li><code>SERVER_PORT</code> (from <code>--port</code>)</li>
+<li><code>OXIDITE_ENV</code> (from <code>--env</code>)</li>
+</ul>
+<p>All other environment variables (from <code>.env</code>, <code>[env]</code>, or your shell) are inherited automatically.</p>
 <p>Build the current project:</p>
 <pre><code class="language-bash">oxidite build
 oxidite build --release
 oxidite build --profile release
 oxidite build --target x86_64-unknown-linux-musl
-oxidite build --features "database,queue"
+oxidite build --features &quot;database,queue&quot;
 oxidite build --verbose
 </code></pre>
 <h2 id="interactive-console-tinker"><a class="header" href="#interactive-console-tinker">Interactive Console (Tinker)</a></h2>
@@ -389,15 +418,16 @@ oxidite build --verbose
 <pre><code class="language-bash">oxidite tinker
 </code></pre>
 <p><strong>Example session:</strong></p>
-<pre><code>🧪 Oxidite Tinker v2.3.0
+<pre><code>🧪 Oxidite Tinker v2.3.1
+Library crate detected: using `my_app::*` imports.
 Type Rust expressions to evaluate them in your project's context.
-Use `exit` or Ctrl-D to quit.
+Type `help` or `?` for a guide, and `exit` or Ctrl-D to quit.
 
 oxidite&gt; User::all(&amp;db).await
-[User { id: 1, name: "Alice", ... }, User { id: 2, name: "Bob", ... }]
+[User { id: 1, name: &quot;Alice&quot;, ... }, User { id: 2, name: &quot;Bob&quot;, ... }]
 
 oxidite&gt; User::find(&amp;db, 1).await
-Some(User { id: 1, name: "Alice", email: "alice@example.com" })
+Some(User { id: 1, name: &quot;Alice&quot;, email: &quot;alice@example.com&quot; })
 
 oxidite&gt; 2 + 2
 4
@@ -405,6 +435,12 @@ oxidite&gt; 2 + 2
 oxidite&gt; exit
 👋 Goodbye!
 </code></pre>
+<p>Tinker automatically detects whether your project is a <strong>library crate</strong> (has <code>src/lib.rs</code>) or a <strong>binary-only crate</strong>:</p>
+<ul>
+<li><strong>Library crates:</strong> All public items from your crate are pre-imported via <code>use your_crate::*</code>.</li>
+<li><strong>Binary crates:</strong> The Oxidite prelude and common imports (<code>Config</code>, <code>DbPool</code>, etc.) are available directly.</li>
+</ul>
+<p>Environment variables from <code>.env</code>, <code>oxidite.toml [env]</code>, and your shell are all available during evaluation.</p>
 <p>Under the hood, Tinker generates a temporary <code>src/bin/_tinker.rs</code> file, compiles it with <code>cargo run</code>, and displays the result. The temporary file is cleaned up automatically when you exit.</p>
 <h2 id="performance-profiler"><a class="header" href="#performance-profiler">Performance Profiler</a></h2>
 <pre><code class="language-bash"># Profile a local HTTP endpoint with default concurrency (10) and total requests (100)
@@ -426,9 +462,9 @@ oxidite profile http://localhost:3000/users -c 20 -r 500
 <p>The doctor command checks:</p>
 <ul>
 <li>Rust and Cargo availability</li>
-<li>project files</li>
-<li>migration directory presence</li>
-<li>common environment variables</li>
+<li>Project files (<code>Cargo.toml</code>, <code>oxidite.toml</code>)</li>
+<li>Migration directory presence</li>
+<li>Common environment variables (<code>DATABASE_URL</code>, <code>REDIS_URL</code>, <code>JWT_SECRET</code>)</li>
 </ul>
 <h2 id="help"><a class="header" href="#help">Help</a></h2>
 <pre><code class="language-bash">oxidite --help

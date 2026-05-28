@@ -22,9 +22,6 @@ cargo install --path oxidite-cli
 
 # Or from crates.io
 cargo install oxidite-cli
-
-# Or pin this generated CLI build
-cargo install oxidite-cli --version 2.1.0-gen
 ```
 
 The installed executable is `oxidite`.

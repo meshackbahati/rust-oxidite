@@ -24,3 +24,6 @@ members = [
     "examples/*",
     "tests/*",
 ]
+
+[workspace.package]
+version = "2.3.1"

@@ -1,4 +1,4 @@
-# Framework Guide: Building Real Applications with Oxidite (v2.3.0)
+# Framework Guide: Building Real Applications with Oxidite (v2.3.1)
 
 This guide is a practical map for building production services with Oxidite.
 
@@ -7,7 +7,7 @@ This guide is a practical map for building production services with Oxidite.
 At a high level:
 
 1. `oxidite-core` handles HTTP primitives (request/response/router/server).
-2. feature crates layer capabilities (db/auth/queue/realtime/cache/storage/etc).
+2. Feature crates layer capabilities (db/auth/queue/realtime/cache/storage/etc).
 3. `oxidite` umbrella crate re-exports these capabilities behind feature flags.
 
 ## Typical project structure
@@ -29,6 +29,49 @@ Recommended ownership:
 - services: business logic
 - models/repositories: persistence logic
 - jobs: async/background flows
+
+## Configuration
+
+Oxidite uses `oxidite.toml` as its primary config file, with optional `.env` support for secrets and per-developer overrides.
+
+### oxidite.toml
+
+```toml
+[server]
+host = "127.0.0.1"
+port = 3000
+
+[database]
+url = "postgres://localhost/myapp_dev"
+
+[env]
+WATU_API_KEY = "sk-abc123"
+STRIPE_SECRET = "whsec_test"
+```
+
+The `[env]` table injects variables into the process environment so `std::env::var("WATU_API_KEY")` works anywhere in your code.
+
+### Loading config in code
+
+```rust
+use oxidite::prelude::*;
+use oxidite_config::Config;
+
+let config = Config::load()?;
+let db_url = &config.database.url;
+let port = config.server.port;
+let api_key = std::env::var("WATU_API_KEY").ok();
+```
+
+### Override precedence (highest wins)
+
+1. OS environment variables (exported in shell)
+2. `.env` file values
+3. `oxidite.toml [env]` table
+4. `oxidite.toml` section defaults
+5. Hardcoded defaults
+
+Blank `.env` entries (`KEY=`) are treated as unset, so the `[env]` fallback applies. Set `OXIDITE_SKIP_DOTENV=1` to skip `.env` loading entirely.
 
 ## Request lifecycle
 

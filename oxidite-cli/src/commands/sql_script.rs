@@ -14,7 +14,10 @@ pub fn load_database_url() -> Result<String, Box<dyn std::error::Error>> {
         return Ok(normalize_database_url(&config.database.url));
     }
 
-    Ok("sqlite://./data.db".to_string())
+    // Fail explicitly instead of silently falling back to SQLite
+    // This prevents data-loss scenarios where migrations run against
+    // the wrong database backend
+    Err("DATABASE_URL not set. Configure it in oxidite.toml [database.url] or set it in your .env file.".into())
 }
 
 fn normalize_database_url(url: &str) -> String {
@@ -175,5 +178,22 @@ mod tests {
             normalize_database_url("postgres://localhost/app"),
             "postgres://localhost/app"
         );
+    }
+
+    #[test]
+    fn splitter_handles_postgres_create_table() {
+        // Exact SQL from bug report
+        let sql = r#"CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL
+);"#;
+        let statements = split_sql_statements(sql);
+        assert_eq!(statements.len(), 1);
+        assert!(statements[0].contains("CREATE TABLE IF NOT EXISTS users"));
+        assert!(statements[0].contains("id BIGSERIAL PRIMARY KEY"));
+        assert!(statements[0].contains("email VARCHAR(255) NOT NULL UNIQUE"));
+        // Print to verify
+        println!("Parsed statement: {:?}", statements[0]);
     }
 }

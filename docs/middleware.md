@@ -24,15 +24,31 @@ Middleware components are included with the core framework:
 oxidite = "1.0"
 ```
 
-## Using Middleware
+## Middleware Layers
 
-### ServiceBuilder Pattern
+### Router-Level vs Service-Level Middleware
 
-Oxidite uses the `ServiceBuilder` from the `tower` ecosystem to compose middleware:
+Oxidite supports two levels of middleware:
+
+**Router-Level Middleware** (applied via `router.layer()`):
+- Custom middleware that doesn't change response body types
+- Middleware that works with `OxiditeRequest` and `OxiditeResponse` directly
+- Examples: LoggerLayer, custom auth middleware
+
+**Service-Level Middleware** (applied via `ServiceBuilder`):
+- All middleware including body-type-changing layers like CORS and Compression
+- Applied to the entire service chain, not just the router
+- **Recommended approach** for most use cases
+
+> **Important**: Body-type-changing middleware like `CorsLayer` and `CompressionLayer` must be applied at the service level using `ServiceBuilder`, not directly on the router with `.layer()`. These middleware change the HTTP response body type, which is incompatible with the router's `Endpoint` trait.
+
+### Using ServiceBuilder (Recommended)
+
+The recommended way to add middleware is using `ServiceBuilder`:
 
 ```rust
 use oxidite::prelude::*;
-use oxidite_middleware::{ServiceBuilder, LoggerLayer, CorsLayer};
+use oxidite_middleware::{ServiceBuilder, LoggerLayer, CorsLayer, CompressionLayer};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -41,8 +57,9 @@ async fn main() -> Result<()> {
     
     // Compose middleware using ServiceBuilder
     let service = ServiceBuilder::new()
-        .layer(LoggerLayer)           // Log requests and responses
-        .layer(CorsLayer::permissive()) // Allow cross-origin requests
+        .layer(LoggerLayer)              // Log requests/responses
+        .layer(CorsLayer::permissive())  // Allow cross-origin requests
+        .layer(CompressionLayer::new())  // Compress responses
         .service(router);
     
     Server::new(service)
@@ -96,6 +113,48 @@ let service = ServiceBuilder::new()
     .layer(cors_layer)
     .service(router);
 ```
+
+### Framework-Level CORS (Recommended)
+
+Oxidite provides a built-in CORS implementation that doesn't require tower-http. This is simpler to use and integrates directly with the Router:
+
+```rust
+use oxidite::prelude::*;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let router = Router::new()
+        .with_cors(CorsConfig {
+            allowed_origins: vec!["http://localhost:3000".to_string()],
+            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+            allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
+            allow_credentials: true,
+            max_age: 3600,
+        });
+    
+    Server::new(router)
+        .listen("127.0.0.1:3000".parse().unwrap())
+        .await
+}
+```
+
+For development, you can use the permissive config:
+
+```rust
+let router = Router::new()
+    .with_cors(CorsConfig::permissive());
+```
+
+For a restrictive default that you customize:
+
+```rust
+let router = Router::new()
+    .with_cors(CorsConfig::restrictive()
+        .allowed_origins(vec!["https://myapp.com".to_string()])
+        .allowed_methods(vec!["GET".to_string(), "POST".to_string()]));
+```
+
+> **Note**: Framework-level CORS adds headers to successful responses and OPTIONS preflight requests. For CORS headers on error responses as well, use `CorsLayer` with `ServiceBuilder` instead.
 
 ### CompressionLayer
 

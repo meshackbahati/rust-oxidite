@@ -63,6 +63,8 @@ async fn main() -> Result<()> {
 }
 ```
 
+> **Note**: Middleware like `CorsLayer` and `CompressionLayer` must be applied via `ServiceBuilder`, not directly on the router with `.layer()`. These middleware change the HTTP response body type, which requires the full service chain that `ServiceBuilder` provides.
+
 ### CORS Middleware
 
 Configure Cross-Origin Resource Sharing policies:

@@ -15,209 +15,85 @@ Production setup includes:
 
 ## Environment Configuration
 
-Configure your application for production environments:
+Oxidite uses `oxidite.toml` as the primary configuration source, with optional `.env` support.
+
+### oxidite.toml for production
 
 ```toml
-# config/production.toml
+# oxidite.toml
 [server]
 host = "0.0.0.0"
 port = 80
-workers = 4
-timeout = 30
-keep_alive = 75
-tcp_nodelay = true
 
 [database]
 url = "${DATABASE_URL}"
-pool_size = 20
-timeout = 30
-max_lifetime = 1800
-idle_timeout = 600
 
-[logging]
-level = "info"
-format = "json"
-output = "stdout"
-sentry_dsn = "${SENTRY_DSN}"
-
-[cache]
-backend = "redis"
-url = "${REDIS_URL}"
-ttl = 3600
-
-[security]
-cors_enabled = true
-allowed_origins = ["https://yourdomain.com", "https://www.yourdomain.com"]
-csrf_enabled = true
-hsts_enabled = true
-content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline'"
-rate_limiting = true
-max_requests_per_minute = 100
-
-[ssl]
-enabled = true
-cert_path = "/etc/ssl/certs/cert.pem"
-key_path = "/etc/ssl/private/key.pem"
+[env]
+# These are injected into the process environment at startup.
+# In production, you typically set these via the deployment platform
+# (Docker env, Kubernetes secrets, etc.) rather than committing them.
+APP_NAME = "myapp"
 ```
 
-### Environment Variables
+### Using environment variables
 
-Use environment variables for sensitive configuration:
+Reference OS env vars in your config using the `${VAR}` syntax, or set them directly in the `[env]` table:
 
 ```bash
-# Production environment variables
+# Production environment variables (set via your deployment platform)
 export DATABASE_URL="postgresql://user:pass@prod-db:5432/app_prod"
 export REDIS_URL="redis://prod-redis:6379"
 export JWT_SECRET="long-random-string-here"
-export ENCRYPTION_KEY="32-byte-encryption-key-here"
-export SENTRY_DSN="https://key@sentry.io/project"
-export SMTP_HOST="smtp.gmail.com"
-export SMTP_USER="noreply@yourdomain.com"
-export SMTP_PASS="smtp-password"
-export AWS_ACCESS_KEY_ID="your-access-key"
-export AWS_SECRET_ACCESS_KEY="your-secret-key"
 ```
+
+```toml
+# oxidite.toml
+[database]
+url = "postgres://localhost/app_dev"  # development default
+
+[env]
+JWT_SECRET = "dev-secret-change-in-prod"
+```
+
+In production, the OS `DATABASE_URL` and `JWT_SECRET` will override the `oxidite.toml` defaults.
 
 ### Configuration Loading
 
-Load configuration dynamically:
+Load configuration with `Config::load()`:
 
 ```rust,ignore
 use oxidite::prelude::*;
-use config::{Config, ConfigError, Environment, File};
+use oxidite_config::Config;
 
-#[derive(serde::Deserialize, Clone)]
-pub struct AppConfig {
-    pub server: ServerConfig,
-    pub database: DatabaseConfig,
-    pub logging: LoggingConfig,
-    pub security: SecurityConfig,
-    pub cache: CacheConfig,
-}
-
-#[derive(serde::Deserialize, Clone)]
-pub struct ServerConfig {
-    pub host: String,
-    pub port: u16,
-    pub workers: usize,
-    pub timeout: u64,
-}
-
-#[derive(serde::Deserialize, Clone)]
-pub struct DatabaseConfig {
-    pub url: String,
-    pub pool_size: u32,
-    pub timeout: u64,
-}
-
-#[derive(serde::Deserialize, Clone)]
-pub struct LoggingConfig {
-    pub level: String,
-    pub format: String,
-    pub sentry_dsn: Option<String>,
-}
-
-#[derive(serde::Deserialize, Clone)]
-pub struct SecurityConfig {
-    pub cors_enabled: bool,
-    pub allowed_origins: Vec<String>,
-    pub csrf_enabled: bool,
-    pub rate_limiting: bool,
-    pub max_requests_per_minute: u32,
-}
-
-#[derive(serde::Deserialize, Clone)]
-pub struct CacheConfig {
-    pub backend: String,
-    pub url: String,
-    pub ttl: u64,
-}
-
-impl AppConfig {
-    pub fn from_env() -> Result<Self, ConfigError> {
-        let mut cfg = Config::builder()
-            .add_source(File::with_name("config/default"))
-            .add_source(File::with_name(&format!("config/{}", 
-                std::env::var("APP_ENV").unwrap_or_else(|_| "development".to_string())
-            )).required(false))
-            .add_source(Environment::with_prefix("APP"));
-
-        // Override with specific environment if set
-        if let Ok(env) = std::env::var("APP_ENV") {
-            cfg = cfg.add_source(File::with_name(&format!("config/{}", env)).required(false));
-        }
-
-        cfg.build()?.try_deserialize()
-    }
-}
-
-// Initialize application with configuration
 #[tokio::main]
 async fn main() -> Result<()> {
-    let config = AppConfig::from_env()
-        .map_err(|e| Error::InternalServerError(format!("Configuration error: {}", e)))?;
-    
-    // Initialize logging
-    init_logging(&config.logging).await?;
-    
-    // Initialize database
-    init_database(&config.database).await?;
-    
-    // Initialize cache
-    init_cache(&config.cache).await?;
-    
-    // Create and run server
-    let router = create_routes(&config).await?;
+    let config = Config::load()
+        .map_err(|e| Error::InternalServerError(format!("Config error: {}", e)))?;
+
+    println!("Running on {}:{}, env={}",
+        config.server.host,
+        config.server.port,
+        config.app.environment,
+    );
+
+    // Access custom env vars
+    let db_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| config.database.url.clone());
+
+    // Initialize database, cache, etc.
+    let router = create_routes().await?;
     let server = Server::new(router);
-    
+
     server.listen(format!("{}:{}", config.server.host, config.server.port).parse()?).await
 }
+```
 
-async fn init_logging(config: &LoggingConfig) -> Result<()> {
-    // Initialize logging based on configuration
-    match config.level.as_str() {
-        "debug" => std::env::set_var("RUST_LOG", "debug"),
-        "info" => std::env::set_var("RUST_LOG", "info"),
-        "warn" => std::env::set_var("RUST_LOG", "warn"),
-        "error" => std::env::set_var("RUST_LOG", "error"),
-        _ => std::env::set_var("RUST_LOG", "info"),
-    }
-    
-    // Initialize tracing subscriber
-    use tracing_subscriber::{EnvFilter, fmt};
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or(EnvFilter::new(&config.level));
-    
-    let subscriber = fmt()
-        .with_env_filter(filter)
-        .json();
-    
-    tracing::subscriber::set_global_default(subscriber)
-        .map_err(|e| Error::InternalServerError(format!("Logging setup error: {}", e)))?;
-    
-    Ok(())
-}
+### Skipping .env in production
 
-async fn init_database(config: &DatabaseConfig) -> Result<()> {
-    // Initialize database connection pool
-    println!("Connecting to database: {}", config.url);
-    Ok(())
-}
+In production deployments, set `OXIDITE_SKIP_DOTENV=1` so that config comes entirely from OS environment variables and `oxidite.toml`:
 
-async fn init_cache(config: &CacheConfig) -> Result<()> {
-    // Initialize cache backend
-    println!("Connecting to cache: {} ({})", config.url, config.backend);
-    Ok(())
-}
-
-async fn create_routes(_config: &AppConfig) -> Result<Router> {
-    let mut router = Router::new();
-    
-    // Add routes
-    router.get("/", |_req| async { Ok(Response::text("Hello from production!".to_string())) });
-    
-    Ok(router)
-}
+```bash
+OXIDITE_SKIP_DOTENV=1 ./target/release/myapp
 ```
 
 ## Security Hardening

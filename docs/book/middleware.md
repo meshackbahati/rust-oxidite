@@ -250,6 +250,43 @@ fn set_cors_headers(headers: &mut http::HeaderMap) {
 }
 ```
 
+### Framework-Level CORS (Recommended)
+
+Oxidite provides a built-in CORS implementation that integrates directly with the Router. This is simpler and doesn't require writing custom middleware:
+
+```rust,ignore
+use oxidite::prelude::*;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let router = Router::new()
+        .with_cors(CorsConfig {
+            allowed_origins: vec!["http://localhost:3000".to_string()],
+            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+            allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
+            allow_credentials: true,
+            max_age: 3600,
+        });
+    
+    Server::new(router)
+        .listen("127.0.0.1:3000".parse()?)
+        .await
+}
+```
+
+For development, you can use the permissive config:
+
+```rust,ignore
+let router = Router::new()
+    .with_cors(CorsConfig::permissive());
+```
+
+The framework-level CORS automatically:
+- Handles OPTIONS preflight requests (returns 204 No Content)
+- Adds CORS headers to all successful responses
+- Supports wildcard (`*`) or specific origins
+- Configures allowed methods, headers, credentials, and cache duration
+
 ## Rate Limiting Middleware
 
 Simple rate limiting middleware:

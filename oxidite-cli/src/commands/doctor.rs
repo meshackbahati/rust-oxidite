@@ -1,7 +1,50 @@
 use std::env;
+use std::path::Path;
 use std::process::Command;
 
+/// Load `.env` from the project root or current directory
+fn load_dotenv() {
+    // Try to find .env in current directory or project root
+    let env_path = Path::new(".env");
+    if env_path.exists() {
+        let _ = dotenv::from_path(env_path);
+        return;
+    }
+
+    // Search parent directories for .env
+    if let Ok(current) = std::env::current_dir() {
+        let mut dir = current;
+        while let Some(parent) = dir.parent() {
+            let potential_env = parent.join(".env");
+            if potential_env.exists() {
+                let _ = dotenv::from_path(&potential_env);
+                return;
+            }
+            dir = parent.to_path_buf();
+        }
+    }
+
+    // Fallback to default dotenv behavior
+    let _ = dotenv::dotenv();
+}
+
+/// Find project root by searching for Cargo.toml or oxidite.toml in parent directories
+fn find_project_root() -> Option<std::path::PathBuf> {
+    let mut current = std::env::current_dir().ok()?;
+    loop {
+        if current.join("Cargo.toml").exists() || current.join("oxidite.toml").exists() {
+            return Some(current);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
 pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env file before checking environment variables
+    load_dotenv();
+
     println!("🏥 Oxidite Health Check\n");
 
     let mut all_ok = true;
@@ -32,29 +75,38 @@ pub fn run_doctor() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // Check if in an Oxidite project
+    // Check if in an Oxidite project (search parent directories)
     print!("Checking project structure... ");
-    if std::path::Path::new("Cargo.toml").exists() {
+    if let Some(_root) = find_project_root() {
         println!("✅ Cargo.toml found");
     } else {
         println!("⚠️  Not in a Cargo project directory");
     }
 
-    // Check oxidite.toml or config
+    // Check oxidite.toml or config (search parent directories)
     print!("Checking configuration... ");
-    if std::path::Path::new("oxidite.toml").exists() {
-        println!("✅ oxidite.toml found");
-    } else if std::path::Path::new("config.toml").exists() {
-        println!("✅ config.toml found");
+    if let Some(root) = find_project_root() {
+        if root.join("oxidite.toml").exists() {
+            println!("✅ oxidite.toml found");
+        } else if root.join("config.toml").exists() {
+            println!("✅ config.toml found");
+        } else {
+            println!("⚠️  No configuration file found (optional)");
+        }
     } else {
         println!("⚠️  No configuration file found (optional)");
     }
 
-    // Check migrations directory
+    // Check migrations directory (search parent directories)
     print!("Checking migrations... ");
-    if std::path::Path::new("migrations").exists() {
-        let count = std::fs::read_dir("migrations")?.count();
-        println!("✅ Found {} migration(s)", count);
+    if let Some(root) = find_project_root() {
+        let migrations_dir = root.join("migrations");
+        if migrations_dir.exists() {
+            let count = std::fs::read_dir(&migrations_dir)?.count();
+            println!("✅ Found {} migration(s)", count);
+        } else {
+            println!("ℹ️  No migrations directory");
+        }
     } else {
         println!("ℹ️  No migrations directory");
     }

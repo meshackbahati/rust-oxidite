@@ -1,8 +1,10 @@
 use clap::{Parser, Subcommand};
-use oxidite_core::{Error, Result};
 use std::process::Command;
 
 mod commands;
+mod alias_hint;
+
+use commands::output::{error, info, header, compile_error, runtime_error, build_failed, build_success, init_colors};
 
 #[derive(Parser)]
 #[command(name = "oxidite")]
@@ -147,6 +149,51 @@ enum Commands {
         #[arg(short, long, default_value_t = 100)]
         requests: usize,
     },
+    /// Run a single Rust file as a script (standalone or within a project)
+    Run {
+        /// Path to the Rust file to execute
+        file: String,
+        /// Extra dependencies to include (crate names, comma-separated)
+        #[arg(long)]
+        deps: Option<String>,
+    },
+    /// Process management (PM2-style)
+    #[command(name = "pm2")]
+    Process {
+        #[command(subcommand)]
+        action: ProcessAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum ProcessAction {
+    /// Start a process in the background
+    Start {
+        /// Process name
+        name: Option<String>,
+        /// Run in release mode
+        #[arg(long)]
+        release: bool,
+    },
+    /// Stop a running process
+    Stop {
+        /// Process name or ID
+        identifier: Option<String>,
+    },
+    /// Restart a process
+    Restart {
+        /// Process name or ID
+        identifier: Option<String>,
+    },
+    /// List all running processes
+    List,
+    /// Show detailed info about a process
+    Info {
+        /// Process name or ID
+        identifier: String,
+    },
+    /// Monitor processes in real-time
+    Monitor,
 }
 
 #[derive(Subcommand)]
@@ -224,20 +271,23 @@ enum QueueCommand {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() {
+    init_colors();
+    alias_hint::print_alias_hint();
+    
     let cli = Cli::parse();
 
-    match cli.command {
+    let result: Result<(), Box<dyn std::error::Error>> = match cli.command {
         Commands::Serve {
             addr,
             host,
             port,
             env,
         } => {
-            let options = resolve_run_options(addr, host, port, env)?;
-            commands::dev::run_project_once(true, &options)
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            match resolve_run_options(addr, host, port, env) {
+                Ok(options) => commands::dev::run_project_once(true, &options).map_err(|e| e as Box<dyn std::error::Error>),
+                Err(e) => Err(e),
+            }
         }
         Commands::New {
             name,
@@ -246,94 +296,51 @@ async fn main() -> Result<()> {
             features,
         } => {
             commands::create_project(&name, project_type, template, &features)
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
         }
         Commands::Make { generator } | Commands::Generate { generator } => {
-            run_generator(generator).map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            run_generator(generator)
         }
         Commands::Migrate { migration } => {
             match migration.unwrap_or(MigrateCommand::Run) {
-                MigrateCommand::Create { name } => commands::migrate::create_migration(&name)
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
-                MigrateCommand::Run => commands::migrate::run_migrations()
-                    .await
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
-                MigrateCommand::Revert => commands::migrate::revert_migration()
-                    .await
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
-                MigrateCommand::Status => commands::migrate::migration_status()
-                    .await
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
-                MigrateCommand::Make { name, dry_run } => commands::migrate::declarative::make_migrations(name, dry_run)
-                    .await
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
+                MigrateCommand::Create { name } => commands::migrate::create_migration(&name),
+                MigrateCommand::Run => commands::migrate::run_migrations().await,
+                MigrateCommand::Revert => commands::migrate::revert_migration().await,
+                MigrateCommand::Status => commands::migrate::migration_status().await,
+                MigrateCommand::Make { name, dry_run } => commands::migrate::declarative::make_migrations(name, dry_run).await,
             }
-            Ok(())
         }
         Commands::MakeMigrations { name, dry_run } => {
-            commands::migrate::declarative::make_migrations(name, dry_run)
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::migrate::declarative::make_migrations(name, dry_run).await
         }
         Commands::MigrateRollback => {
-            commands::migrate::revert_migration()
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::migrate::revert_migration().await
         }
         Commands::Seed { seeder } => {
             match seeder.unwrap_or(SeedCommand::Run) {
-                SeedCommand::Run => commands::seed::run_seeders()
-                    .await
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
-                SeedCommand::Create { name } => commands::seed::create_seeder(&name)
-                    .map_err(|err| Error::InternalServerError(err.to_string()))?,
+                SeedCommand::Run => commands::seed::run_seeders().await,
+                SeedCommand::Create { name } => commands::seed::create_seeder(&name),
             }
-            Ok(())
         }
         Commands::DbSeed => {
-            commands::seed::run_seeders()
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::seed::run_seeders().await
         }
         Commands::Queue { queue } => {
-            run_queue_command(queue)
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            run_queue_command(queue).await
         }
         Commands::QueueWork { workers } => {
-            commands::queue::queue_work(workers)
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::queue::queue_work(workers).await
         }
         Commands::QueueList => {
-            commands::queue::queue_list()
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::queue::queue_list().await
         }
         Commands::QueueDlq => {
-            commands::queue::queue_dlq()
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::queue::queue_dlq().await
         }
         Commands::QueueClear => {
-            commands::queue::queue_clear()
-                .await
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
+            commands::queue::queue_clear().await
         }
         Commands::Doctor => {
             commands::doctor::run_doctor()
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
         }
         Commands::Build {
             release,
@@ -342,8 +349,7 @@ async fn main() -> Result<()> {
             features,
             verbose,
         } => {
-            build_project(release, profile, target, features, verbose)?;
-            Ok(())
+            build_project(release, profile, target, features, verbose)
         }
         Commands::Dev {
             host,
@@ -361,8 +367,6 @@ async fn main() -> Result<()> {
                 hot_reload: !no_hot_reload,
             };
             commands::dev::start_dev_server(options)
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
         }
         Commands::Version => {
             println!("oxidite {}", env!("CARGO_PKG_VERSION"));
@@ -370,13 +374,56 @@ async fn main() -> Result<()> {
         }
         Commands::Tinker => {
             commands::tinker::run_tinker()
-                .map_err(|err| Error::InternalServerError(err.to_string()))?;
-            Ok(())
         }
         Commands::Profile { url, concurrency, requests } => {
             commands::profile::run(&url, concurrency, requests).await;
             Ok(())
         }
+        Commands::Run { file, deps } => {
+            commands::run::run_file(&file, deps.as_deref())
+        }
+        Commands::Process { action } => {
+            match action {
+                ProcessAction::Start { name, release } => {
+                    commands::process_manager::start_process(name, release)
+                }
+                ProcessAction::Stop { identifier } => {
+                    commands::process_manager::stop_process(identifier)
+                }
+                ProcessAction::Restart { identifier } => {
+                    commands::process_manager::restart_process(identifier)
+                }
+                ProcessAction::List => {
+                    commands::process_manager::list_processes()
+                }
+                ProcessAction::Info { identifier } => {
+                    commands::process_manager::show_process(&identifier)
+                }
+                ProcessAction::Monitor => {
+                    commands::process_manager::monitor_processes()
+                }
+            }
+        }
+    };
+
+    // Handle errors with proper formatting
+    if let Err(err) = result {
+        let err_str = err.to_string();
+        
+        // Categorize error by type and display with appropriate formatting
+        if err_str.contains("not found") || err_str.contains("No such file") || err_str.contains("does not exist") {
+            compile_error(&err_str);
+        } else if err_str.contains("build") || err_str.contains("compil") || err_str.contains("syntax") {
+            compile_error(&err_str);
+        } else if err_str.contains("connection") || err_str.contains("database") || err_str.contains("timeout") {
+            runtime_error(&err_str);
+        } else if err_str.contains("permission") || err_str.contains("denied") {
+            error(&format!("Permission denied: {}", err_str));
+        } else {
+            error(&err_str);
+        }
+        
+        std::process::exit(1);
     }
 }
 
@@ -415,8 +462,8 @@ fn build_project(
     target: Option<String>,
     features: Option<String>,
     verbose: bool,
-) -> Result<()> {
-    println!("🔨 Building Oxidite project...");
+) -> Result<(), Box<dyn std::error::Error>> {
+    header("Building Oxidite project");
 
     let mut command = Command::new("cargo");
     command.arg("build");
@@ -425,7 +472,7 @@ fn build_project(
         command.arg("--profile").arg(profile);
     } else if release {
         command.arg("--release");
-        println!("📦 Building in release mode");
+        info("Building in release mode");
     }
 
     if let Some(target) = target {
@@ -442,13 +489,14 @@ fn build_project(
 
     let status = command
         .status()
-        .map_err(|err| Error::InternalServerError(err.to_string()))?;
+        .map_err(|err| Box::new(std::io::Error::new(std::io::ErrorKind::Other, err.to_string())) as Box<dyn std::error::Error>)?;
 
     if status.success() {
-        println!("✅ Build completed successfully");
+        build_success("Compilation completed successfully");
         Ok(())
     } else {
-        Err(Error::InternalServerError("Build failed".to_string()))
+        build_failed("Cargo build process returned errors");
+        Err("Build failed".into())
     }
 }
 
@@ -457,47 +505,49 @@ fn resolve_run_options(
     host: Option<String>,
     port: Option<u16>,
     env: Option<String>,
-) -> Result<commands::dev::RunOptions> {
-    let (addr_host, addr_port) = if let Some(addr) = addr {
-        parse_addr(&addr)?
-    } else {
-        (None, None)
-    };
-
-    Ok(commands::dev::RunOptions {
-        host: host.or(addr_host),
-        port: port.or(addr_port),
-        env,
-    })
+) -> Result<commands::dev::RunOptions, Box<dyn std::error::Error>> {
+    match parse_addr_opt(&addr) {
+        Ok((addr_host, addr_port)) => {
+            Ok(commands::dev::RunOptions {
+                host: host.or(addr_host),
+                port: port.or(addr_port),
+                env,
+            })
+        }
+        Err(e) => Err(e),
+    }
 }
 
-fn parse_addr(addr: &str) -> Result<(Option<String>, Option<u16>)> {
+fn parse_addr_opt(addr: &Option<String>) -> Result<(Option<String>, Option<u16>), Box<dyn std::error::Error>> {
+    if addr.is_none() {
+        return Ok((None, None));
+    }
+    
+    let addr = addr.as_ref().unwrap();
     let Some((host, port)) = addr.rsplit_once(':') else {
-        return Err(Error::InternalServerError(format!(
-            "invalid address `{addr}`; expected host:port"
-        )));
+        return Err(format!("invalid address `{addr}`; expected host:port").into());
     };
 
     let port = port
         .parse::<u16>()
-        .map_err(|_| Error::InternalServerError(format!("invalid port in address `{addr}`")))?;
+        .map_err(|_| format!("invalid port in address `{addr}`"))?;
 
     Ok((Some(host.to_string()), Some(port)))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::parse_addr;
+    use super::parse_addr_opt;
 
     #[test]
     fn parses_host_and_port_from_addr() {
-        let (host, port) = parse_addr("127.0.0.1:8080").unwrap();
+        let (host, port) = parse_addr_opt(&Some("127.0.0.1:8080".to_string())).unwrap();
         assert_eq!(host.as_deref(), Some("127.0.0.1"));
         assert_eq!(port, Some(8080));
     }
 
     #[test]
     fn rejects_invalid_addr() {
-        assert!(parse_addr("not-an-addr").is_err());
+        assert!(parse_addr_opt(&Some("not-an-addr".to_string())).is_err());
     }
 }

@@ -5,328 +5,109 @@ The Oxidite CLI package is `oxidite-cli`, and the installed executable is `oxidi
 ## Installation
 
 ```bash
-# Install from crates.io
 cargo install oxidite-cli
-
-# Install this generated build explicitly
-cargo install oxidite-cli --version 2.3.0
-
-# Install from the workspace checkout
-cargo install --path oxidite-cli
 ```
 
-Verify the binary:
+**After installation**, add this alias for shorter commands:
 
 ```bash
-oxidite --version
-oxidite version
+# Bash
+echo "alias oxi='oxidite'" >> ~/.bashrc
+source ~/.bashrc
+
+# Zsh
+echo "alias oxi='oxidite'" >> ~/.zshrc
+source ~/.zshrc
 ```
+
+**Windows PowerShell:**
+```powershell
+Set-Alias oxi oxidite  # Add to $PROFILE for persistence
+```
+
+The CLI will also suggest this alias on first run.
+
+## What the CLI Does
+
+The CLI generates code, manages projects, and runs development tools. It saves typing but doesn't replace understanding of the underlying technologies.
+
+**It does:**
+- Create project scaffolding
+- Generate boilerplate models, routes, controllers
+- Run database migrations
+- Start development servers with file watching
+- Execute single Rust files without full project setup
+- Manage background processes
+
+**It doesn't:**
+- Speed up compilation beyond cargo's capabilities
+- Prevent architectural mistakes
+- Replace knowledge of Rust, sqlx, or hyper
 
 ## Project Scaffolding
 
-Create a new project:
-
 ```bash
-# Interactive project creation
-oxidite new my_app
-
-# Explicit project type
-oxidite new my_api --project-type api
-oxidite new my_api --type api
-
-# Template aliases
-oxidite new my_web --template web
-oxidite new my_fullstack --template fullstack
-oxidite new my_minimal --template minimal
+oxi new my_app
+oxi new my_api --project-type api
+oxi new my_web --template web
 ```
 
-Supported project kinds:
-
-- `api`
-- `fullstack`
-- `web` as an alias for `fullstack`
-- `microservice`
-- `minimal` as an alias for `api`
-- `serverless`
-
-The generated project includes the directories the CLI expects for development:
-
-```text
-my_app/
-├── Cargo.toml
-├── README.md
-├── oxidite.toml
-├── migrations/
-├── seeds/
-├── src/
-│   ├── main.rs
-│   ├── controllers/
-│   ├── events/
-│   ├── jobs/
-│   ├── middleware/
-│   ├── models/
-│   ├── policies/
-│   ├── routes/
-│   ├── services/
-│   └── validators/
-└── tests/
-```
+Generated structure includes standard directories. The CLI tools expect this layout for commands like `oxi generate` and `oxi migrate`.
 
 ## Code Generation
 
-Use `generate` for new workflows. `make` remains as a hidden compatibility alias.
-
 ```bash
-# Models
-oxidite generate model User
-oxidite generate model User email:string age:integer
-
-# Route modules
-oxidite generate route users
-
-# Controllers and middleware
-oxidite generate controller UserController
-oxidite generate middleware AuthMiddleware
-
-# Other supported generators
-oxidite generate service Billing
-oxidite generate validator CreateUser
-oxidite generate job SendDigest
-oxidite generate policy Post
-oxidite generate event UserSignedUp
-
-# File-based database artifacts
-oxidite generate migration create_users_table
-oxidite generate seeder users_seed
+oxi generate model User email:string age:integer
+oxi generate route users
+oxi generate controller UserController
 ```
 
-Supported model field types:
-
-- `string`
-- `text`
-- `integer`
-- `float`
-- `decimal`
-- `boolean`
-- `uuid`
-- `json`
-- `timestamp`
-
-Example generated model:
-
-```rust,ignore
-use serde::{Deserialize, Serialize};
-use oxidite::db::{Model, sqlx};
-
-#[derive(Debug, Clone, Serialize, Deserialize, Model, sqlx::FromRow)]
-#[model(table = "users")]
-pub struct User {
-    pub id: i64,
-    pub email: String,
-    pub age: i64,
-    pub created_at: i64,
-    pub updated_at: i64,
-}
-```
+Generated code is starting point boilerplate. You modify it to fit your needs. Generators don't overwrite existing files.
 
 ## Database Migrations
 
-Create a migration file:
+```bash
+oxi migrate create create_users_table
+oxi migrate run
+oxi migrate status
+oxi migrate revert
+oxi make-migrations  # Auto-generate from model changes
+```
+
+Migrations are SQL files with `-- migrate:up` and `-- migrate:down` sections. The migration tracker stores which migrations have run, not their content hashes.
+
+## Development Server
 
 ```bash
-oxidite migrate create create_users_table
-oxidite generate migration create_users_table
+oxi dev
+oxi dev --port 8080 --watch src
 ```
 
-The generated file uses file-based SQL sections:
+Runs `cargo run` and restarts on file changes. Compile times remain the same as manual `cargo build`.
 
-```sql
--- migrate:up
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY,
-    email TEXT NOT NULL
-);
-
--- migrate:down
-DROP TABLE users;
-```
-
-Run migrations:
+## Single File Execution
 
 ```bash
-# Canonical command
-oxidite migrate run
-
-# Bare command also runs pending migrations
-oxidite migrate
+oxi run script.rs
+oxi run script.rs --deps serde,chrono
 ```
 
-Check or revert migrations:
- 
- ```bash
- oxidite migrate status
- oxidite migrate revert
- 
- # Compatibility alias retained by the CLI
- oxidite migrate:rollback
- ```
+Creates temp projects for standalone files. Useful for scripts and prototypes, not for production code.
 
-### Declarative Migrations (Auto-Generation)
-
-Oxidite can automatically generate migration files by diffing your Rust models against the current database schema. This eliminates the need for manual SQL for common schema changes.
+## Process Management
 
 ```bash
-# Generate a migration based on model changes
-oxidite migrate make
-
-# Generate with a specific name
-oxidite migrate make create_users_table
-
-# Dry run: see the SQL without generating files
-oxidite migrate make --dry-run
+oxi pm2 start --release
+oxi pm2 list
+oxi pm2 stop <name>
 ```
 
-You can also use the top-level alias:
-```bash
-oxidite make-migrations
-```
+Stores process state locally. For production deployment, use systemd, Docker, or Kubernetes instead.
 
-## Seeders
+## Debug and Output
 
 ```bash
-# Create a seeder file
-oxidite seed create users_seed
-oxidite generate seeder users_seed
-
-# Run seeders
-oxidite seed run
-oxidite seed
-
-# Compatibility alias
-oxidite db:seed
+OXIDITE_DEBUG=1 oxi dev
 ```
 
-## Queue Commands
-
-Canonical queue commands:
-
-```bash
-oxidite queue work --workers 4
-oxidite queue list
-oxidite queue dlq
-oxidite queue clear
-```
-
-Compatibility aliases that still work:
-
-```bash
-oxidite queue:work --workers 4
-oxidite queue:list
-oxidite queue:dlq
-oxidite queue:clear
-```
-
-## Development Workflow
-
-Start the development server with hot reload:
-
-```bash
-oxidite dev
-oxidite dev --port 8080
-oxidite dev --host 0.0.0.0 --env development
-oxidite dev --watch src --watch templates
-oxidite dev --ignore dist
-oxidite dev --no-hot-reload
-```
-
-The CLI forwards these overrides to the generated app via:
-
-- `SERVER_HOST`
-- `SERVER_PORT`
-- `OXIDITE_ENV`
-
-Start the current project in release mode:
-
-```bash
-oxidite serve
-oxidite serve --addr 0.0.0.0:8080
-oxidite serve --env production
-```
-
-Build the current project:
-
-```bash
-oxidite build
-oxidite build --release
-oxidite build --profile release
-oxidite build --target x86_64-unknown-linux-musl
-oxidite build --features "database,queue"
-oxidite build --verbose
-```
-
-## Interactive Console (Tinker)
-
-Oxidite ships with a built-in interactive console, similar to Laravel's Tinker or Rails' console. It lets you evaluate Rust expressions directly inside your project's context — with access to all your models, services, and the database.
-
-```bash
-oxidite tinker
-```
-
-**Example session:**
-
-```
-🧪 Oxidite Tinker v2.3.0
-Type Rust expressions to evaluate them in your project's context.
-Use `exit` or Ctrl-D to quit.
-
-oxidite> User::all(&db).await
-[User { id: 1, name: "Alice", ... }, User { id: 2, name: "Bob", ... }]
-
-oxidite> User::find(&db, 1).await
-Some(User { id: 1, name: "Alice", email: "alice@example.com" })
-
-oxidite> 2 + 2
-4
-
-oxidite> exit
-👋 Goodbye!
-```
-
-Under the hood, Tinker generates a temporary `src/bin/_tinker.rs` file, compiles it with `cargo run`, and displays the result. The temporary file is cleaned up automatically when you exit.
-
-## Performance Profiler
-
-```bash
-# Profile a local HTTP endpoint with default concurrency (10) and total requests (100)
-oxidite profile http://localhost:3000/
-
-# Profile with custom concurrency and request count
-oxidite profile http://localhost:3000/users -c 20 -r 500
-```
-
-The `profile` command spawns concurrent asynchronous HTTP workers using `reqwest` to measure:
-- Total execution time
-- Successful vs. failed requests (HTTP 2xx)
-- Request throughput (Requests per second / RPS)
-- Detailed latency percentiles (min, max, average, p50, p90, p99)
-
-## Diagnostics
-
-```bash
-oxidite doctor
-```
-
-The doctor command checks:
-
-- Rust and Cargo availability
-- project files
-- migration directory presence
-- common environment variables
-
-## Help
-
-```bash
-oxidite --help
-oxidite migrate --help
-oxidite generate --help
-```
+Colored output: red for errors, green for success, yellow for warnings, blue for info. Errors are categorized by type automatically.

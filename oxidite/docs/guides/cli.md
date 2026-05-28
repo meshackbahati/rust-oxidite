@@ -6,9 +6,6 @@ The CLI package is `oxidite-cli`. The installed binary is `oxidite`.
 
 ```bash
 cargo install oxidite-cli
-
-# Install this generated CLI build explicitly
-cargo install oxidite-cli --version 2.1.0-gen
 ```
 
 ## Project Creation

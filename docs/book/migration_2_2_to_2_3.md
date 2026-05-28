@@ -58,6 +58,8 @@ let users = sqlx::query_as!(User, "SELECT * FROM users WHERE ...")
 For database-specific features like PostgreSQL JSONB, arrays, or `#[derive(FromRow)]` with complex types, you can now access the concrete pool directly:
 
 ```rust
+use oxidite::prelude::*;
+
 // Get PostgreSQL-specific pool
 let pg_pool = db.postgres_pool().expect("PostgreSQL required");
 

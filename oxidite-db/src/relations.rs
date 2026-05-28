@@ -212,4 +212,48 @@ where
     pub async fn get(&self, db: &impl Database) -> Result<Option<P>> {
         P::find(db, self.foreign_key_value).await
     }
+
+    /// Eager-load parent records for many child records in one query.
+    /// Returns a HashMap keyed by the foreign key value (child's parent_id).
+    pub async fn eager_load(
+        db: &impl Database,
+        foreign_key_values: &[i64],
+    ) -> Result<HashMap<i64, Option<P>>> {
+        if foreign_key_values.is_empty() {
+            return Ok(HashMap::new());
+        }
+
+        let placeholders = std::iter::repeat("?")
+            .take(foreign_key_values.len())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        let query = format!(
+            "SELECT * FROM {} WHERE id IN ({})",
+            P::table_name(),
+            placeholders
+        );
+
+        let mut sql_query = sqlx::query(&query);
+        for fk_value in foreign_key_values {
+            sql_query = sql_query.bind(*fk_value);
+        }
+
+        let rows = db.fetch_all(sql_query).await?;
+        let mut grouped = HashMap::<i64, Option<P>>::new();
+
+        // Initialize all keys with None
+        for fk_value in foreign_key_values {
+            grouped.insert(*fk_value, None);
+        }
+
+        // Fill in found parents
+        for row in rows {
+            let id_value: i64 = row.try_get("id")?;
+            let parent = P::from_row(&row)?;
+            grouped.insert(id_value, Some(parent));
+        }
+
+        Ok(grouped)
+    }
 }

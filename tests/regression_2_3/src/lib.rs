@@ -1,7 +1,7 @@
-use oxidite::prelude::*;
-
 #[tokio::test]
 async fn test_12_extractors_compilation() {
+    use oxidite::prelude::*;
+
     async fn h12(
         _e1: State<()>, _e2: State<()>, _e3: State<()>, _e4: State<()>,
         _e5: State<()>, _e6: State<()>, _e7: State<()>, _e8: State<()>,

@@ -163,9 +163,6 @@ Install the `oxidite-cli` package to get the `oxidite` executable:
 
 ```bash
 cargo install oxidite-cli
-
-# Install this generated CLI build explicitly
-cargo install oxidite-cli --version 2.1.0-gen
 ```
 
 Create and run a project:

@@ -396,6 +396,35 @@ fn set_cors_headers(headers: &amp;mut http::HeaderMap) {
         "Content-Type, Authorization".parse().unwrap()
     );
 }</code></pre>
+<h3 id="framework-level-cors-recommended"><a class="header" href="#framework-level-cors-recommended">Framework-Level CORS (Recommended)</a></h3>
+<p>Oxidite provides a built-in CORS implementation that integrates directly with the Router. This is simpler and doesn't require writing custom middleware:</p>
+<pre><code class="language-rust ignore">use oxidite::prelude::*;
+
+#[tokio::main]
+async fn main() -&gt; Result&lt;()&gt; {
+    let router = Router::new()
+        .with_cors(CorsConfig {
+            allowed_origins: vec!["http://localhost:3000".to_string()],
+            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+            allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
+            allow_credentials: true,
+            max_age: 3600,
+        });
+    
+    Server::new(router)
+        .listen("127.0.0.1:3000".parse()?)
+        .await
+}</code></pre>
+<p>For development, you can use the permissive config:</p>
+<pre><code class="language-rust ignore">let router = Router::new()
+    .with_cors(CorsConfig::permissive());</code></pre>
+<p>The framework-level CORS automatically:</p>
+<ul>
+<li>Handles OPTIONS preflight requests (returns 204 No Content)</li>
+<li>Adds CORS headers to all successful responses</li>
+<li>Supports wildcard (<code>*</code>) or specific origins</li>
+<li>Configures allowed methods, headers, credentials, and cache duration</li>
+</ul>
 <h2 id="rate-limiting-middleware"><a class="header" href="#rate-limiting-middleware">Rate Limiting Middleware</a></h2>
 <p>Simple rate limiting middleware:</p>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;

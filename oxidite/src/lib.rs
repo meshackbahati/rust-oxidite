@@ -87,6 +87,7 @@ pub mod prelude {
         Error, Result,
         Request, Response,
         StatusCode, mpsc, BodyExt,
+        CorsConfig,
         extract::{Json, Path, Query, State, FromRequest, Form, Cookies, Body, WebSocketUpgrade, PathParams},
     };
     
@@ -97,6 +98,9 @@ pub mod prelude {
     };
     
     pub use oxidite_config::Config;
+    
+    // Response helpers for cleaner syntax: json!({...}), text("..."), html("...")
+    pub use oxidite_core::response::helpers::{json, text, html, ok, no_content};
     
     #[cfg(feature = "database")]
     pub use oxidite_db::{Database, Model, Migration};

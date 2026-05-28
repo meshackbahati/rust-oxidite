@@ -50,37 +50,60 @@ impl Endpoint for EndpointService {
     }
 }
 
-impl<S, E> Endpoint for tower_http::cors::Cors<S>
-where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = E> + Clone + Send + Sync + 'static,
-    S::Future: Send + 'static,
-    E: std::fmt::Display + Send + 'static,
-{
-    fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+/// CORS configuration for the Router
+#[derive(Clone, Debug)]
+pub struct CorsConfig {
+    /// Allowed origins (e.g., "http://localhost:3000")
+    /// Use "*" to allow all origins
+    pub allowed_origins: Vec<String>,
+    /// Allowed HTTP methods (e.g., "GET", "POST", "PUT", "DELETE")
+    /// Empty means allow all methods
+    pub allowed_methods: Vec<String>,
+    /// Allowed HTTP headers (e.g., "Content-Type", "Authorization")
+    /// Empty means allow all headers
+    pub allowed_headers: Vec<String>,
+    /// Whether to allow credentials (cookies, authorization headers)
+    pub allow_credentials: bool,
+    /// Max age for CORS preflight cache (in seconds)
+    pub max_age: u32,
+}
 
-        let this = self.clone();
-        Box::pin(async move {
-            let res = this.call(req).await.map_err(|e| Error::InternalServerError(e.to_string()))?;
-            Ok(res)
-        })
+impl Default for CorsConfig {
+    fn default() -> Self {
+        Self {
+            allowed_origins: vec!["*".to_string()],
+            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string(), "OPTIONS".to_string(), "PATCH".to_string()],
+            allowed_headers: vec!["*".to_string()],
+            allow_credentials: false,
+            max_age: 3600,
+        }
     }
 }
 
-impl<S, E> Endpoint for tower_http::compression::Compression<S>
-where
-    S: Service<OxiditeRequest, Response = OxiditeResponse, Error = E> + Clone + Send + Sync + 'static,
-    S::Future: Send + 'static,
-    E: std::fmt::Display + Send + 'static,
-{
-    fn call(&self, req: OxiditeRequest) -> Pin<Box<dyn Future<Output = Result<OxiditeResponse>> + Send>> {
+impl CorsConfig {
+    /// Create a new CORS config that allows everything (useful for development)
+    pub fn permissive() -> Self {
+        Self::default()
+    }
 
-        let this = self.clone();
-        Box::pin(async move {
-            let res = this.call(req).await.map_err(|e| Error::InternalServerError(e.to_string()))?;
-            Ok(res)
-        })
+    /// Create a new CORS config with no allowed origins (restrictive default)
+    pub fn restrictive() -> Self {
+        Self {
+            allowed_origins: Vec::new(),
+            allowed_methods: vec!["GET".to_string(), "POST".to_string()],
+            allowed_headers: vec!["Content-Type".to_string()],
+            allow_credentials: false,
+            max_age: 3600,
+        }
     }
 }
+
+// Note: tower-http middleware like Cors and Compression change the response body type,
+// so they cannot be used as Endpoint-level middleware. They should be applied at the
+// Server level instead, after body type conversion.
+//
+// For CORS at the router level, use custom middleware that only modifies headers
+// without changing the body type.
 
 
 /// Trait for async functions that can be used as handlers
@@ -463,6 +486,7 @@ pub struct Router {
     routes: HashMap<Method, Vec<Arc<Route>>>,
     extensions: Arc<std::sync::RwLock<http::Extensions>>,
     middleware: Vec<Arc<dyn Fn(Arc<dyn Endpoint>) -> Arc<dyn Endpoint> + Send + Sync>>,
+    cors_config: Option<CorsConfig>,
 }
 
 impl Router {
@@ -471,6 +495,7 @@ impl Router {
             routes: HashMap::new(),
             extensions: Arc::new(std::sync::RwLock::new(http::Extensions::new())),
             middleware: Vec::new(),
+            cors_config: None,
         }
     }
 
@@ -524,6 +549,20 @@ impl Router {
     /// Add a middleware layer to all routes in the router.
     ///
     /// The layer must implement `tower::Layer<EndpointService>` and return a new `Endpoint`.
+    ///
+    /// # Limitations
+    ///
+    /// Body-type-changing middleware (like `CorsLayer` and `CompressionLayer` from tower-http)
+    /// **cannot** be used with this method. These middleware change the HTTP response body type,
+    /// which is incompatible with the `Endpoint` trait that expects `OxiditeResponse`.
+    ///
+    /// For such middleware, use `ServiceBuilder` instead:
+    /// ```rust,ignore
+    /// let service = ServiceBuilder::new()
+    ///     .layer(CorsLayer::permissive())
+    ///     .layer(CompressionLayer::new())
+    ///     .service(router);
+    /// ```
     pub fn layer<L>(mut self, layer: L) -> Self
     where
         L: tower::Layer<EndpointService> + Send + Sync + 'static,
@@ -543,6 +582,37 @@ impl Router {
         L::Service: Endpoint,
     {
         self.layer(layer)
+    }
+
+    /// Configure CORS for this router.
+    ///
+    /// This adds CORS headers to all responses, including preflight OPTIONS requests.
+    /// This is a framework-level CORS implementation that doesn't require tower-http.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use oxidite::prelude::*;
+    ///
+    /// let router = Router::new()
+    ///     .with_cors(CorsConfig {
+    ///         allowed_origins: vec!["http://localhost:3000".to_string()],
+    ///         allowed_methods: vec!["GET".to_string(), "POST".to_string()],
+    ///         allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
+    ///         allow_credentials: true,
+    ///         max_age: 3600,
+    ///     });
+    /// ```
+    ///
+    /// For development, you can use the permissive config:
+    ///
+    /// ```rust,ignore
+    /// let router = Router::new()
+    ///     .with_cors(CorsConfig::permissive());
+    /// ```
+    pub fn with_cors(mut self, config: CorsConfig) -> Self {
+        self.cors_config = Some(config);
+        self
     }
 
     fn add_route<H, Args>(&mut self, method: Method, path: &str, handler: H)
@@ -571,6 +641,45 @@ impl Router {
             .entry(method)
             .or_insert_with(Vec::new)
             .push(route);
+    }
+
+    /// Add CORS headers to a response builder based on the configured CORS policy
+    fn add_cors_headers(&self, mut builder: http::response::Builder) -> http::response::Builder {
+        if let Some(cors) = &self.cors_config {
+            // Add Access-Control-Allow-Origin
+            if !cors.allowed_origins.is_empty() {
+                if cors.allowed_origins.contains(&"*".to_string()) {
+                    builder = builder.header("Access-Control-Allow-Origin", "*");
+                } else {
+                    // For specific origins, we'd need to check the Origin header
+                    // For now, we'll add the first origin (could be improved with request checking)
+                    if let Some(origin) = cors.allowed_origins.first() {
+                        builder = builder.header("Access-Control-Allow-Origin", origin);
+                    }
+                }
+            }
+
+            // Add Access-Control-Allow-Methods
+            if !cors.allowed_methods.is_empty() {
+                let methods = cors.allowed_methods.join(", ");
+                builder = builder.header("Access-Control-Allow-Methods", methods);
+            }
+
+            // Add Access-Control-Allow-Headers
+            if !cors.allowed_headers.is_empty() {
+                let headers = cors.allowed_headers.join(", ");
+                builder = builder.header("Access-Control-Allow-Headers", headers);
+            }
+
+            // Add Access-Control-Allow-Credentials
+            if cors.allow_credentials {
+                builder = builder.header("Access-Control-Allow-Credentials", "true");
+            }
+
+            // Add Access-Control-Max-Age
+            builder = builder.header("Access-Control-Max-Age", cors.max_age.to_string());
+        }
+        builder
     }
 
     pub async fn handle(&self, mut req: OxiditeRequest) -> Result<OxiditeResponse> {
@@ -612,7 +721,29 @@ impl Router {
         if let Some(route) = try_match(&method, &mut req) {
             // Add router extensions to request so State extractor can find global state
             req.extensions_mut().insert(self.extensions.clone());
-            return route.handler.call(req).await;
+            let response = route.handler.call(req).await?;
+            
+            // Add CORS headers to successful responses
+            if self.cors_config.is_some() {
+                let hyper_response: hyper::Response<crate::types::BoxBody> = response.into();
+                let (parts, body) = hyper_response.into_parts();
+                let mut builder = http::Response::builder()
+                    .status(parts.status);
+                
+                // Copy existing headers
+                for (key, value) in parts.headers {
+                    if let Some(key) = key {
+                        builder = builder.header(key, value);
+                    }
+                }
+                
+                // Add CORS headers
+                builder = self.add_cors_headers(builder);
+                
+                return Ok(OxiditeResponse::new(builder.body(body).unwrap()));
+            }
+            
+            return Ok(response);
         }
 
         // 2. If OPTIONS, return empty success response for CORS if no explicit handler
@@ -620,8 +751,14 @@ impl Router {
             if let Some(_route) = try_match(&Method::OPTIONS, &mut req) {
                 // Explicit handler exists, will be handled by step 1
             } else {
-                return Ok(OxiditeResponse::new(hyper::Response::builder()
-                    .status(http::StatusCode::OK)
+                // Return 204 No Content for CORS preflight
+                let mut builder = http::Response::builder()
+                    .status(http::StatusCode::NO_CONTENT);
+                
+                // Add CORS headers to preflight response
+                builder = self.add_cors_headers(builder);
+                
+                return Ok(OxiditeResponse::new(builder
                     .body(crate::types::BoxBody::default())
                     .unwrap()));
             }
@@ -951,5 +1088,143 @@ mod tests {
         use http_body_util::BodyExt;
         let bytes = body.collect().await.unwrap().to_bytes();
         assert_eq!(bytes, "middleware_ok");
+    }
+
+    #[tokio::test]
+    async fn test_cors_config_default() {
+        let config = CorsConfig::default();
+        assert_eq!(config.allowed_origins, vec!["*"]);
+        assert!(!config.allowed_methods.is_empty());
+        assert_eq!(config.allowed_headers, vec!["*"]);
+        assert!(!config.allow_credentials);
+        assert_eq!(config.max_age, 3600);
+    }
+
+    #[tokio::test]
+    async fn test_cors_config_permissive() {
+        let config = CorsConfig::permissive();
+        assert_eq!(config.allowed_origins, vec!["*"]);
+        assert_eq!(config.allowed_headers, vec!["*"]);
+    }
+
+    #[tokio::test]
+    async fn test_cors_config_restrictive() {
+        let config = CorsConfig::restrictive();
+        assert!(config.allowed_origins.is_empty());
+        assert_eq!(config.allowed_methods, vec!["GET", "POST"]);
+        assert_eq!(config.allowed_headers, vec!["Content-Type"]);
+    }
+
+    #[tokio::test]
+    async fn test_cors_preflight_response() {
+        let mut router = Router::new()
+            .with_cors(CorsConfig {
+                allowed_origins: vec!["http://localhost:3000".to_string()],
+                allowed_methods: vec!["GET".to_string(), "POST".to_string()],
+                allowed_headers: vec!["Content-Type".to_string()],
+                allow_credentials: true,
+                max_age: 7200,
+            });
+        router.get("/test", || async { Ok(OxiditeResponse::text("ok")) });
+
+        let req = http::Request::builder()
+            .method(Method::OPTIONS)
+            .uri("/test")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let res = router.handle(req).await.expect("handle");
+        let hyper_res: hyper::Response<crate::types::BoxBody> = res.into();
+        
+        // Should be 204 No Content for preflight
+        assert_eq!(hyper_res.status(), http::StatusCode::NO_CONTENT);
+        
+        // Check CORS headers
+        let headers = hyper_res.headers();
+        assert_eq!(
+            headers.get("Access-Control-Allow-Origin").unwrap(),
+            "http://localhost:3000"
+        );
+        assert_eq!(
+            headers.get("Access-Control-Allow-Methods").unwrap(),
+            "GET, POST"
+        );
+        assert_eq!(
+            headers.get("Access-Control-Allow-Headers").unwrap(),
+            "Content-Type"
+        );
+        assert_eq!(
+            headers.get("Access-Control-Allow-Credentials").unwrap(),
+            "true"
+        );
+        assert_eq!(
+            headers.get("Access-Control-Max-Age").unwrap(),
+            "7200"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_cors_on_successful_response() {
+        let mut router = Router::new()
+            .with_cors(CorsConfig::permissive());
+        router.get("/test", || async { Ok(OxiditeResponse::text("ok")) });
+
+        let req = http::Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let res = router.handle(req).await.expect("handle");
+        let hyper_res: hyper::Response<crate::types::BoxBody> = res.into();
+        
+        // Check CORS headers are present
+        let headers = hyper_res.headers();
+        assert_eq!(
+            headers.get("Access-Control-Allow-Origin").unwrap(),
+            "*"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_cors_wildcard_origin() {
+        let mut router = Router::new()
+            .with_cors(CorsConfig::permissive());
+        router.get("/test", || async { Ok(OxiditeResponse::text("ok")) });
+
+        let req = http::Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let res = router.handle(req).await.expect("handle");
+        let hyper_res: hyper::Response<crate::types::BoxBody> = res.into();
+        
+        let headers = hyper_res.headers();
+        assert_eq!(
+            headers.get("Access-Control-Allow-Origin").unwrap(),
+            "*"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_no_cors_when_not_configured() {
+        let mut router = Router::new();
+        router.get("/test", || async { Ok(OxiditeResponse::text("ok")) });
+
+        let req = http::Request::builder()
+            .method(Method::GET)
+            .uri("/test")
+            .body(BoxBody::default())
+            .expect("request");
+
+        let res = router.handle(req).await.expect("handle");
+        let hyper_res: hyper::Response<crate::types::BoxBody> = res.into();
+        
+        // Should NOT have CORS headers
+        let headers = hyper_res.headers();
+        assert!(headers.get("Access-Control-Allow-Origin").is_none());
+        assert!(headers.get("Access-Control-Allow-Methods").is_none());
     }
 }

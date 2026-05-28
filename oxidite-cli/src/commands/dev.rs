@@ -6,6 +6,42 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use std::env;
+
+use super::output;
+
+/// Find the project root by searching for `oxidite.toml` or `Cargo.toml`
+/// starting from the current directory and walking up the tree.
+fn find_project_root() -> Option<PathBuf> {
+    let mut current = std::env::current_dir().ok()?;
+    loop {
+        if current.join("oxidite.toml").exists() || current.join("Cargo.toml").exists() {
+            return Some(current);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
+/// Load `.env` from the project root, if present.
+/// Skipped when `OXIDITE_SKIP_DOTENV` is set, allowing users to rely
+/// exclusively on `oxidite.toml` (including its `[env]` table) for config.
+fn load_dotenv() {
+    if env::var("OXIDITE_SKIP_DOTENV").is_err() {
+        // Try to load from project root first, then fall back to CWD
+        if let Some(root) = find_project_root() {
+            let env_path = root.join(".env");
+            if env_path.exists() {
+                let _ = dotenv::from_path(&env_path);
+                return;
+            }
+        }
+        // Fallback: load from CWD
+        let _ = dotenv::dotenv();
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct RunOptions {
     pub host: Option<String>,
@@ -25,18 +61,23 @@ pub fn run_project_once(
     release: bool,
     options: &RunOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env so all variables are available
+    load_dotenv();
+    
+    output::debug("Loading environment variables from .env");
+
     if release {
-        println!(
-            "{}",
-            "Starting Oxidite server in release mode...".green().bold()
-        );
+        output::info("Starting Oxidite server in release mode");
     } else {
-        println!("{}", "Starting Oxidite project...".green().bold());
+        output::info("Starting Oxidite project in debug mode");
     }
+    
+    output::debug(&format!("Server options: {:?}", options));
 
     let mut child = spawn_project_process(release, options)?;
     let status = child.wait()?;
     if status.success() {
+        output::success("Process completed successfully");
         Ok(())
     } else {
         Err(format!("process exited with status {status}").into())
@@ -44,16 +85,20 @@ pub fn run_project_once(
 }
 
 pub fn start_dev_server(options: DevOptions) -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env once at startup so the CLI and child process both see it
+    load_dotenv();
+
     if !options.hot_reload {
-        println!("{}", "Hot reload disabled; running project once.".yellow());
+        output::warning("Hot reload disabled; running project once");
         return run_project_once(false, &options.run);
     }
 
-    println!(
-        "{}",
-        "Starting Oxidite development server...".green().bold()
-    );
-    println!("{}", "Watching for file changes...".cyan());
+    output::success("Starting Oxidite development server");
+    output::info("Watching for file changes");
+    
+    output::debug(&format!("Watch paths: {:?}", options.watch));
+    output::debug(&format!("Ignore patterns: {:?}", options.ignore));
+    output::debug(&format!("Run options: {:?}", options.run));
 
     let child_process: Arc<Mutex<Option<Child>>> = Arc::new(Mutex::new(None));
     restart_process(&child_process, &options.run)?;
@@ -150,6 +195,8 @@ fn spawn_project_process(release: bool, options: &RunOptions) -> std::io::Result
 }
 
 fn apply_run_env(command: &mut Command, options: &RunOptions) {
+    // .env is already loaded at startup; child inherits parent env by default.
+    // Only override if explicit CLI flags were provided.
     if let Some(host) = &options.host {
         command.env("SERVER_HOST", host);
     }

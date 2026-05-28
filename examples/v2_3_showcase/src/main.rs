@@ -25,7 +25,7 @@ async fn handler_12_extractors(
     _e11: State<Arc<AppState>>, _e12: State<Arc<AppState>>,
 ) -> Result<Response> {
     println!("App Name: {}", state.app_name);
-    Ok(Response::text("Extracted 12!").header("X-Custom", "Value"))
+    Ok(Response::text("Extracted 12 extractors successfully!"))
 }
 
 async fn authenticated_ws(ws: WebSocketUpgrade) -> Result<Response> {
@@ -42,16 +42,17 @@ async fn main() -> Result<()> {
         app_name: "Oxidite 2.3 Showcase".to_string(),
     });
 
-    let app = Router::new()
-        .layer(CorsLayer::permissive())
-        .with_state(state);
+    let mut router = Router::new()
+        .layer(CorsLayer::permissive());
 
-    app.get("/heavy", handler_12_extractors);
-    app.get("/ws", authenticated_ws);
+    router.with_state(state);
+
+    router.get("/heavy", handler_12_extractors);
+    router.get("/ws", authenticated_ws);
 
     println!("Oxidite 2.3 showcase ready.");
 
-    Server::new(app)
+    Server::new(router)
         .bind("127.0.0.1:3000".parse().unwrap())
         .run()
         .await
