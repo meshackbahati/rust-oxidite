@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-middleware = "0.1"
+oxidite-middleware = "2.3.3"
 ```
 
 ## Features
@@ -305,7 +305,7 @@ All middleware is designed to work seamlessly with Oxidite's architecture:
 use oxidite::prelude::*;
 use oxidite_middleware::{ServiceBuilder, LoggerLayer};
 
-async fn handler(_req: OxiditeRequest) -> Result<OxiditeResponse> {
+async fn handler(_req: Request) -> Result<Response> {
     Ok(response::text("Hello, World!"))
 }
 

@@ -6,7 +6,7 @@ GraphQL integration for Oxidite using Juniper.
 
 ```toml
 [dependencies]
-oxidite-graphql = "2.1.0"
+oxidite-graphql = "2.3.3"
 ```
 
 ## What This Crate Provides

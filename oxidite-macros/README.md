@@ -2,6 +2,13 @@
 
 Procedural macros used by Oxidite crates.
 
+## Installation
+
+```toml
+[dependencies]
+oxidite-macros = "2.3.3"
+```
+
 This crate currently provides:
 
 - `#[derive(Model)]` for `oxidite-db` models.

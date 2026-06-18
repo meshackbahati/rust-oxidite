@@ -9,7 +9,7 @@ Command-line tooling for Oxidite. The package name is `oxidite-cli`, and the ins
 cargo install oxidite-cli
 
 # Install this generated CLI build explicitly
-cargo install oxidite-cli --version 2.2.1
+cargo install oxidite-cli --version 2.3.3
 
 # Install from the local checkout
 cargo install --path .

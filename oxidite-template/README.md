@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-template = "0.1"
+oxidite-template = "2.3.3"
 ```
 
 ## Features
@@ -202,9 +202,9 @@ Using templates with Oxidite's response utilities:
 use oxidite::prelude::*;
 
 async fn home_page(
-    _req: OxiditeRequest,
+    _req: Request,
     State(template_engine): State<TemplateEngine>
-) -> Result<OxiditeResponse> {
+) -> Result<Response> {
     let mut context = Context::new();
     context.insert("title", "Home Page");
     context.insert("welcome_message", "Welcome to our site!");

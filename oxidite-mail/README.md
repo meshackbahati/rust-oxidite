@@ -6,7 +6,7 @@ SMTP email sending for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-mail = "2.1.0"
+oxidite-mail = "2.3.3"
 ```
 
 ## Basic Usage

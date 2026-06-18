@@ -6,7 +6,7 @@ Testing utilities for Oxidite handlers and routers.
 
 ```toml
 [dev-dependencies]
-oxidite-testing = "2.1.0"
+oxidite-testing = "2.3.3"
 ```
 
 ## Available API
@@ -23,8 +23,8 @@ oxidite-testing = "2.1.0"
 use oxidite::prelude::*;
 use oxidite_testing::{test_router, TestRequest};
 
-async fn ping(_req: OxiditeRequest) -> Result<OxiditeResponse> {
-    Ok(OxiditeResponse::text("pong"))
+async fn ping(_req: Request) -> Result<Response> {
+    Ok(Response::text("pong"))
 }
 
 #[tokio::test]

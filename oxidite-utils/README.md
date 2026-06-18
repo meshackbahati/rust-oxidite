@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-utils = "0.1"
+oxidite-utils = "2.3.3"
 ```
 
 ## Features

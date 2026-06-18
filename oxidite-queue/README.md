@@ -6,7 +6,7 @@ Background job queue with cron scheduling, DLQ, and retry logic.
 
 ```toml
 [dependencies]
-oxidite-queue = "0.1"
+oxidite-queue = "2.3.3"
 ```
 
 ## Usage

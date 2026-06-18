@@ -6,7 +6,7 @@ Caching backends for Oxidite with in-memory and Redis implementations.
 
 ```toml
 [dependencies]
-oxidite-cache = "2.1.0"
+oxidite-cache = "2.3.3"
 ```
 
 ## Backends

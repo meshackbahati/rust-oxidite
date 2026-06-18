@@ -6,7 +6,7 @@ OpenAPI 3.0 document structures and helpers for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-openapi = "2.1.0"
+oxidite-openapi = "2.3.3"
 ```
 
 ## What This Crate Provides

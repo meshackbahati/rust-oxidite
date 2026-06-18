@@ -6,7 +6,7 @@ Core HTTP server, router, request/response types, and extractors for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-core = "2.1.0"
+oxidite-core = "2.3.3"
 ```
 
 ## Key Components
@@ -14,20 +14,21 @@ oxidite-core = "2.1.0"
 - `Router`: method/path routing with path params and wildcard support.
 - `Server`: Hyper-based async server integration for Oxidite services.
 - `OxiditeRequest` / `OxiditeResponse`: request/response core types.
-- Extractors: `Path`, `Query`, `Json`, `Form`, `State`, `Cookies`, `Body`.
+- Extractors: `Path`, `Query`, `Json`, `Form`, `State`, `Cookies`, `Body`, `WebSocketUpgrade`.
 
 ## Basic Example
 
 ```rust
-use oxidite_core::{Router, Server, OxiditeResponse, Result};
+use oxidite_core::{Router, Server, Request, Response, Result};
+
+async fn hello(_req: Request) -> Result<Response> {
+    Ok(Response::text("Hello, Oxidite!"))
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut router = Router::new();
-
-    router.get("/", || async {
-        Ok(OxiditeResponse::text("Hello, Oxidite!"))
-    });
+    router.get("/", hello);
 
     Server::new(router)
         .listen("127.0.0.1:3000".parse().unwrap())
