@@ -7,7 +7,9 @@ use thiserror::Error;
 
 // Concrete pool types for escape hatches
 use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
+#[allow(unused_imports)]
 use sqlx::mysql::{MySqlPool, MySqlPoolOptions, MySqlRow};
+#[allow(unused_imports)]
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteRow};
 
 #[cfg(test)]
