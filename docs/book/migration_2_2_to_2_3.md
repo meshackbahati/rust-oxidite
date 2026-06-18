@@ -53,7 +53,7 @@ let users = sqlx::query_as!(User, "SELECT * FROM users WHERE ...")
     .await?;
 ```
 
-### Concrete Pool Access (New in 2.3.1)
+### Concrete Pool Access (New in 2.3.3)
 
 For database-specific features like PostgreSQL JSONB, arrays, or `#[derive(FromRow)]` with complex types, you can now access the concrete pool directly:
 

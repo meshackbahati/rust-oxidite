@@ -65,12 +65,14 @@ impl Default for Context {
 /// Template engine to manage multiple templates
 pub struct TemplateEngine {
     templates: HashMap<String, Template>,
+    filters: Filters,
 }
 
 impl TemplateEngine {
     pub fn new() -> Self {
         Self {
             templates: HashMap::new(),
+            filters: Filters::new(),
         }
     }
 
@@ -82,6 +84,21 @@ impl TemplateEngine {
 
     pub fn get_template(&self, name: &str) -> Option<&Template> {
         self.templates.get(name)
+    }
+
+    /// Register a custom template filter.
+    ///
+    /// The filter function receives the string value of the variable and returns a new string.
+    /// Once registered, the filter can be used in templates with `{{ var | filter_name }}`.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// let mut engine = TemplateEngine::new();
+    /// engine.register_filter("shout", |s: &str| s.to_uppercase() + "!!!");
+    /// ```
+    pub fn register_filter(&mut self, name: impl Into<String>, filter: fn(&str) -> String) {
+        self.filters.register(name.into(), filter);
     }
 
     pub fn render(&self, name: &str, context: &Context) -> Result<String> {
@@ -219,5 +236,143 @@ mod tests {
         
         let result = tmpl.render(&ctx).unwrap();
         assert_eq!(result, "Hello Alice!");
+    }
+
+    // ISSUE 1: safe filter tests
+    #[test]
+    fn test_safe_filter_skips_html_escaping() {
+        let tmpl = Template::new("{{ content | safe }}").unwrap();
+        let mut ctx = Context::new();
+        ctx.set("content", "<p>Hello</p>");
+
+        let result = tmpl.render(&ctx).unwrap();
+        assert_eq!(result, "<p>Hello</p>");
+    }
+
+    #[test]
+    fn test_raw_filter_skips_html_escaping() {
+        let tmpl = Template::new("{{ content | raw }}").unwrap();
+        let mut ctx = Context::new();
+        ctx.set("content", "<b>Bold</b>");
+
+        let result = tmpl.render(&ctx).unwrap();
+        assert_eq!(result, "<b>Bold</b>");
+    }
+
+    #[test]
+    fn test_auto_escape_without_safe_filter() {
+        let tmpl = Template::new("{{ content }}").unwrap();
+        let mut ctx = Context::new();
+        ctx.set("content", "<p>Hello</p>");
+
+        let result = tmpl.render(&ctx).unwrap();
+        assert_eq!(result, "&lt;p&gt;Hello&lt;/p&gt;");
+    }
+
+    // ISSUE 3: comparison operator tests
+    #[test]
+    fn test_if_equality_comparison() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("test", r#"{% if status == "active" %}ON{% else %}OFF{% endif %}"#).unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("status", "active");
+        assert_eq!(engine.render("test", &ctx).unwrap(), "ON");
+
+        let mut ctx2 = Context::new();
+        ctx2.set("status", "inactive");
+        assert_eq!(engine.render("test", &ctx2).unwrap(), "OFF");
+    }
+
+    #[test]
+    fn test_if_inequality_comparison() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("test", r#"{% if status != "draft" %}Published{% else %}Draft{% endif %}"#).unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("status", "published");
+        assert_eq!(engine.render("test", &ctx).unwrap(), "Published");
+
+        let mut ctx2 = Context::new();
+        ctx2.set("status", "draft");
+        assert_eq!(engine.render("test", &ctx2).unwrap(), "Draft");
+    }
+
+    #[test]
+    fn test_if_numeric_comparison() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("test", "{% if count > 5 %}many{% else %}few{% endif %}").unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("count", 10);
+        assert_eq!(engine.render("test", &ctx).unwrap(), "many");
+
+        let mut ctx2 = Context::new();
+        ctx2.set("count", 3);
+        assert_eq!(engine.render("test", &ctx2).unwrap(), "few");
+    }
+
+    // ISSUE 5: elif tests
+    #[test]
+    fn test_elif_branches() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("test", r#"{% if color == "red" %}RED{% elif color == "blue" %}BLUE{% elif color == "green" %}GREEN{% else %}OTHER{% endif %}"#).unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("color", "red");
+        assert_eq!(engine.render("test", &ctx).unwrap(), "RED");
+
+        let mut ctx2 = Context::new();
+        ctx2.set("color", "blue");
+        assert_eq!(engine.render("test", &ctx2).unwrap(), "BLUE");
+
+        let mut ctx3 = Context::new();
+        ctx3.set("color", "green");
+        assert_eq!(engine.render("test", &ctx3).unwrap(), "GREEN");
+
+        let mut ctx4 = Context::new();
+        ctx4.set("color", "yellow");
+        assert_eq!(engine.render("test", &ctx4).unwrap(), "OTHER");
+    }
+
+    // ISSUE 6: custom filter registration test
+    #[test]
+    fn test_register_custom_filter() {
+        let mut engine = TemplateEngine::new();
+        engine.register_filter("shout", |s: &str| s.to_uppercase() + "!!!");
+        engine.add_template("test", "{{ greeting | shout }}").unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("greeting", "hello");
+
+        let result = engine.render("test", &ctx).unwrap();
+        assert_eq!(result, "HELLO!!!");
+    }
+
+    // ISSUE 2: variable include test
+    #[test]
+    fn test_include_with_variable() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("partials/header.html", "<header>HEADER</header>").unwrap();
+        engine.add_template("partials/footer.html", "<footer>FOOTER</footer>").unwrap();
+        engine.add_template("page", "{% include partial_path %}").unwrap();
+
+        let mut ctx = Context::new();
+        ctx.set("partial_path", "partials/header.html");
+        assert_eq!(engine.render("page", &ctx).unwrap(), "<header>HEADER</header>");
+
+        let mut ctx2 = Context::new();
+        ctx2.set("partial_path", "partials/footer.html");
+        assert_eq!(engine.render("page", &ctx2).unwrap(), "<footer>FOOTER</footer>");
+    }
+
+    #[test]
+    fn test_include_with_string_literal_still_works() {
+        let mut engine = TemplateEngine::new();
+        engine.add_template("partials/nav.html", "<nav>NAV</nav>").unwrap();
+        engine.add_template("page", r#"{% include "partials/nav.html" %}"#).unwrap();
+
+        let ctx = Context::new();
+        assert_eq!(engine.render("page", &ctx).unwrap(), "<nav>NAV</nav>");
     }
 }

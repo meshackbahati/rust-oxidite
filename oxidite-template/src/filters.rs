@@ -2,6 +2,7 @@ use crate::{TemplateError, Result};
 use std::collections::HashMap;
 
 /// Built-in template filters
+#[derive(Clone)]
 pub struct Filters {
     filters: HashMap<String, fn(&str) -> String>,
 }

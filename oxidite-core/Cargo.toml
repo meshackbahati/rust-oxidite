@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-core"
-version = "2.3.1"
+version = "2.3.3"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "High-performance HTTP kernel and routing engine for the Oxidite framework."

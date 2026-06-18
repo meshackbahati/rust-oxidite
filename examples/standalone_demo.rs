@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
 async fn get_root(_req: Request) -> Result<Response> {
     let body = serde_json::json!({
         "message": "Welcome to Oxidite!",
-        "version": "2.3.1"
+        "version": "2.3.2"
     });
 
     Ok(Response::builder()

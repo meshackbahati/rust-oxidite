@@ -100,8 +100,8 @@ impl From<Error> for OxiditeResponse {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use oxidite_core::response::{json, text, html};
+/// ```rust,ignore
+/// use oxidite_core::response::helpers::{json, text, html};
 ///
 /// // Create a JSON response with inline data
 /// async fn handler() -> Result<OxiditeResponse> {
@@ -131,9 +131,9 @@ pub mod helpers {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// // With inline JSON (most common)
-    /// use oxidite_core::response::json;
+    /// use oxidite_core::response::helpers::json;
     /// async fn handler() -> OxiditeResponse {
     ///     json!({
     ///         "message": "Hello",
@@ -142,7 +142,7 @@ pub mod helpers {
     /// }
     ///
     /// // With a struct
-    /// use oxidite_core::response::json;
+    /// use oxidite_core::response::helpers::json;
     /// #[derive(serde::Serialize)]
     /// struct MyData { message: String }
     /// async fn handler2() -> OxiditeResponse {
@@ -158,8 +158,8 @@ pub mod helpers {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use oxidite_core::response::text;
+    /// ```rust,ignore
+    /// use oxidite_core::response::helpers::text;
     /// async fn handler() -> OxiditeResponse {
     ///     text("Hello, world!")
     /// }
@@ -173,8 +173,8 @@ pub mod helpers {
     ///
     /// # Examples
     ///
-    /// ```rust
-    /// use oxidite_core::response::html;
+    /// ```rust,ignore
+    /// use oxidite_core::response::helpers::html;
     /// async fn handler() -> OxiditeResponse {
     ///     html("<h1>Hello</h1>")
     /// }

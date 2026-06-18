@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-06-07
+
+### Added
+- **Template `safe`/`raw` Filter**: Variables can now opt out of HTML auto-escaping with `{{ content | safe }}` or `{{ content | raw }}`, enabling injection of pre-rendered HTML (markdown output, CMS content, etc.).
+- **Dynamic `{% include %}`**: The include directive now accepts context variables in addition to string literals: `{% include partial_path %}`. Enables dynamic template composition based on route parameters.
+- **Comparison Operators in `{% if %}`**: Full support for `==`, `!=`, `>`, `<`, `>=`, `<=` comparisons, plus `and`, `or`, `not` logical operators in conditionals.
+- **`{% elif %}` Chains**: Added else-if branch support to eliminate deeply nested conditional blocks: `{% if a %}...{% elif b %}...{% else %}...{% endif %}`.
+- **Custom Filter Registration**: New `TemplateEngine::register_filter()` API allows users to add project-specific template filters callable with the pipe (`|`) syntax.
+- **Framework-Level CORS**: `Router::with_cors(CorsConfig)` provides built-in CORS support without requiring tower-http `ServiceBuilder`, with `CorsConfig::permissive()` for development and full customisation for production.
+- **Response Helpers**: `json()`, `text()`, `html()`, `ok()`, `no_content()` functions exported in the prelude for cleaner response creation.
+
+### Changed
+- Bumped all crate versions from 2.3.1 to 2.3.2.
+
+### Fixed
+- **CORS/Compression Stack Overflow**: Removed broken `Endpoint` implementations for `tower_http::cors::Cors<S>` and `tower_http::compression::Compression<S>` that caused infinite recursion. These middleware must now be applied via `ServiceBuilder` at the server level, or use the new `with_cors()` method for CORS.
+- **`oxidite run` File Not Found**: Fixed `fs::canonicalize()` failing on non-existent target paths in project mode.
+- **`oxidite doctor` Environment Detection**: Added `.env` loading and parent directory search for `Cargo.toml`/`oxidite.toml`.
+- **`oxidite tinker` Binary Crate Imports**: Fixed unresolved import errors for binary-only crates by using `oxidite::` re-exports instead of sub-crate imports.
+
 ## [2.3.0] - 2026-05-26
 
 ### Added

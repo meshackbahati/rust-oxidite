@@ -28,7 +28,7 @@ cargo install --path oxidite-cli
 cargo install oxidite-cli
 
 # Or pin this generated CLI build
-cargo install oxidite-cli --version 2.3.0
+cargo install oxidite-cli --version 2.3.3
 ```
 
 ## Creating Your First Project

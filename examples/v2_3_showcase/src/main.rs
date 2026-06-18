@@ -1,5 +1,4 @@
 use oxidite::prelude::*;
-use oxidite::middleware::CorsLayer;
 use std::sync::Arc;
 use chrono::{DateTime, Utc};
 
@@ -43,7 +42,7 @@ async fn main() -> Result<()> {
     });
 
     let mut router = Router::new()
-        .layer(CorsLayer::permissive());
+        .with_cors(CorsConfig::permissive());
 
     router.with_state(state);
 

@@ -358,6 +358,72 @@ async fn render_as_response(_req: Request) -&gt; Result&lt;Response&gt; {
 &lt;!-- Default value if variable is not set --&gt;
 &lt;p&gt;Name: {{ user.name | default("Anonymous") }}&lt;/p&gt;
 </code></pre>
+<h3 id="the-safe-filter-disable-html-escaping"><a class="header" href="#the-safe-filter-disable-html-escaping">The <code>safe</code> Filter (Disable HTML Escaping)</a></h3>
+<p>By default, the template engine escapes all variable output to prevent XSS attacks. If you need to render raw HTML content (e.g., markdown-to-HTML output, CMS content), use the <code>safe</code> or <code>raw</code> filter:</p>
+<pre><code class="language-html">&lt;!-- Raw HTML output (use with trusted content only!) --&gt;
+{{ html_content | safe }}
+{{ markdown_output | raw }}</code></pre>
+<blockquote>
+<p><strong>Warning</strong>: Only use <code>safe</code>/<code>raw</code> with trusted content. Never use it with user-provided input, as it disables XSS protection.</p>
+</blockquote>
+<h2 id="conditionals-and-comparisons"><a class="header" href="#conditionals-and-comparisons">Conditionals and Comparisons</a></h2>
+<h3 id="comparison-operators"><a class="header" href="#comparison-operators">Comparison Operators</a></h3>
+<p>The template engine supports comparison operators in <code>{% if %}</code> conditions:</p>
+<pre><code class="language-html">&lt;!-- Equality --&gt;
+{% if status == "active" %}
+    &lt;span class="badge active"&gt;Active&lt;/span&gt;
+{% endif %}
+
+&lt;!-- Inequality --&gt;
+{% if role != "guest" %}
+    &lt;a href="/admin"&gt;Admin Panel&lt;/a&gt;
+{% endif %}
+
+&lt;!-- Numeric comparisons --&gt;
+{% if count &gt; 0 %}
+    &lt;p&gt;You have {{ count }} items&lt;/p&gt;
+{% endif %}
+
+{% if score &gt;= 90 %}
+    &lt;span class="grade"&gt;A&lt;/span&gt;
+{% endif %}</code></pre>
+<h3 id="elif-else-if-chains"><a class="header" href="#elif-else-if-chains"><code>elif</code> (Else If) Chains</a></h3>
+<p>Use <code>{% elif %}</code> for multi-branch conditions without deep nesting:</p>
+<pre><code class="language-html">{% if status == "draft" %}
+    &lt;span class="badge draft"&gt;Draft&lt;/span&gt;
+{% elif status == "published" %}
+    &lt;span class="badge published"&gt;Published&lt;/span&gt;
+{% elif status == "archived" %}
+    &lt;span class="badge archived"&gt;Archived&lt;/span&gt;
+{% else %}
+    &lt;span class="badge unknown"&gt;Unknown&lt;/span&gt;
+{% endif %}</code></pre>
+<h3 id="logical-operators"><a class="header" href="#logical-operators">Logical Operators</a></h3>
+<p>Combine conditions with <code>and</code>, <code>or</code>, and <code>not</code>:</p>
+<pre><code class="language-html">{% if user.admin and user.active %}
+    &lt;a href="/admin"&gt;Admin&lt;/a&gt;
+{% endif %}
+
+{% if is_premium or is_trial %}
+    &lt;p&gt;Thank you for using premium features!&lt;/p&gt;
+{% endif %}
+
+{% if not logged_in %}
+    &lt;a href="/login"&gt;Log in&lt;/a&gt;
+{% endif %}</code></pre>
+<h2 id="template-includes"><a class="header" href="#template-includes">Template Includes</a></h2>
+<h3 id="static-includes"><a class="header" href="#static-includes">Static Includes</a></h3>
+<p>Include another template using a string literal:</p>
+<pre><code class="language-html">{% include "partials/header.html" %}
+&lt;main&gt;{% block content %}{% endblock %}&lt;/main&gt;
+{% include "partials/footer.html" %}</code></pre>
+<h3 id="dynamic-includes"><a class="header" href="#dynamic-includes">Dynamic Includes</a></h3>
+<p>You can also include templates using a variable, enabling dynamic template composition:</p>
+<pre><code class="language-html">{% include current_chapter %}</code></pre>
+<p>With context:</p>
+<pre><code class="language-rust ignore">let mut context = Context::new();
+context.set("current_chapter", "chapters/01.html");</code></pre>
+<p>This is useful for rendering different partials based on route parameters or application state.</p>
 <h2 id="static-file-serving"><a class="header" href="#static-file-serving">Static File Serving</a></h2>
 <p>The template engine also includes utilities for serving static files:</p>
 <pre><code class="language-rust ignore">use oxidite::prelude::*;
@@ -478,6 +544,29 @@ async fn main() -&gt; Result&lt;()&gt; {
 <li>Input validation for template variables</li>
 </ul>
 <p>Remember to always validate and sanitize user input before passing it to templates, especially when dealing with dynamic content.</p>
+<h2 id="custom-filters"><a class="header" href="#custom-filters">Custom Filters</a></h2>
+<p>You can register custom filters to extend the template engine with project-specific transformations:</p>
+<pre><code class="language-rust ignore">use oxidite_template::{TemplateEngine, Context};
+
+let mut engine = TemplateEngine::new();
+
+// Register a custom filter
+engine.register_filter("shout", |s: &amp;str| s.to_uppercase() + "!!!");
+
+// Register a date formatting filter
+engine.register_filter("short_date", |s: &amp;str| {
+    // Your date formatting logic here
+    format!("Date: {}", s)
+});
+
+engine.add_template("greeting", "{{ name | shout }}")?;
+
+let mut context = Context::new();
+context.set("name", "hello");
+
+let html = engine.render("greeting", &amp;context)?;
+assert_eq!(html, "HELLO!!!");</code></pre>
+<p>Custom filters are applied the same way as built-in filters using the pipe (<code>|</code>) syntax in templates.</p>
 
                     </main>
 

@@ -1,4 +1,23 @@
 # Oxidite Configuration
+#
+# Environment Variables — three strategies (all produce the same env::var() results):
+#
+# 1. [env] flat table — keys map directly to env vars:
+#        [env]
+#        DATABASE_URL = "postgres://..."
+#        API_KEY = "secret"
+#
+# 2. Namespaced tables — table name becomes an UPPERCASE prefix:
+#        [google]
+#        client_id = "abc"        → GOOGLE_CLIENT_ID
+#        client_secret = "xyz"    → GOOGLE_CLIENT_SECRET
+#
+# 3. Nested tables — flattened recursively:
+#        [google.oauth]
+#        client_id = "abc"        → GOOGLE_OAUTH_CLIENT_ID
+#
+# .env files also work and take priority over oxidite.toml values.
+# Real OS environment variables always take highest priority.
 
 [server]
 host = "127.0.0.1"
@@ -12,3 +31,9 @@ url = "sqlite://data.db"
 # OS env vars and .env entries override these values.
 # Leave blank here and set in .env for per-developer secrets.
 # WATU_API_KEY = ""
+# NAME = "my-single-name-var"
+
+# Namespaced example:
+# [google]
+# client_id = "your-id"        → GOOGLE_CLIENT_ID
+# client_secret = "your-secret" → GOOGLE_CLIENT_SECRET

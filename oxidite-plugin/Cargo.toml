@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-plugin"
-version = "2.3.1"
+version = "2.3.3"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Plugin system for Oxidite web framework with dynamic loading and extension capabilities"
@@ -19,8 +19,8 @@ chrono = "0.4.42"
 libloading = "0.8.5"
 
 # Oxidite dependencies
-oxidite-core = { version = "2.3.1", path = "../oxidite-core" }
-oxidite-config = { version = "2.3.1", path = "../oxidite-config" }
+oxidite-core = { version = "2.3.3", path = "../oxidite-core" }
+oxidite-config = { version = "2.3.3", path = "../oxidite-config" }
 
 [features]
 default = []

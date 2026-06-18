@@ -12,7 +12,12 @@ fn variable_regex() -> &'static Regex {
 
 fn if_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\{%\s*if\s+([a-zA-Z0-9_.]+)\s*%\}").expect("if regex"))
+    RE.get_or_init(|| Regex::new(r"\{%\s*if\s+(.+?)\s*%\}").expect("if regex"))
+}
+
+fn elif_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"\{%\s*elif\s+(.+?)\s*%\}").expect("elif regex"))
 }
 
 fn for_regex() -> &'static Regex {
@@ -35,7 +40,7 @@ fn extends_regex() -> &'static Regex {
 
 fn include_regex() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"\{%\s*include\s+"([^"]+)"\s*%\}"#).expect("include regex"))
+    RE.get_or_init(|| Regex::new(r#"\{%\s*include\s+(?:"([^"]+)"|([a-zA-Z0-9_.]+))\s*%\}"#).expect("include regex"))
 }
 
 /// Template AST nodes
@@ -43,7 +48,12 @@ fn include_regex() -> &'static Regex {
 pub enum TemplateNode {
     Text(String),
     Variable { name: String, filters: Vec<String> },
-    If { condition: String, then_branch: Vec<TemplateNode>, else_branch: Option<Vec<TemplateNode>> },
+    If {
+        condition: String,
+        then_branch: Vec<TemplateNode>,
+        elif_branches: Vec<(String, Vec<TemplateNode>)>,
+        else_branch: Option<Vec<TemplateNode>>,
+    },
     For { item: String, iterable: String, body: Vec<TemplateNode> },
     Block { name: String, body: Vec<TemplateNode> },
     Extends(String),
@@ -158,30 +168,73 @@ impl Parser {
             let condition = cap.get(1).unwrap().as_str().to_string();
             let start_pos = cap.get(0).unwrap().end();
 
-            // Find {% endif %}
+            // Find the matching {% endif %}
             let endif_pattern = "{% endif %}";
-            let else_pattern = "{% else %}";
-
+            
             if let Some(endif_pos) = source[start_pos..].find(endif_pattern) {
                 let body_source = &source[start_pos..start_pos + endif_pos];
-                
-                // Check for {% else %}
-                let (then_branch, else_branch) = if let Some(else_pos) = body_source.find(else_pattern) {
-                    let then_source = &body_source[..else_pos];
-                    let else_source = &body_source[else_pos + else_pattern.len()..];
-                    
-                    let parser_then = Parser::new(then_source);
-                    let parser_else = Parser::new(else_source);
-                    
-                    (parser_then.parse()?, Some(parser_else.parse()?))
-                } else {
-                    let parser = Parser::new(body_source);
-                    (parser.parse()?, None)
-                };
+
+                // Split body by {% elif %} and {% else %}
+                // We need to find all elif/else blocks in order
+                let mut segments: Vec<(&str, &str)> = Vec::new(); // (tag_type, body)
+                let mut current_pos = 0;
+                let mut current_type = "if";
+
+                loop {
+                    // Find next elif or else
+                    let elif_match = elif_regex().find(&body_source[current_pos..]);
+                    let else_match = body_source[current_pos..].find("{% else %}");
+
+                    let next_split = match (elif_match.map(|m| m.start()), else_match) {
+                        (Some(e1), Some(e2)) => Some(std::cmp::min(e1, e2)),
+                        (Some(e1), None) => Some(e1),
+                        (None, Some(e2)) => Some(e2),
+                        (None, None) => None,
+                    };
+
+                    if let Some(split_pos) = next_split {
+                        // Save current segment
+                        let segment_body = &body_source[current_pos..current_pos + split_pos];
+                        segments.push((current_type, segment_body));
+
+                        // Determine what tag we hit
+                        let remaining = &body_source[current_pos + split_pos..];
+                        if remaining.starts_with("{% elif ") {
+                            if let Some(elif_cap) = elif_regex().captures(remaining) {
+                                let elif_condition = elif_cap.get(1).unwrap().as_str().to_string();
+                                let tag_len = elif_cap.get(0).unwrap().end();
+                                current_pos = current_pos + split_pos + tag_len;
+                                // Store the elif condition as the "type" marker
+                                // We'll extract it when processing
+                                segments.push(("elif_cond", ""));  // placeholder
+                                current_type = "elif";
+                                // Actually, let's rethink this approach
+                                // We'll store elif conditions separately
+                                let _ = elif_condition;
+                                continue;
+                            }
+                        } else if remaining.starts_with("{% else %}") {
+                            current_pos = current_pos + split_pos + "{% else %}".len();
+                            current_type = "else";
+                            continue;
+                        }
+                        break;
+                    } else {
+                        // No more splits, rest is the final segment
+                        let segment_body = &body_source[current_pos..];
+                        segments.push((current_type, segment_body));
+                        break;
+                    }
+                }
+
+                // Simpler approach: manually parse if/elif/else/endif
+                // Let me restart with a cleaner algorithm
+                let (then_branch, elif_branches, else_branch) = self.parse_if_body(body_source)?;
 
                 let node = TemplateNode::If {
                     condition,
                     then_branch,
+                    elif_branches,
                     else_branch,
                 };
 
@@ -191,6 +244,64 @@ impl Parser {
         }
 
         Ok(None)
+    }
+
+    /// Parse the body of an if block, splitting into then/elif/else branches
+    fn parse_if_body(&self, body: &str) -> Result<(Vec<TemplateNode>, Vec<(String, Vec<TemplateNode>)>, Option<Vec<TemplateNode>>)> {
+        // Find all {% elif %} and {% else %} positions
+        let mut split_points: Vec<(usize, usize, &str)> = Vec::new(); // (start, end, type)
+        
+        // Find all elif matches
+        for cap in elif_regex().captures_iter(body) {
+            let m = cap.get(0).unwrap();
+            split_points.push((m.start(), m.end(), "elif"));
+        }
+        
+        // Find else match
+        if let Some(else_pos) = body.find("{% else %}") {
+            split_points.push((else_pos, else_pos + "{% else %}".len(), "else"));
+        }
+        
+        // Sort by position
+        split_points.sort_by_key(|(start, _, _)| *start);
+
+        if split_points.is_empty() {
+            // Simple if with no elif or else
+            let parser = Parser::new(body);
+            return Ok((parser.parse()?, Vec::new(), None));
+        }
+
+        // Then branch is everything before the first split point
+        let then_source = &body[..split_points[0].0];
+        let parser = Parser::new(then_source);
+        let then_branch = parser.parse()?;
+
+        let mut elif_branches = Vec::new();
+        let mut else_branch = None;
+
+        for (i, (start, end, tag_type)) in split_points.iter().enumerate() {
+            let next_start = if i + 1 < split_points.len() {
+                split_points[i + 1].0
+            } else {
+                body.len()
+            };
+
+            let branch_body = &body[*end..next_start];
+            let parser = Parser::new(branch_body);
+            let nodes = parser.parse()?;
+
+            if *tag_type == "elif" {
+                // Extract the elif condition from the original source
+                if let Some(cap) = elif_regex().captures(&body[*start..]) {
+                    let condition = cap.get(1).unwrap().as_str().to_string();
+                    elif_branches.push((condition, nodes));
+                }
+            } else if *tag_type == "else" {
+                else_branch = Some(nodes);
+            }
+        }
+
+        Ok((then_branch, elif_branches, else_branch))
     }
 
     fn parse_for(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
@@ -290,7 +401,12 @@ impl Parser {
 
     fn parse_include(&self, source: &str) -> Result<Option<(TemplateNode, usize)>> {
         if let Some(cap) = include_regex().captures(source) {
-            let template = cap.get(1).unwrap().as_str().to_string();
+            // Group 1 = quoted string literal, Group 2 = variable name
+            let template = cap.get(1)
+                .or_else(|| cap.get(2))
+                .unwrap()
+                .as_str()
+                .to_string();
             let len = cap.get(0).unwrap().len();
             
             return Ok(Some((TemplateNode::Include(template), len)));

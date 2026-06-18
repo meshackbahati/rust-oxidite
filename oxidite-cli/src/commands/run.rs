@@ -49,7 +49,7 @@ pub fn run_file(file: &str, extra_deps: Option<&str>) -> Result<(), Box<dyn std:
         return Err("File must be a .rs file".into());
     }
 
-    output::header("Oxidite Runner v2.3.1");
+    output::header("Oxidite Runner v2.3.2");
     output::debug(&format!("Executing file: {}", file_path.display()));
 
     // Check if we're inside a Cargo project
@@ -138,10 +138,10 @@ fn run_standalone(
 
     // Determine dependencies
     let mut deps = vec![
-        ("oxidite", "2.3.1"),
-        ("oxidite-db", "2.3.1"),
-        ("oxidite-config", "2.3.1"),
-        ("oxidite-core", "2.3.1"),
+        ("oxidite", "2.3.2"),
+        ("oxidite-db", "2.3.2"),
+        ("oxidite-config", "2.3.2"),
+        ("oxidite-core", "2.3.2"),
         ("tokio", "1"),
     ];
 

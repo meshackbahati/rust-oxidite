@@ -671,7 +671,7 @@ async fn configure_database_advanced() -&gt; oxidite::db::Result&lt;DbPool&gt; {
     
     Ok(db)
 }</code></pre>
-<h2 id="concrete-pool-access"><a class="header" href="#concrete-pool-access">Concrete Pool Access (v2.3.1+)</a></h2>
+<h2 id="concrete-pool-access"><a class="header" href="#concrete-pool-access">Concrete Pool Access (v2.3.3+)</a></h2>
 <p><code>DbPool</code> now stores concrete connection pools alongside the <code>AnyPool</code> abstraction, enabling use of PostgreSQL/MySQL/SQLite-specific features that the <code>Any</code> driver doesn't support.</p>
 <h3 id="why-this-matters"><a class="header" href="#why-this-matters">Why This Matters</a></h3>
 <p>The <code>Any</code> database abstraction is great for write-once-run-anywhere code, but it has limitations:</p>

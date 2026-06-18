@@ -1,12 +1,15 @@
 //! # Oxidite Web Framework
 //!
-//! Oxidite is a modern, batteries-included web framework for Rust, inspired by Laravel and Rails.
+//! Oxidite is a modular web framework for Rust built on `hyper` and `tokio`.
+//! It provides an integrated stack covering routing, ORM, authentication, real-time
+//! communication, background jobs, caching, storage, templates, email, and OpenAPI
+//! generation — all wired through a single CLI for scaffolding and development.
 //!
 //! ## Quick Start
 //!
 //! ```toml
 //! [dependencies]
-//! oxidite = "2.1"
+//! oxidite = { version = "2.3.3", features = ["full"] }
 //! tokio = { version = "1", features = ["full"] }
 //! serde = { version = "1", features = ["derive"] }
 //! ```
@@ -34,14 +37,15 @@
 //! - **HTTP Server**: HTTP/1.1, HTTP/2, and WebSocket support
 //! - **Routing**: Path parameters, query parsing, API versioning
 //! - **Middleware**: CORS, logging, compression, rate limiting
-//! - **Database**: ORM with relationships, migrations, soft deletes
+//! - **Database**: ORM with relationships, migrations, soft deletes, eager loading
 //! - **Authentication**: RBAC, JWT, OAuth2, 2FA, API keys
 //! - **Background Jobs**: Cron scheduling, retry logic, dead letter queue
 //! - **Caching**: Memory and Redis backends
-//! - **Real-time**: WebSocket support with pub/sub
+//! - **Real-time**: WebSocket and SSE with event broadcasting
 //! - **Templates**: Server-side rendering
 //! - **Email**: SMTP support
 //! - **File Storage**: Local and S3 backends
+//! - **Config**: TOML-based config with namespaced env variables
 
 // Re-export core types
 pub use oxidite_core::*;

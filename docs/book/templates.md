@@ -222,6 +222,118 @@ Filters allow you to transform variables:
 <p>Name: {{ user.name | default("Anonymous") }}</p>
 ```
 
+### The `safe` Filter (Disable HTML Escaping)
+
+By default, the template engine escapes all variable output to prevent XSS attacks. If you need to render raw HTML content (e.g., markdown-to-HTML output, CMS content), use the `safe` or `raw` filter:
+
+```html
+<!-- Raw HTML output (use with trusted content only!) -->
+{{ html_content | safe }}
+{{ markdown_output | raw }}
+```
+
+> **Warning**: Only use `safe`/`raw` with trusted content. Never use it with user-provided input, as it disables XSS protection.
+
+## Conditionals and Comparisons
+
+### Basic Conditionals
+
+```html
+{% if user %}
+    <p>Welcome, {{ user.name }}!</p>
+{% else %}
+    <p>Please log in.</p>
+{% endif %}
+```
+
+### Comparison Operators
+
+The template engine supports comparison operators in `{% if %}` conditions:
+
+```html
+<!-- Equality -->
+{% if status == "active" %}
+    <span class="badge active">Active</span>
+{% endif %}
+
+<!-- Inequality -->
+{% if role != "guest" %}
+    <a href="/admin">Admin Panel</a>
+{% endif %}
+
+<!-- Numeric comparisons -->
+{% if count > 0 %}
+    <p>You have {{ count }} items</p>
+{% endif %}
+
+{% if score >= 90 %}
+    <span class="grade">A</span>
+{% endif %}
+```
+
+### `elif` (Else If) Chains
+
+Use `{% elif %}` for multi-branch conditions without deep nesting:
+
+```html
+{% if status == "draft" %}
+    <span class="badge draft">Draft</span>
+{% elif status == "published" %}
+    <span class="badge published">Published</span>
+{% elif status == "archived" %}
+    <span class="badge archived">Archived</span>
+{% else %}
+    <span class="badge unknown">Unknown</span>
+{% endif %}
+```
+
+### Logical Operators
+
+Combine conditions with `and`, `or`, and `not`:
+
+```html
+{% if user.admin and user.active %}
+    <a href="/admin">Admin</a>
+{% endif %}
+
+{% if is_premium or is_trial %}
+    <p>Thank you for using premium features!</p>
+{% endif %}
+
+{% if not logged_in %}
+    <a href="/login">Log in</a>
+{% endif %}
+```
+
+## Template Includes
+
+### Static Includes
+
+Include another template using a string literal:
+
+```html
+{% include "partials/header.html" %}
+<main>{% block content %}{% endblock %}</main>
+{% include "partials/footer.html" %}
+```
+
+### Dynamic Includes
+
+You can also include templates using a variable, enabling dynamic template composition:
+
+```html
+{% include current_chapter %}
+```
+
+With context:
+
+```rust,ignore
+let mut context = Context::new();
+context.set("current_chapter", "chapters/01.html");
+```
+
+This is useful for rendering different partials based on route parameters or application state.
+
 ## Static File Serving
 
 The template engine also includes utilities for serving static files:
@@ -353,3 +465,32 @@ The Oxidite template engine includes built-in security features:
 - Input validation for template variables
 
 Remember to always validate and sanitize user input before passing it to templates, especially when dealing with dynamic content.
+
+## Custom Filters
+
+You can register custom filters to extend the template engine with project-specific transformations:
+
+```rust,ignore
+use oxidite_template::{TemplateEngine, Context};
+
+let mut engine = TemplateEngine::new();
+
+// Register a custom filter
+engine.register_filter("shout", |s: &str| s.to_uppercase() + "!!!");
+
+// Register a date formatting filter
+engine.register_filter("short_date", |s: &str| {
+    // Your date formatting logic here
+    format!("Date: {}", s)
+});
+
+engine.add_template("greeting", "{{ name | shout }}")?;
+
+let mut context = Context::new();
+context.set("name", "hello");
+
+let html = engine.render("greeting", &context)?;
+assert_eq!(html, "HELLO!!!");
+```
+
+Custom filters are applied the same way as built-in filters using the pipe (`|`) syntax in templates.

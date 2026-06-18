@@ -65,7 +65,14 @@ pub struct Config {
     /// `env::var("WATU_API_KEY")` and similar calls work.
     #[serde(default)]
     pub env: HashMap<String, String>,
-    #[serde(default)]
+    /// Any unknown root-level TOML tables are captured here via `#[serde(flatten)]`.
+    ///
+    /// This enables **namespaced environment variables**: a table like `[google]`
+    /// with `client_id = "abc"` is injected as `GOOGLE_CLIENT_ID=abc`.
+    /// Nested tables (`[google.oauth]`) flatten recursively (`GOOGLE_OAUTH_CLIENT_ID`).
+    ///
+    /// Also usable for arbitrary custom config via `config.get("table.key")`.
+    #[serde(flatten, default)]
     pub custom: HashMap<String, toml::Value>,
 }
 
@@ -246,19 +253,64 @@ impl Default for Config {
 }
 
 impl Config {
-    /// Inject `[env]` entries from the config into the process environment.
+    /// Inject `[env]` entries and namespaced tables into the process environment.
     ///
-    /// Real OS env vars take precedence over `[env]` values.  A variable is
-    /// considered "set" only if it exists in the environment **and** is not
-    /// empty, so blank `.env` entries like `WATU_API_KEY=` still allow the
-    /// `oxidite.toml` fallback to apply.
+    /// **Resolution order** (highest to lowest priority):
+    /// 1. Real OS environment variables
+    /// 2. `.env` file entries (loaded earlier via `dotenv`)
+    /// 3. `[env]` flat table entries
+    /// 4. Namespaced tables (`[google]`, `[platform]`, etc.)
+    ///
+    /// Namespaced tables are flattened recursively:
+    /// - `[google]` with `client_id = "x"` → `GOOGLE_CLIENT_ID=x`
+    /// - `[google.oauth]` with `client_id = "x"` → `GOOGLE_OAUTH_CLIENT_ID=x`
+    ///
+    /// A variable is only set if it is not already defined (or is empty) in the
+    /// OS environment, so real env vars and `.env` entries always take precedence.
     fn inject_env_vars(&self) {
+        // Flat [env] table
         for (key, value) in &self.env {
             let already_set = env::var(key)
                 .map(|v| !v.is_empty())
                 .unwrap_or(false);
             if !already_set {
                 env::set_var(key, value);
+            }
+        }
+
+        // Namespaced tables from flattened custom (unknown root-level TOML tables)
+        for (prefix, value) in &self.custom {
+            Self::inject_namespaced_env(prefix, value);
+        }
+    }
+
+    /// Recursively flatten a TOML value into environment variables.
+    ///
+    /// - A table like `[google]` with `client_id = "abc"` produces `GOOGLE_CLIENT_ID=abc`.
+    /// - A nested table like `[google.oauth]` with `client_id = "abc"` produces
+    ///   `GOOGLE_OAUTH_CLIENT_ID=abc`.
+    /// - Non-table values (strings, integers, booleans) are converted to strings and set.
+    /// - Existing (non-empty) OS env vars are never overwritten.
+    fn inject_namespaced_env(prefix: &str, value: &toml::Value) {
+        let upper_prefix = prefix.to_uppercase();
+        match value {
+            toml::Value::Table(table) => {
+                for (key, val) in table {
+                    let env_key = format!("{}_{}", upper_prefix, key.to_uppercase());
+                    Self::inject_namespaced_env(&env_key, val);
+                }
+            }
+            _ => {
+                let already_set = env::var(prefix)
+                    .map(|v| !v.is_empty())
+                    .unwrap_or(false);
+                if !already_set {
+                    let s = match value {
+                        toml::Value::String(s) => s.clone(),
+                        other => other.to_string(),
+                    };
+                    env::set_var(prefix, s);
+                }
             }
         }
     }
@@ -292,9 +344,28 @@ impl Config {
     }
 
     fn has_key(&self, key: &str) -> bool {
-        if self.custom.contains_key(key) {
-            return true;
+        // Check flattened custom table first (e.g., "google.client_id", "platform.name")
+        {
+            let mut parts = key.split('.');
+            if let Some(first) = parts.next() {
+                if let Some(val) = self.custom.get(first) {
+                    let mut cur = val;
+                    let mut found = true;
+                    for part in parts {
+                        if let Some(next) = cur.get(part) {
+                            cur = next;
+                        } else {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if found {
+                        return true;
+                    }
+                }
+            }
         }
+
         let root = toml::Value::try_from(self).ok();
         if let Some(root) = root {
             let mut cursor = &root;
@@ -363,12 +434,31 @@ impl Config {
     }
 
     pub fn get<T: for<'de> Deserialize<'de>>(&self, key: &str) -> Option<T> {
-        if let Some(value) = self.custom.get(key) {
-            if let Ok(parsed) = T::deserialize(value.clone()) {
-                return Some(parsed);
+        // Check flattened custom table first (e.g., "google.client_id", "platform.name")
+        {
+            let mut parts = key.split('.');
+            if let Some(first) = parts.next() {
+                if let Some(val) = self.custom.get(first) {
+                    let mut cursor = val;
+                    let mut found = true;
+                    for part in parts {
+                        if let Some(next) = cursor.get(part) {
+                            cursor = next;
+                        } else {
+                            found = false;
+                            break;
+                        }
+                    }
+                    if found {
+                        if let Ok(parsed) = T::deserialize(cursor.clone()) {
+                            return Some(parsed);
+                        }
+                    }
+                }
             }
         }
 
+        // Fall back to known config fields via serialization round-trip
         let root = toml::Value::try_from(self).ok()?;
         let mut cursor = &root;
         for part in key.split('.') {
@@ -438,6 +528,184 @@ mod tests {
         let cfg = Config::load_from("non-existent.toml").unwrap();
         if let Some(v) = prev_host { env::set_var("SERVER_HOST", v); } else { env::remove_var("SERVER_HOST"); }
         assert_eq!(cfg.server.host, "0.0.0.0");
+    }
+
+    #[test]
+    fn test_flat_env_table_injection() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [env]
+            FLAT_TEST_VAR = "flat_value"
+        "#;
+        let prev = env::var("FLAT_TEST_VAR").ok();
+        env::remove_var("FLAT_TEST_VAR");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("FLAT_TEST_VAR").unwrap(), "flat_value");
+
+        if let Some(v) = prev { env::set_var("FLAT_TEST_VAR", v); } else { env::remove_var("FLAT_TEST_VAR"); }
+    }
+
+    #[test]
+    fn test_namespaced_env_injection() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [google]
+            client_id = "g-123"
+            client_secret = "g-secret"
+        "#;
+        let prev_id = env::var("GOOGLE_CLIENT_ID").ok();
+        let prev_secret = env::var("GOOGLE_CLIENT_SECRET").ok();
+        env::remove_var("GOOGLE_CLIENT_ID");
+        env::remove_var("GOOGLE_CLIENT_SECRET");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("GOOGLE_CLIENT_ID").unwrap(), "g-123");
+        assert_eq!(env::var("GOOGLE_CLIENT_SECRET").unwrap(), "g-secret");
+
+        if let Some(v) = prev_id { env::set_var("GOOGLE_CLIENT_ID", v); } else { env::remove_var("GOOGLE_CLIENT_ID"); }
+        if let Some(v) = prev_secret { env::set_var("GOOGLE_CLIENT_SECRET", v); } else { env::remove_var("GOOGLE_CLIENT_SECRET"); }
+    }
+
+    #[test]
+    fn test_nested_namespaced_env_injection() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [google.oauth]
+            client_id = "nested-123"
+            client_secret = "nested-secret"
+        "#;
+        let prev_id = env::var("GOOGLE_OAUTH_CLIENT_ID").ok();
+        let prev_secret = env::var("GOOGLE_OAUTH_CLIENT_SECRET").ok();
+        env::remove_var("GOOGLE_OAUTH_CLIENT_ID");
+        env::remove_var("GOOGLE_OAUTH_CLIENT_SECRET");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("GOOGLE_OAUTH_CLIENT_ID").unwrap(), "nested-123");
+        assert_eq!(env::var("GOOGLE_OAUTH_CLIENT_SECRET").unwrap(), "nested-secret");
+
+        if let Some(v) = prev_id { env::set_var("GOOGLE_OAUTH_CLIENT_ID", v); } else { env::remove_var("GOOGLE_OAUTH_CLIENT_ID"); }
+        if let Some(v) = prev_secret { env::set_var("GOOGLE_OAUTH_CLIENT_SECRET", v); } else { env::remove_var("GOOGLE_OAUTH_CLIENT_SECRET"); }
+    }
+
+    #[test]
+    fn test_single_name_var_in_namespace() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [platform]
+            name = "myapp"
+        "#;
+        let prev = env::var("PLATFORM_NAME").ok();
+        env::remove_var("PLATFORM_NAME");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("PLATFORM_NAME").unwrap(), "myapp");
+
+        if let Some(v) = prev { env::set_var("PLATFORM_NAME", v); } else { env::remove_var("PLATFORM_NAME"); }
+    }
+
+    #[test]
+    fn test_os_env_takes_precedence_over_namespaced() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [google]
+            client_id = "toml-value"
+        "#;
+        let prev = env::var("GOOGLE_CLIENT_ID").ok();
+        env::set_var("GOOGLE_CLIENT_ID", "os-value");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("GOOGLE_CLIENT_ID").unwrap(), "os-value");
+
+        if let Some(v) = prev { env::set_var("GOOGLE_CLIENT_ID", v); } else { env::remove_var("GOOGLE_CLIENT_ID"); }
+    }
+
+    #[test]
+    fn test_env_table_takes_precedence_over_namespace() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        // Define the same var in both [env] and a namespace table.
+        // [env] is processed first, so its value wins.
+        let toml_str = r#"
+            [env]
+            GOOGLE_CLIENT_ID = "from-env-table"
+
+            [google]
+            client_id = "from-namespace"
+        "#;
+        let prev = env::var("GOOGLE_CLIENT_ID").ok();
+        env::remove_var("GOOGLE_CLIENT_ID");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("GOOGLE_CLIENT_ID").unwrap(), "from-env-table");
+
+        if let Some(v) = prev { env::set_var("GOOGLE_CLIENT_ID", v); } else { env::remove_var("GOOGLE_CLIENT_ID"); }
+    }
+
+    #[test]
+    fn test_get_namespaced_custom_value() {
+        let toml_str = r#"
+            [google]
+            client_id = "abc"
+
+            [google.oauth]
+            redirect_url = "http://localhost/callback"
+        "#;
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert_eq!(config.get::<String>("google.client_id").unwrap(), "abc");
+        assert_eq!(
+            config.get::<String>("google.oauth.redirect_url").unwrap(),
+            "http://localhost/callback"
+        );
+    }
+
+    #[test]
+    fn test_has_key_namespaced() {
+        let toml_str = r#"
+            [platform]
+            name = "test"
+
+            [platform.api]
+            key = "secret"
+        "#;
+        let config: Config = toml::from_str(toml_str).unwrap();
+        assert!(config.has_key("platform.name"));
+        assert!(config.has_key("platform.api.key"));
+        assert!(!config.has_key("platform.missing"));
+    }
+
+    #[test]
+    fn test_non_string_namespaced_values() {
+        let _lock = SERIAL_TEST.lock().unwrap();
+        let toml_str = r#"
+            [myapp]
+            port = 8080
+            debug = true
+        "#;
+        let prev_port = env::var("MYAPP_PORT").ok();
+        let prev_debug = env::var("MYAPP_DEBUG").ok();
+        env::remove_var("MYAPP_PORT");
+        env::remove_var("MYAPP_DEBUG");
+
+        let config: Config = toml::from_str(toml_str).unwrap();
+        config.inject_env_vars();
+
+        assert_eq!(env::var("MYAPP_PORT").unwrap(), "8080");
+        assert_eq!(env::var("MYAPP_DEBUG").unwrap(), "true");
+
+        if let Some(v) = prev_port { env::set_var("MYAPP_PORT", v); } else { env::remove_var("MYAPP_PORT"); }
+        if let Some(v) = prev_debug { env::set_var("MYAPP_DEBUG", v); } else { env::remove_var("MYAPP_DEBUG"); }
     }
 
     use std::sync::Mutex;

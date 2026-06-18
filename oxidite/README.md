@@ -17,9 +17,11 @@ Built with ❤️ by [Meshack Bahati Ouma](https://github.com/Kyle6012)
 
 ---
 
-## 🚀 What is Oxidite?
+## What is Oxidite?
 
-Oxidite is a modern, high-performance, developer-first web framework for Rust that provides a Rails-like, batteries-included experience. Built on top of the lightning-fast `hyper` and `tokio` asynchronous runtimes, it eliminates boilerplates by providing first-class identity & access management, a fully-featured custom ORM with async validation and eager-loading, a unified cloud/local storage manager, durable background queues, interactive REPL (`oxidite tinker`), hot-reload dev servers, and beautiful diagnostic pages. Oxidite is designed to provide maximum velocity and system-level performance, without compromising on developer ergonomics.
+Oxidite is a modular web framework for Rust built on `hyper` and `tokio`. It provides an integrated stack that covers routing, a custom ORM with relationships and auto-diff migrations, identity and access management (JWT, OAuth2, RBAC/PBAC), real-time communication (WebSockets, SSE), background job queues, caching, file storage, server-side templates, email delivery, and OpenAPI generation — all wired together through a single CLI for scaffolding, migrations, and hot-reload development.
+
+Oxidite is organised as a collection of focused crates (`oxidite-core`, `oxidite-db`, `oxidite-auth`, etc.) that can be used independently or pulled in together through the main `oxidite` facade with feature flags.
 
 ## ✨ What's Included
 
