@@ -138,10 +138,10 @@ fn run_standalone(
 
     // Determine dependencies
     let mut deps = vec![
-        ("oxidite", "2.3.2"),
-        ("oxidite-db", "2.3.2"),
-        ("oxidite-config", "2.3.2"),
-        ("oxidite-core", "2.3.2"),
+        ("oxidite", "2.3.3"),
+        ("oxidite-db", "2.3.3"),
+        ("oxidite-config", "2.3.3"),
+        ("oxidite-core", "2.3.3"),
         ("tokio", "1"),
     ];
 
