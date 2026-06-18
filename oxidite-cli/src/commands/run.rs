@@ -1,5 +1,7 @@
 use colored::*;
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -22,7 +24,8 @@ fn find_project_root() -> Option<PathBuf> {
 ///
 /// This command supports two modes:
 /// 1. **Standalone mode**: Run a Rust file outside any project by creating
-///    a temporary Cargo project.
+///    a cached temporary project. Subsequent runs with the same dependencies
+///    reuse the build cache for near-instant execution.
 /// 2. **Project mode**: Run a Rust file inside an existing Oxidite/Cargo
 ///    project by placing it in `src/bin/` and using `cargo run --bin`.
 ///
@@ -59,7 +62,7 @@ pub fn run_file(file: &str, extra_deps: Option<&str>) -> Result<(), Box<dyn std:
         output::debug(&format!("Project root: {}", project_root.display()));
         run_in_project(&project_root, file_path, extra_deps)
     } else {
-        // Standalone mode: create a temp project
+        // Standalone mode: use cached temp project
         output::info("Running in standalone mode");
         run_standalone(file_path, extra_deps)
     }
@@ -81,19 +84,20 @@ fn run_in_project(
 
     // If the file is not already in src/bin/, copy it there
     let target_path = src_bin.join(format!("{}.rs", bin_name));
-    
-    // Check if we need to copy the file (compare canonical paths if both exist)
+
     let should_copy = if target_path.exists() {
-        // Both exist, compare canonical paths
         fs::canonicalize(file_path)? != fs::canonicalize(&target_path)?
     } else {
-        // Target doesn't exist yet, definitely need to copy
         true
     };
-    
+
     if should_copy {
         fs::copy(file_path, &target_path)?;
-        output::info(&format!("Copied {} -> {}", file_path.display(), target_path.display()));
+        output::info(&format!(
+            "Copied {} -> {}",
+            file_path.display(),
+            target_path.display()
+        ));
     }
 
     // Check if Cargo.toml needs dependencies added
@@ -104,15 +108,15 @@ fn run_in_project(
 
     output::step(&format!("Running {} in project context", bin_name.bold()));
 
-    let mut cmd = Command::new("cargo");
-    cmd.arg("run").arg("--bin").arg(bin_name);
-
-    cmd.stdout(std::process::Stdio::inherit())
+    let status = Command::new("cargo")
+        .arg("run")
+        .arg("--bin")
+        .arg(bin_name)
+        .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
         .stdin(std::process::Stdio::inherit())
-        .current_dir(project_root);
-
-    let status = cmd.status()?;
+        .current_dir(project_root)
+        .status()?;
 
     if !status.success() {
         return Err(format!("Script exited with status: {}", status).into());
@@ -126,23 +130,11 @@ fn run_standalone(
     file_path: &Path,
     extra_deps: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Create a temporary project directory
-    let temp_dir = std::env::temp_dir().join("oxidite_run_temp");
-    if temp_dir.exists() {
-        fs::remove_dir_all(&temp_dir)?;
-    }
-    fs::create_dir_all(temp_dir.join("src"))?;
-
-    // Copy the script to src/main.rs
-    fs::copy(file_path, temp_dir.join("src").join("main.rs"))?;
-
-    // Determine dependencies
-    let mut deps = vec![
-        ("oxidite", "2.3.3"),
-        ("oxidite-db", "2.3.3"),
-        ("oxidite-config", "2.3.3"),
-        ("oxidite-core", "2.3.3"),
-        ("tokio", "1"),
+    // Build the dependency list.
+    // Only oxidite (which re-exports all sub-crates) + tokio by default.
+    let mut deps: Vec<(String, String)> = vec![
+        ("oxidite".into(), "\"2.3.3\"".into()),
+        ("tokio".into(), "{ version = \"1\", features = [\"full\"] }".into()),
     ];
 
     // Parse extra dependencies
@@ -150,13 +142,33 @@ fn run_standalone(
         for dep in extra.split(',') {
             let dep = dep.trim();
             if !dep.is_empty() {
-                deps.push((dep, "*"));
+                // Support "crate@version" syntax, e.g. "serde@1.0" or just "serde"
+                if let Some((name, version)) = dep.split_once('@') {
+                    deps.push((name.trim().into(), format!("\"{}\"", version.trim())));
+                } else {
+                    deps.push((dep.into(), "\"*\"".into()));
+                }
             }
         }
     }
 
-    // Generate Cargo.toml
-    let cargo_toml = format!(
+    // Hash the deps to create a unique cache directory.
+    // Same deps = same cache = fast re-runs.
+    let deps_hash = {
+        let mut hasher = DefaultHasher::new();
+        for (name, version) in &deps {
+            name.hash(&mut hasher);
+            version.hash(&mut hasher);
+        }
+        format!("{:016x}", hasher.finish())
+    };
+
+    let cache_dir = dirs_cache().join(&deps_hash);
+    let src_dir = cache_dir.join("src");
+    fs::create_dir_all(&src_dir)?;
+
+    // Generate Cargo.toml content
+    let cargo_toml_content = format!(
         r#"[package]
 name = "oxidite-script"
 version = "0.1.0"
@@ -166,27 +178,34 @@ edition = "2021"
 {}
 "#,
         deps.iter()
-            .map(|(name, version)| format!("{} = \"{}\"", name, version))
+            .map(|(name, version)| format!("{} = {}", name, version))
             .collect::<Vec<_>>()
             .join("\n")
     );
 
-    fs::write(temp_dir.join("Cargo.toml"), cargo_toml)?;
+    // Only write Cargo.toml if it changed (avoids cargo re-resolving deps).
+    let cargo_toml_path = cache_dir.join("Cargo.toml");
+    write_if_changed(&cargo_toml_path, &cargo_toml_content)?;
 
-    output::info(&format!("Running {} (standalone mode)", file_path.display()));
-    output::debug(&format!("Using temp project at {}", temp_dir.display()));
+    // Copy the script to src/main.rs only if it changed.
+    let script_content = fs::read_to_string(file_path)?;
+    let main_rs_path = src_dir.join("main.rs");
+    write_if_changed(&main_rs_path, &script_content)?;
 
+    output::info(&format!("Running {} (standalone)", file_path.display()));
+    output::debug(&format!("Cache: {}", cache_dir.display()));
+
+    // Run with --quiet to suppress cargo build output.
+    // On first run this compiles (slow). On re-runs with the same deps
+    // cargo sees nothing changed and just runs the binary (fast).
     let status = Command::new("cargo")
         .arg("run")
         .arg("--quiet")
         .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
         .stdin(std::process::Stdio::inherit())
-        .current_dir(&temp_dir)
+        .current_dir(&cache_dir)
         .status()?;
-
-    // Clean up temp directory
-    let _ = fs::remove_dir_all(&temp_dir);
 
     if !status.success() {
         return Err(format!("Script exited with status: {}", status).into());
@@ -194,6 +213,31 @@ edition = "2021"
 
     output::success("Completed successfully");
     Ok(())
+}
+
+/// Get the cache base directory for standalone script builds.
+fn dirs_cache() -> PathBuf {
+    if let Ok(xdg) = std::env::var("XDG_CACHE_HOME") {
+        PathBuf::from(xdg).join("oxidite-run")
+    } else if let Ok(home) = std::env::var("HOME") {
+        PathBuf::from(home).join(".cache").join("oxidite-run")
+    } else {
+        std::env::temp_dir().join("oxidite-run-cache")
+    }
+}
+
+/// Write content to a file only if the file doesn't exist or its content differs.
+/// This preserves mtime so cargo's incremental compilation stays warm.
+fn write_if_changed(path: &Path, content: &str) -> Result<bool, std::io::Error> {
+    if path.exists() {
+        if let Ok(existing) = fs::read_to_string(path) {
+            if existing == content {
+                return Ok(false); // No change
+            }
+        }
+    }
+    fs::write(path, content)?;
+    Ok(true) // Changed
 }
 
 fn add_dependencies(project_root: &Path, deps: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -209,7 +253,8 @@ fn add_dependencies(project_root: &Path, deps: &str) -> Result<(), Box<dyn std::
         }
 
         // Check if dependency already exists
-        if !cargo_toml.contains(&format!("{} = ", dep)) && !cargo_toml.contains(&format!("{}=", dep)) {
+        if !cargo_toml.contains(&format!("{} = ", dep)) && !cargo_toml.contains(&format!("{}=", dep))
+        {
             // Add the dependency under [dependencies]
             if cargo_toml.contains("[dependencies]") {
                 let lines: Vec<&str> = cargo_toml.lines().collect();
