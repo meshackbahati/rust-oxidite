@@ -49,7 +49,7 @@ pub fn run_file(file: &str, extra_deps: Option<&str>) -> Result<(), Box<dyn std:
         return Err("File must be a .rs file".into());
     }
 
-    output::header("Oxidite Runner v2.3.2");
+    output::header("Oxidite Runner v2.3.3");
     output::debug(&format!("Executing file: {}", file_path.display()));
 
     // Check if we're inside a Cargo project

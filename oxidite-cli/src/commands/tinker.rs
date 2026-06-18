@@ -62,7 +62,7 @@ pub fn run_tinker() -> Result<(), Box<dyn std::error::Error>> {
 
     let tinker_path = Path::new("src/bin/_tinker.rs");
 
-    println!("🧪 Oxidite Tinker v2.3.2");
+    println!("Oxidite Tinker v2.3.3");
     if has_lib {
         println!("Library crate detected: using `{crate_ident}::*` imports.");
     } else {
