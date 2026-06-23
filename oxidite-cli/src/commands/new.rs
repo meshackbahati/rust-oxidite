@@ -109,6 +109,7 @@ pub fn create_project(
     fs::create_dir(src_path.join("utils"))?;
     fs::create_dir(src_path.join("config"))?;
     fs::create_dir(project_path.join("tests"))?;
+    create_test_file(project_path, p_type)?;
     fs::create_dir(project_path.join("migrations"))?;
     fs::create_dir(project_path.join("seeds"))?;
 
@@ -163,6 +164,47 @@ Cargo.lock
 }
 
 // ---------------------------------------------------------------------------
+// Test files (scaffolded for all project types)
+// ---------------------------------------------------------------------------
+
+fn create_test_file(path: &Path, p_type: ProjectType) -> std::io::Result<()> {
+    let test_content = match p_type {
+        ProjectType::Serverless => r#"use oxidite_testing::{TestRequest, test_router};
+
+#[tokio::test]
+async fn test_health_endpoint() {
+    let mut router = oxidite::Router::new();
+    router.get("/", handler);
+
+    let mut server = test_router(router);
+    let req = TestRequest::get("/").build_oxidite();
+    let resp = server.call(req).await.unwrap();
+    assert!(resp.status().is_success());
+}
+"#,
+        _ => r#"use oxidite_testing::{TestRequest, TestResponse, test_router};
+use oxidite::prelude::*;
+
+/// Integration test for the health-check endpoint.
+#[tokio::test]
+async fn test_health_endpoint() {
+    let mut router = Router::new();
+    router.get("/", || async { Ok(Response::json_val(json!({"status": "ok"}))) });
+
+    let mut server = test_router(router);
+    let req = TestRequest::get("/").build_oxidite();
+    let resp = server.call(req).await.unwrap();
+
+    let test_resp = TestResponse::from_oxidite_response(resp).await;
+    assert!(test_resp.is_success());
+}
+"#,
+    };
+
+    fs::write(path.join("tests/integration_test.rs"), test_content)
+}
+
+// ---------------------------------------------------------------------------
 // Cargo.toml
 // ---------------------------------------------------------------------------
 
@@ -176,7 +218,7 @@ edition = "2021"
 [dependencies]
 # Oxidite — a modern, batteries-included Rust web framework.
 # The "full" feature flag enables all sub-crates (auth, db, cache, etc.).
-oxidite = {{ version = "2.3.3", features = ["full"] }}
+oxidite = {{ version = "2.3.3-1", features = ["full"] }}
 
 # Async runtime.
 tokio = {{ version = "1", features = ["full"] }}
@@ -184,6 +226,10 @@ tokio = {{ version = "1", features = ["full"] }}
 # Serialization / deserialization.
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
+
+[dev-dependencies]
+# Testing utilities for integration tests.
+oxidite-testing = "2.3.3-1"
 "#,
         name
     );
@@ -441,7 +487,7 @@ use oxidite::prelude::*;
 
 // The request handler — replace this with your own logic.
 async fn handler(_req: Request) -> Result<Response> {
-    Ok(Response::json(serde_json::json!({
+    Ok(Response::json_val(json!({
         "message": "Hello from Serverless Function!"
     })))
 }
@@ -571,7 +617,7 @@ fn register_generated(router: &mut Router) {
 
 /// Returns a simple JSON health-check response.
 async fn health(_req: Request) -> Result<Response> {
-    Ok(Response::json(serde_json::json!({"status": "ok"})))
+    Ok(Response::json_val(json!({"status": "ok"})))
 }
 "#
         }

@@ -96,6 +96,36 @@ impl CorsConfig {
             max_age: 3600,
         }
     }
+
+    /// Builder: add an allowed origin.
+    pub fn allow_origin(mut self, origin: &str) -> Self {
+        self.allowed_origins.push(origin.to_string());
+        self
+    }
+
+    /// Builder: add an allowed HTTP method.
+    pub fn allow_method(mut self, method: &str) -> Self {
+        self.allowed_methods.push(method.to_string());
+        self
+    }
+
+    /// Builder: add an allowed HTTP header.
+    pub fn allow_header(mut self, header: &str) -> Self {
+        self.allowed_headers.push(header.to_string());
+        self
+    }
+
+    /// Builder: enable credentials (cookies, authorization headers).
+    pub fn credentials(mut self) -> Self {
+        self.allow_credentials = true;
+        self
+    }
+
+    /// Builder: set the max age for CORS preflight cache (in seconds).
+    pub fn max_age(mut self, seconds: u32) -> Self {
+        self.max_age = seconds;
+        self
+    }
 }
 
 // Note: tower-http middleware like Cors and Compression change the response body type,

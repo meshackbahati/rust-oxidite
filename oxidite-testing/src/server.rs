@@ -3,9 +3,39 @@ use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use tower::Service;
 
-/// Test server for integration testing
+/// Test server for integration testing.
+///
+/// This server is **single-threaded by design** — it holds a single `&mut` reference
+/// to the underlying service and processes one request at a time.  For concurrent
+/// tests, create a separate `TestServer` per test function (the server is cheap to
+/// construct).
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use oxidite_testing::{test_router, TestRequest};
+///
+/// #[tokio::test]
+/// async fn test_hello() {
+///     let mut server = test_router(my_router());
+///     let req = TestRequest::get("/hello").build_oxidite();
+///     let resp = server.call(req).await.unwrap();
+///     assert_eq!(resp.status(), 200);
+/// }
+/// ```
 pub struct TestServer<S> {
     service: S,
+}
+
+impl<S> Clone for TestServer<S>
+where
+    S: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            service: self.service.clone(),
+        }
+    }
 }
 
 impl<S> TestServer<S>
@@ -19,7 +49,11 @@ where
         Self { service }
     }
 
-    /// Send a request to the test server
+    /// Send a request to the test server.
+    ///
+    /// Because the underlying Tower `Service` requires `&mut self` for `ready()`,
+    /// this method takes `&mut self`.  If you need concurrent requests, either
+    /// clone the test server or construct a fresh one per concurrent task.
     pub async fn call(&mut self, request: OxiditeRequest) -> Result<OxiditeResponse> {
         use tower::ServiceExt;
         self.service

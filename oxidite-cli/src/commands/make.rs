@@ -66,35 +66,35 @@ pub fn register(router: &mut Router) {{
 
 async fn index(_req: Request) -> Result<Response> {{
     // TODO: List your resources here.
-    Ok(Response::json(serde_json::json!({{
+    Ok(Response::json_val(json!({{
         "message": "List {route}"
     }})))
 }}
 
 async fn show(_req: Request) -> Result<Response> {{
     // TODO: Load and return one resource here.
-    Ok(Response::json(serde_json::json!({{
+    Ok(Response::json_val(json!({{
         "message": "Show one {resource}"
     }})))
 }}
 
 async fn create(_req: Request) -> Result<Response> {{
     // TODO: Parse input, validate it, and persist a new resource here.
-    Ok(Response::json(serde_json::json!({{
+    Ok(Response::json_val(json!({{
         "message": "Create {resource}"
     }})))
 }}
 
 async fn update(_req: Request) -> Result<Response> {{
     // TODO: Apply updates to an existing resource here.
-    Ok(Response::json(serde_json::json!({{
+    Ok(Response::json_val(json!({{
         "message": "Update {resource}"
     }})))
 }}
 
 async fn destroy(_req: Request) -> Result<Response> {{
     // TODO: Delete the resource or mark it as archived here.
-    Ok(Response::json(serde_json::json!({{
+    Ok(Response::json_val(json!({{
         "message": "Delete {resource}"
     }})))
 }}
@@ -127,7 +127,7 @@ impl {name} {{
         State(state): State<Arc<AppState>>,
     ) -> Result<OxiditeResponse> {{
         // TODO: Fetch all resources from the database using state.db
-        Ok(response::json(serde_json::json!({{
+        Ok(response::json_val(json!({{
             "message": "List endpoint"
         }})))
     }}
@@ -139,7 +139,7 @@ impl {name} {{
     ) -> Result<OxiditeResponse> {{
         let id = params["id"].as_i64().unwrap_or(0);
         // TODO: Fetch one resource by id using state.db
-        Ok(response::json(serde_json::json!({{
+        Ok(response::json_val(json!({{
             "message": format!("Show resource {{}}", id)
         }})))
     }}
@@ -150,7 +150,7 @@ impl {name} {{
         Json(payload): Json<serde_json::Value>,
     ) -> Result<OxiditeResponse> {{
         // TODO: Parse payload, validate, and insert using state.db
-        Ok(response::json(serde_json::json!({{
+        Ok(response::json_val(json!({{
             "message": "Resource created",
             "data": payload
         }})))
@@ -164,7 +164,7 @@ impl {name} {{
     ) -> Result<OxiditeResponse> {{
         let id = params["id"].as_i64().unwrap_or(0);
         // TODO: Update the resource by id using state.db
-        Ok(response::json(serde_json::json!({{
+        Ok(response::json_val(json!({{
             "message": format!("Resource {{}} updated", id),
             "data": payload
         }})))
@@ -177,7 +177,7 @@ impl {name} {{
     ) -> Result<OxiditeResponse> {{
         let id = params["id"].as_i64().unwrap_or(0);
         // TODO: Delete the resource by id using state.db
-        Ok(response::json(serde_json::json!({{
+        Ok(response::json_val(json!({{
             "message": format!("Resource {{}} deleted", id)
         }})))
     }}

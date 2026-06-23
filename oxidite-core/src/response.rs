@@ -9,7 +9,17 @@ use http::StatusCode;
 pub(crate) const SERVER_HEADER_VALUE: &str = concat!("Oxidite/", env!("CARGO_PKG_VERSION"));
 
 impl OxiditeResponse {
-    /// Create a JSON response
+    /// Create a JSON response from any serializable value.
+    ///
+    /// Handy with `serde_json::json!()` for inline JSON without defining a struct:
+    ///
+    /// ```rust,ignore
+    /// use oxidite::prelude::*;
+    ///
+    /// async fn handler() -> Result<Response> {
+    ///     Ok(Response::json(json!({"status": "ok", "count": 42})))
+    /// }
+    /// ```
     pub fn json<T: serde::Serialize>(data: T) -> Self {
         match serde_json::to_vec(&data) {
             Ok(json_bytes) => {
@@ -30,6 +40,23 @@ impl OxiditeResponse {
                 Self(res)
             },
         }
+    }
+
+    /// Create a JSON response from a pre-built `serde_json::Value`.
+    ///
+    /// This is a convenience that works directly with `serde_json::json!()`
+    /// output, letting you write inline JSON without any serde import:
+    ///
+    /// ```rust,ignore
+    /// use oxidite::prelude::*;
+    ///
+    /// async fn handler() -> Result<Response> {
+    ///     Ok(Response::json_val(json!({"message": "Hello!"})))
+    /// }
+    /// ```
+    #[inline]
+    pub fn json_val(value: serde_json::Value) -> Self {
+        Self::json(value)
     }
 
     /// Create an HTML response
@@ -194,5 +221,13 @@ pub mod helpers {
     #[inline]
     pub fn no_content() -> OxiditeResponse {
         OxiditeResponse::no_content()
+    }
+
+    /// Create a JSON response from a pre-built `serde_json::Value`.
+    ///
+    /// See [`OxiditeResponse::json_val`] for details.
+    #[inline]
+    pub fn json_val(value: serde_json::Value) -> OxiditeResponse {
+        OxiditeResponse::json_val(value)
     }
 }

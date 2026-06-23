@@ -5,27 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.2] - 2026-06-07
+## [2.3.3-1] - 2026-06-23
 
 ### Added
-- **Template `safe`/`raw` Filter**: Variables can now opt out of HTML auto-escaping with `{{ content | safe }}` or `{{ content | raw }}`, enabling injection of pre-rendered HTML (markdown output, CMS content, etc.).
-- **Dynamic `{% include %}`**: The include directive now accepts context variables in addition to string literals: `{% include partial_path %}`. Enables dynamic template composition based on route parameters.
-- **Comparison Operators in `{% if %}`**: Full support for `==`, `!=`, `>`, `<`, `>=`, `<=` comparisons, plus `and`, `or`, `not` logical operators in conditionals.
-- **`{% elif %}` Chains**: Added else-if branch support to eliminate deeply nested conditional blocks: `{% if a %}...{% elif b %}...{% else %}...{% endif %}`.
-- **Custom Filter Registration**: New `TemplateEngine::register_filter()` API allows users to add project-specific template filters callable with the pipe (`|`) syntax.
-- **Framework-Level CORS**: `Router::with_cors(CorsConfig)` provides built-in CORS support without requiring tower-http `ServiceBuilder`, with `CorsConfig::permissive()` for development and full customisation for production.
-- **Response Helpers**: `json()`, `text()`, `html()`, `ok()`, `no_content()` functions exported in the prelude for cleaner response creation.
+- **`Error::internal()` Helper**: New method `Error::internal(err)` preserves the original source error in `InternalServerErrorWithSource` variant, retaining type info and backtrace for debugging.
+- **`OxiditeResponse` Convenience Methods**: Added `status()`, `headers()`, `headers_mut()` on `OxiditeResponse` for tests and handler code that only need status/header access without body conversion.
+- **`From<OxiditeResponse>` for `hyper::Response<B>`**: Generic conversion for any body type `B: Default + From<BoxBody>`, fixing integration test ergonomics.
+- **CORS Builder Methods**: `CorsConfig` now has `.allow_origin()`, `.allow_method()`, `.allow_header()`, `.credentials()`, `.max_age()` chainable builders.
+- **`Result<T>` Closure Helper**: `pub fn Ok<T>(value: T)` shadows `std::result::Result::Ok` to fix type inference in `.map()` closures — no more turbofish needed.
+- **`json!` Macro in Prelude**: `serde_json::json!` is re-exported as `json!` in `oxidite::prelude`, so users write `Response::json(json!({...}))` without any serde import.
+- **Scaffolded Test Files**: `oxidite new` now generates `tests/integration_test.rs` with a working test using `oxidite-testing`.
 
 ### Changed
-- Bumped all crate versions from 2.3.1 to 2.3.2.
+- Bumped `oxidite-core`, `oxidite-testing`, `oxidite-middleware`, `oxidite-template`, `oxidite-openapi`, `oxidite-graphql`, `oxidite-plugin`, `oxidite-auth`, `oxidite`, and `oxidite-cli` to `2.3.3-1`.
+- Updated dependency version references across all dependant crates.
+- Book HTML documentation updated to `v2.3.3-1`.
+- CLI templates now use `Response::json_val(json!(...))` instead of `serde_json::json!(...)` for better ergonomics.
 
 ### Fixed
-- **CORS/Compression Stack Overflow**: Removed broken `Endpoint` implementations for `tower_http::cors::Cors<S>` and `tower_http::compression::Compression<S>` that caused infinite recursion. These middleware must now be applied via `ServiceBuilder` at the server level, or use the new `with_cors()` method for CORS.
-- **`oxidite run` File Not Found**: Fixed `fs::canonicalize()` failing on non-existent target paths in project mode.
-- **`oxidite doctor` Environment Detection**: Added `.env` loading and parent directory search for `Cargo.toml`/`oxidite.toml`.
-- **`oxidite tinker` Binary Crate Imports**: Fixed unresolved import errors for binary-only crates by using `oxidite::` re-exports instead of sub-crate imports.
+- **`Result<T>` Type Inference (#1)**: Compilation failure in closure/iterator mapping patterns resolved — see `Ok<T>` helper above.
+- **`OxiditeResponse` Conversion (#2)**: Integration tests can now convert `OxiditeResponse` into `hyper::Response<Incoming>`.
+- **`CorsConfig` Builder Pattern (#5)**: Added missing chainable setters for all CORS fields.
+- **`TestServer` Ergonomics (#6)**: Added `Clone` impl and expanded documentation clarifying single-threaded design.
+- **`Error::InternalServerError` Source Loss (#7)**: New `InternalServerErrorWithSource` variant and `Error::internal()` preserve the original error chain.
+- **`render_ignition_error` Version**: Error page footer now displays `v2.3.3-1` instead of stale `v2.2.1`.
 
-## [2.3.0] - 2026-05-26
+## [2.3.2] - 2026-06-07
 
 ### Added
 - **Expanded Handler Capacity**: Handlers now support up to 12 extractors (previously limited to 3), enabling complex production controllers without workarounds.

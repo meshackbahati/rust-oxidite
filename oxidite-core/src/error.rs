@@ -4,6 +4,16 @@ use thiserror::Error;
 pub enum Error {
     #[error("Internal server error: {0}")]
     InternalServerError(String),
+    /// Internal server error that preserves the original source error for debugging.
+    ///
+    /// Prefer this variant when you want to chain the original error without losing
+    /// its type information, source chain, or backtrace.
+    #[error("Internal server error: {message}")]
+    InternalServerErrorWithSource {
+        message: String,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
     #[error("Resource not found: {0}")]
     NotFound(String),
     #[error("Bad request: {0}")]
@@ -40,6 +50,30 @@ pub enum Error {
 pub type Result<T> = std::result::Result<T, Error>;
 
 impl Error {
+    /// Create a new `InternalServerError` while preserving the original source error.
+    ///
+    /// This is the recommended way to wrap external errors in handler code — the
+    /// original error's type, source chain, and backtrace are retained for debugging
+    /// while the `Display` message is still user-facing.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use oxidite::prelude::*;
+    ///
+    /// async fn handler() -> Result<Response> {
+    ///     let data = std::fs::read_to_string("config.toml")
+    ///         .map_err(Error::internal)?;
+    ///     Ok(Response::text(data))
+    /// }
+    /// ```
+    pub fn internal<E: std::error::Error + Send + Sync + 'static>(err: E) -> Self {
+        Error::InternalServerErrorWithSource {
+            message: err.to_string(),
+            source: Box::new(err),
+        }
+    }
+
     /// Get the HTTP status code for this error
     pub fn status_code(&self) -> hyper::StatusCode {
         match self {
@@ -52,7 +86,11 @@ impl Error {
             Error::RateLimited(_) => hyper::StatusCode::TOO_MANY_REQUESTS,
             Error::ServiceUnavailable(_) => hyper::StatusCode::SERVICE_UNAVAILABLE,
             Error::MethodNotAllowed(_) => hyper::StatusCode::METHOD_NOT_ALLOWED,
-            Error::InternalServerError(_) | Error::Hyper(_) | Error::Io(_) | Error::Http(_) => hyper::StatusCode::INTERNAL_SERVER_ERROR,
+            Error::InternalServerError(_)
+            | Error::InternalServerErrorWithSource { .. }
+            | Error::Hyper(_)
+            | Error::Io(_)
+            | Error::Http(_) => hyper::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -74,7 +112,7 @@ impl Error {
 /// Render an Ignition-style HTML error page
 pub fn render_ignition_error(error: &Error) -> String {
     let error_type = match error {
-        Error::InternalServerError(_) => "Internal Server Error",
+        Error::InternalServerError(_) | Error::InternalServerErrorWithSource { .. } => "Internal Server Error",
         Error::NotFound(_) => "Not Found",
         Error::BadRequest(_) => "Bad Request",
         Error::Unauthorized(_) => "Unauthorized",
@@ -209,7 +247,7 @@ pub fn render_ignition_error(error: &Error) -> String {
             </div>
         </div>
         <div class="footer">
-            <span>Oxidite Framework v2.2.1</span>
+            <span>Oxidite Framework v2.3.3-1</span>
             <span>Running in Development Mode</span>
         </div>
     </div>
