@@ -6,7 +6,7 @@ Security-focused utilities for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-security = "2.3.3"
+oxidite-security = "2.3.4"
 ```
 
 ## Available Utilities

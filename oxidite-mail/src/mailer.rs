@@ -6,6 +6,7 @@ pub struct Mailer<T: Transport> {
 }
 
 impl<T: Transport> Mailer<T> {
+    /// Create a new mailer with the given transport
     pub fn new(transport: T) -> Self {
         Self { transport }
     }

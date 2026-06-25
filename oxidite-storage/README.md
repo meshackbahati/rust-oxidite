@@ -6,14 +6,14 @@ File storage abstraction for Oxidite with local filesystem and optional S3 backe
 
 ```toml
 [dependencies]
-oxidite-storage = "2.3.3"
+oxidite-storage = "2.3.4"
 ```
 
 Disable S3 if you only need local storage:
 
 ```toml
 [dependencies]
-oxidite-storage = { version = "2.3.3", default-features = false }
+oxidite-storage = { version = "2.3.4", default-features = false }
 ```
 
 ## Usage

@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-mail"
-version = "2.3.3"
+version = "2.3.4"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Email sending for Oxidite with SMTP support"

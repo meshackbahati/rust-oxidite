@@ -16,6 +16,7 @@ pub struct Message {
 }
 
 impl Message {
+    /// Create a new empty email message
     pub fn new() -> Self {
         Self {
             from: None,

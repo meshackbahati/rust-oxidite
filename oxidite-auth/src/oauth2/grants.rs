@@ -27,6 +27,7 @@ pub struct ClientCredentialsGrant {
 }
 
 impl AuthorizationCodeGrant {
+    /// Create a new authorization code grant with the given parameters.
     pub fn new(client_id: String, redirect_uri: String, ttl_secs: u64) -> Self {
         use std::time::{SystemTime, UNIX_EPOCH};
         use uuid::Uuid;
@@ -45,11 +46,13 @@ impl AuthorizationCodeGrant {
         }
     }
 
+    /// Set the PKCE code challenge for this grant.
     pub fn with_pkce(mut self, code_challenge: String) -> Self {
         self.code_challenge = Some(code_challenge);
         self
     }
 
+    /// Check whether the authorization code grant has expired.
     pub fn is_expired(&self) -> bool {
         use std::time::{SystemTime, UNIX_EPOCH};
         

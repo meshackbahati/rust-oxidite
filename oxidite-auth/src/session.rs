@@ -20,6 +20,7 @@ pub struct Session {
 }
 
 impl Session {
+    /// Create a new session for the given user with a specified TTL.
     pub fn new(user_id: String, ttl_secs: u64) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -35,6 +36,7 @@ impl Session {
         }
     }
 
+    /// Check whether the session has expired.
     pub fn is_expired(&self) -> bool {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -43,6 +45,7 @@ impl Session {
         now >= self.expires_at
     }
 
+    /// Extend the session expiration by the given TTL from now.
     pub fn renew(&mut self, ttl_secs: u64) {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -51,10 +54,12 @@ impl Session {
         self.expires_at = now + ttl_secs;
     }
 
+    /// Associate a value with the given key in the session data.
     pub fn set_data(&mut self, key: String, value: serde_json::Value) {
         self.data.insert(key, value);
     }
 
+    /// Retrieve a value from the session data by key.
     pub fn get_data(&self, key: &str) -> Option<&serde_json::Value> {
         self.data.get(key)
     }
@@ -76,6 +81,7 @@ pub struct InMemorySessionStore {
 }
 
 impl InMemorySessionStore {
+    /// Create an empty in-memory session store.
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(RwLock::new(HashMap::new())),
@@ -84,6 +90,7 @@ impl InMemorySessionStore {
 }
 
 impl Default for InMemorySessionStore {
+    /// Create a default in-memory session store.
     fn default() -> Self {
         Self::new()
     }
@@ -130,6 +137,7 @@ pub struct RedisSessionStore {
 }
 
 impl RedisSessionStore {
+    /// Create a new Redis-backed session store.
     pub fn new(url: &str, prefix: &str) -> Result<Self> {
         let client = Client::open(url)
             .map_err(|e| AuthError::HashError(e.to_string()))?;
@@ -224,30 +232,37 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
+    /// Create a session manager backed by the given store.
     pub fn new(store: Arc<dyn SessionStore>) -> Self {
         Self { store }
     }
     
+    /// Create a session manager backed by an in-memory store.
     pub fn new_memory() -> Self {
         Self::new(Arc::new(InMemorySessionStore::new()))
     }
     
+    /// Create a session manager backed by a Redis store.
     pub fn new_redis(url: &str, prefix: &str) -> Result<Self> {
         Ok(Self::new(Arc::new(RedisSessionStore::new(url, prefix)?)))
     }
     
+    /// Persist a session via the backing store.
     pub async fn create(&self, session: Session) -> Result<String> {
         self.store.create(session).await
     }
-    
+
+    /// Retrieve a session from the backing store.
     pub async fn get(&self, session_id: &str) -> Result<Option<Session>> {
         self.store.get(session_id).await
     }
-    
+
+    /// Update an existing session in the backing store.
     pub async fn update(&self, session: Session) -> Result<()> {
         self.store.update(session).await
     }
-    
+
+    /// Remove a session from the backing store.
     pub async fn delete(&self, session_id: &str) -> Result<()> {
         self.store.delete(session_id).await
     }

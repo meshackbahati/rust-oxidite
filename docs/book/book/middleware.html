@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Middleware | Oxidite v2.3.3-1</title>
+        <title>Middleware | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -218,16 +218,15 @@ async fn handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add middleware to a specific route
-    router.get("/protected")
+    app.router_mut().get("/protected")
         .middleware(basic_middleware)
         .handler(handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="global-middleware"><a class="header" href="#global-middleware">Global Middleware</a></h2>
 <p>Add middleware to apply to all routes:</p>
@@ -248,17 +247,16 @@ async fn about(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add global middleware
-    router.middleware(global_middleware);
+    app.router_mut().middleware(global_middleware);
     
-    router.get("/", home);
-    router.get("/about", about);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="requestresponse-modification"><a class="header" href="#requestresponse-modification">Request/Response Modification</a></h2>
 <p>Middleware can modify both requests and responses:</p>
@@ -526,18 +524,17 @@ async fn handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Middlewares are executed in the order they're added
-    router.middleware(middleware_a);
-    router.middleware(middleware_b);
-    router.middleware(middleware_c);
+    app.router_mut().middleware(middleware_a);
+    app.router_mut().middleware(middleware_b);
+    app.router_mut().middleware(middleware_c);
     
-    router.get("/", handler);
+    app.router_mut().get("/", handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // Output would be:
@@ -594,15 +591,14 @@ async fn web_handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.middleware(conditional_middleware);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().middleware(conditional_middleware);
     
-    router.get("/api/data", api_handler);
-    router.get("/web/page", web_handler);
+    app.router_mut().get("/api/data", api_handler);
+    app.router_mut().get("/web/page", web_handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="stateful-middleware"><a class="header" href="#stateful-middleware">Stateful Middleware</a></h2>
 <p>Middleware can use application state:</p>
@@ -632,15 +628,14 @@ async fn main() -&gt; Result&lt;()&gt; {
         maintenance_mode: false,
     });
     
-    let mut router = Router::new();
-    router.with_state(app_state);
-    router.middleware(stateful_middleware);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().with_state(app_state);
+    app.router_mut().middleware(stateful_middleware);
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="built-in-middleware"><a class="header" href="#built-in-middleware">Built-in Middleware</a></h2>
 <p>Oxidite provides several built-in middleware options:</p>
@@ -649,30 +644,28 @@ use oxidite_middleware::{Logger, RateLimiter, Cors};
 
 // Logger middleware
 async fn with_logger() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add logging middleware
-    router.middleware(Logger::new());
+    app.router_mut().middleware(Logger::new());
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // Rate limiting middleware
 async fn with_rate_limit() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add rate limiting middleware
-    router.middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
+    app.router_mut().middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="performance-considerations"><a class="header" href="#performance-considerations">Performance Considerations</a></h2>
 <ol>
@@ -692,7 +685,7 @@ async fn with_rate_limit() -&gt; Result&lt;()&gt; {
 <p>Middleware in Oxidite is a powerful way to handle cross-cutting concerns:</p>
 <ul>
 <li>Use <code>async fn(Request, Next) -&gt; Result&lt;Response&gt;</code> signature</li>
-<li>Apply globally with <code>router.middleware()</code> or to specific routes</li>
+<li>Apply globally with <code>app.router_mut().middleware()</code> or to specific routes</li>
 <li>Modify requests before and responses after the handler</li>
 <li>Handle authentication, logging, CORS, rate limiting, etc.</li>
 <li>Compose multiple middleware functions</li>

@@ -13,6 +13,7 @@ pub struct AuthMiddleware<S> {
 }
 
 impl<S> AuthMiddleware<S> {
+    /// Create a new `AuthMiddleware` that validates JWT tokens with the given secret.
     pub fn new(inner: S, secret: String) -> Self {
         Self { inner, secret }
     }
@@ -75,6 +76,7 @@ pub struct AuthLayer {
 }
 
 impl AuthLayer {
+    /// Create a new `AuthLayer` that validates JWT tokens with the given secret.
     pub fn new(secret: String) -> Self {
         Self { secret }
     }

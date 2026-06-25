@@ -12,6 +12,7 @@ pub struct PluginManager {
 }
 
 impl PluginManager {
+    /// Create a new plugin manager with the given configuration.
     pub fn new(config: PluginConfig) -> Self {
         Self {
             plugins: HashMap::new(),
@@ -126,7 +127,7 @@ impl PluginManager {
     }
 }
 
-/// Helper function to create a plugin manager
+/// Create a plugin manager (convenience alias).
 pub fn create_manager(config: PluginConfig) -> PluginManager {
     PluginManager::new(config)
 }

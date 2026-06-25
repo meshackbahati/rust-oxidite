@@ -11,6 +11,7 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
+    /// Create a new renderer bound to the given context and optional engine
     pub fn new(context: &'a Context, engine: Option<&'a TemplateEngine>) -> Self {
         let filters = if let Some(eng) = engine {
             eng.filters.clone()
@@ -25,6 +26,10 @@ impl<'a> Renderer<'a> {
         }
     }
 
+    /// Render a compiled template node tree into a final output string
+    ///
+    /// Handles inheritance (`{% extends %}`), blocks, includes, variables,
+    /// conditionals, and loops.
     pub fn render(&mut self, template: &Template) -> Result<String> {
         // Check for Extends (ignoring leading whitespace)
         let extends_node = template.parsed.iter().find(|node| {

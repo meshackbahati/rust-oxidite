@@ -6,13 +6,18 @@ use crate::{Router, OxiditeRequest, OxiditeResponse};
 /// API version
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ApiVersion {
+    /// API version 1.
     V1,
+    /// API version 2.
     V2,
+    /// API version 3.
     V3,
+    /// A custom version number.
     Custom(u8),
 }
 
 impl ApiVersion {
+    /// Parse an API version from a string (e.g. `"v1"`, `"2"`).
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "v1" | "1" => Some(ApiVersion::V1),
@@ -22,6 +27,9 @@ impl ApiVersion {
         }
     }
     
+    /// Return the string representation of this API version.
+    ///
+    /// Returns `"v1"`, `"v2"`, `"v3"`, or `"custom"` for [`ApiVersion::Custom`].
     pub fn as_str(&self) -> &'static str {
         match self {
             ApiVersion::V1 => "v1",
@@ -39,6 +47,7 @@ pub struct VersionedRouter {
 }
 
 impl VersionedRouter {
+    /// Create a new `VersionedRouter` with the given default version.
     pub fn new(default_version: ApiVersion) -> Self {
         Self {
             routers: HashMap::new(),
@@ -98,13 +107,15 @@ impl VersionedRouter {
     }
 }
 
-/// Version deprecation middleware
+/// Middleware that adds deprecation headers (`Deprecation`, `Sunset`, `Link`)
+/// to responses for deprecated API versions.
 pub struct DeprecationMiddleware {
     deprecated_versions: Vec<ApiVersion>,
     sunset_date: Option<String>,
 }
 
 impl DeprecationMiddleware {
+    /// Create a new `DeprecationMiddleware` for the given set of deprecated versions.
     pub fn new(deprecated_versions: Vec<ApiVersion>) -> Self {
         Self {
             deprecated_versions,
@@ -112,6 +123,7 @@ impl DeprecationMiddleware {
         }
     }
     
+    /// Set the sunset date returned in the `Sunset` header.
     pub fn with_sunset_date(mut self, date: String) -> Self {
         self.sunset_date = Some(date);
         self

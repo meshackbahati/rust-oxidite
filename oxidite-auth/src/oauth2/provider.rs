@@ -49,6 +49,7 @@ pub struct OAuth2Provider {
     clients: Arc<RwLock<HashMap<String, ClientConfig>>>,
 }
 
+/// Configuration for an OAuth2 client registered with the provider.
 #[derive(Debug, Clone)]
 pub struct ClientConfig {
     pub client_id: String,
@@ -57,6 +58,7 @@ pub struct ClientConfig {
 }
 
 impl OAuth2Provider {
+    /// Create a new `OAuth2Provider` with no registered clients.
     pub fn new() -> Self {
         Self {
             codes: Arc::new(RwLock::new(HashMap::new())),

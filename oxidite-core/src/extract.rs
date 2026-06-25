@@ -123,12 +123,19 @@ impl<T: DeserializeOwned + Send> FromRequest for Json<T> {
     }
 }
 
-// Storage for path parameters extracted during routing
+/// Storage for path parameters extracted during routing.
+///
+/// Populated by the router when a route with dynamic segments (e.g. `/users/:id`)
+/// is matched. The [`Path`] extractor reads these parameters from request extensions.
 #[derive(Clone)]
 pub struct PathParams(pub serde_json::Value);
 
 // Helper to serialize responses as JSON
 impl<T: serde::Serialize> Json<T> {
+    /// Convert the JSON extractor value into an HTTP response body.
+    ///
+    /// Serializes the wrapped value to a JSON byte buffer that can be
+    /// used directly as a hyper body.
     pub fn into_response(self) -> Result<http_body_util::Full<bytes::Bytes>> {
         let body = serde_json::to_vec(&self.0)
             .map_err(|e| Error::InternalServerError(format!("Failed to serialize JSON: {}", e)))?;
@@ -232,14 +239,17 @@ pub struct Cookies {
 }
 
 impl Cookies {
+    /// Get a cookie value by name.
     pub fn get(&self, name: &str) -> Option<&String> {
         self.cookies.get(name)
     }
     
+    /// Check whether a cookie with the given name exists.
     pub fn contains_key(&self, name: &str) -> bool {
         self.cookies.contains_key(name)
     }
     
+    /// Iterate over all cookie name-value pairs.
     pub fn iter(&self) -> impl Iterator<Item = (&String, &String)> {
         self.cookies.iter()
     }
@@ -293,7 +303,7 @@ impl FromRequest for Body<String> {
     }
 }
 
-/// Extract raw request body as Vec<u8>
+/// Extract raw request body as `Vec<u8>`
 impl FromRequest for Body<Vec<u8>> {
     async fn from_request(req: &mut OxiditeRequest) -> Result<Self> {
         use http_body_util::BodyExt;

@@ -50,18 +50,28 @@ pub trait Plugin: Send + Sync {
 /// Information about a plugin
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PluginInfo {
+    /// Unique plugin identifier.
     pub id: String,
+    /// Human-readable plugin name.
     pub name: String,
+    /// Plugin version string.
     pub version: String,
+    /// Short description of the plugin.
     pub description: String,
+    /// Plugin author name.
     pub author: String,
+    /// Plugin license identifier.
     pub license: String,
+    /// Optional homepage URL.
     pub homepage: Option<String>,
+    /// Optional repository URL.
     pub repository: Option<String>,
+    /// Whether the plugin is currently enabled.
     pub enabled: bool,
 }
 
 impl PluginInfo {
+    /// Create a new `PluginInfo` with the given fields.
     pub fn new(id: &str, name: &str, version: &str, description: &str, author: &str) -> Self {
         Self {
             id: id.to_string(),

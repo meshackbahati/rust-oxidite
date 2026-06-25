@@ -11,6 +11,7 @@ pub struct RequireRole {
 }
 
 impl RequireRole {
+    /// Create a role guard that checks the named role.
     pub fn new(role_name: impl Into<String>, db: Arc<dyn Database>) -> Self {
         Self {
             role_name: role_name.into(),
@@ -18,12 +19,13 @@ impl RequireRole {
         }
     }
     
+    /// Check whether the authenticated user has the required role.
     pub async fn check(&self, req: &OxiditeRequest) -> OxiditeResult<bool> {
         // Get user_id from request extensions (set by auth middleware)
         let user_id = req.extensions()
             .get::<i64>()
             .ok_or_else(|| Error::Unauthorized("User not authenticated".to_string()))?;
-        
+
         // Check if user has the required role
         let query = oxidite_db::sqlx::query(
             "SELECT 1 FROM roles r
@@ -48,13 +50,15 @@ pub struct RequirePermission {
 }
 
 impl RequirePermission {
+    /// Create a permission guard that checks the named permission.
     pub fn new(permission_name: impl Into<String>, db: Arc<dyn Database>) -> Self {
         Self {
             permission_name: permission_name.into(),
             db,
         }
     }
-    
+
+    /// Check whether the authenticated user has the required permission.
     pub async fn check(&self, req: &OxiditeRequest) -> OxiditeResult<bool> {
         // Get user_id from request extensions
         let user_id = req.extensions()
@@ -85,6 +89,7 @@ pub struct AuthorizationService {
 }
 
 impl AuthorizationService {
+    /// Create a new authorization service backed by the given database.
     pub fn new(db: Arc<dyn Database>) -> Self {
         Self { db }
     }

@@ -6,38 +6,52 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use thiserror::Error;
 use tokio::sync::RwLock;
+/// Redis cache backend
 pub mod redis;
+/// Re-export of [`RedisCache`]
 pub use crate::redis::RedisCache;
 
+/// Cache errors
+/// Cache errors
 #[derive(Debug, Error)]
 pub enum CacheError {
+    /// Invalid cache key
     #[error("invalid cache key: {0}")]
     InvalidKey(String),
+    /// Invalid TTL (must be greater than zero)
     #[error("invalid TTL: duration must be greater than zero")]
     InvalidTtl,
+    /// Serialization/deserialization error
     #[error("serialization error: {0}")]
     Serde(#[from] serde_json::Error),
+    /// Redis error
     #[error("redis error: {0}")]
     Redis(#[from] ::redis::RedisError),
 }
 
+/// Cache result type alias
 pub type Result<T> = std::result::Result<T, CacheError>;
 
 /// Cache trait
 #[async_trait]
 pub trait Cache: Send + Sync {
+    /// Retrieve a value from the cache by key
     async fn get<T>(&self, key: &str) -> Result<Option<T>>
     where
         T: for<'de> Deserialize<'de> + Send;
 
+    /// Store a value in the cache with an optional TTL
     async fn set<T>(&self, key: &str, value: &T, ttl: Option<Duration>) -> Result<()>
     where
         T: Serialize + Send + Sync;
 
+    /// Delete a key from the cache
     async fn delete(&self, key: &str) -> Result<()>;
     
+    /// Check if a key exists in the cache
     async fn exists(&self, key: &str) -> Result<bool>;
     
+    /// Clear all entries from the cache
     async fn flush(&self) -> Result<()>;
 }
 
@@ -69,11 +83,16 @@ pub struct MemoryCache {
     deletes: Arc<AtomicU64>,
 }
 
+/// Cache operation statistics
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CacheStats {
+    /// Number of cache hits
     pub hits: u64,
+    /// Number of cache misses
     pub misses: u64,
+    /// Number of cache set operations
     pub sets: u64,
+    /// Number of cache delete operations
     pub deletes: u64,
 }
 
@@ -84,6 +103,7 @@ pub struct NamespacedCache<C> {
 }
 
 impl<C> NamespacedCache<C> {
+    /// Create a new namespaced cache wrapping an inner cache backend
     pub fn new(namespace: impl Into<String>, inner: C) -> Self {
         Self {
             namespace: namespace.into(),
@@ -97,6 +117,7 @@ impl<C> NamespacedCache<C> {
 }
 
 impl MemoryCache {
+    /// Create a new in-memory cache with a default TTL of one hour
     pub fn new() -> Self {
         Self {
             store: Arc::new(RwLock::new(HashMap::new())),
@@ -108,6 +129,7 @@ impl MemoryCache {
         }
     }
 
+    /// Create a new in-memory cache with a custom default TTL
     pub fn with_default_ttl(ttl: Duration) -> Self {
         Self {
             store: Arc::new(RwLock::new(HashMap::new())),

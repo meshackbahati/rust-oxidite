@@ -22,6 +22,10 @@ impl Endpoint for Arc<dyn Endpoint> {
     }
 }
 
+/// A `tower::Service` wrapper around a type-erased [`Endpoint`].
+///
+/// Bridges the `Endpoint` trait with tower's `Service` trait so that
+/// handlers can be used with tower middleware and hyper's server stack.
 pub struct EndpointService(pub Arc<dyn Endpoint>);
 
 impl Clone for EndpointService {
@@ -511,6 +515,14 @@ struct Route {
     handler: Arc<dyn Endpoint>,
 }
 
+/// The central request router.
+///
+/// Maintains a map of HTTP methods to registered route patterns and their
+/// associated handler endpoints. Supports path parameters (`/users/:id`),
+/// wildcard segments, middleware layers, and CORS configuration.
+///
+/// Implements `tower::Service` so it can be used directly with hyper's
+/// server or wrapped with tower middleware.
 #[derive(Clone)]
 pub struct Router {
     routes: HashMap<Method, Vec<Arc<Route>>>,
@@ -520,6 +532,7 @@ pub struct Router {
 }
 
 impl Router {
+    /// Create an empty router with no routes, middleware, or CORS configuration.
     pub fn new() -> Self {
         Self {
             routes: HashMap::new(),
@@ -536,6 +549,7 @@ impl Router {
         }
     }
 
+    /// Register a handler for `GET` requests at the given path.
     pub fn get<H, Args>(&mut self, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -544,6 +558,7 @@ impl Router {
         self.add_route(Method::GET, path, handler);
     }
     
+    /// Register a handler for `POST` requests at the given path.
     pub fn post<H, Args>(&mut self, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -552,6 +567,7 @@ impl Router {
         self.add_route(Method::POST, path, handler);
     }
 
+    /// Register a handler for `PUT` requests at the given path.
     pub fn put<H, Args>(&mut self, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -560,6 +576,7 @@ impl Router {
         self.add_route(Method::PUT, path, handler);
     }
 
+    /// Register a handler for `DELETE` requests at the given path.
     pub fn delete<H, Args>(&mut self, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -568,6 +585,7 @@ impl Router {
         self.add_route(Method::DELETE, path, handler);
     }
 
+    /// Register a handler for `PATCH` requests at the given path.
     pub fn patch<H, Args>(&mut self, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -645,6 +663,8 @@ impl Router {
         self
     }
 
+    /// Internal: compile the path pattern, wrap the handler, apply router-level
+    /// middleware, and store the resulting route.
     fn add_route<H, Args>(&mut self, method: Method, path: &str, handler: H)
     where
         H: Handler<Args>,
@@ -712,6 +732,12 @@ impl Router {
         builder
     }
 
+    /// Match the incoming request against registered routes and dispatch
+    /// to the corresponding handler.
+    ///
+    /// Handles route matching with path parameter extraction, CORS preflight
+    /// (OPTIONS), HEAD-to-GET fallback, and produces `405 Method Not Allowed`
+    /// or `404 Not Found` errors as appropriate.
     pub async fn handle(&self, mut req: OxiditeRequest) -> Result<OxiditeResponse> {
         req.extensions_mut().insert(self.extensions.clone());
         let method = req.method().clone();

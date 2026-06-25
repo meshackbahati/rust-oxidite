@@ -66,19 +66,18 @@ async fn v2_get_user(Path(user_id): Path<u32>) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // V1 API
-    router.get("/api/v1/users", v1_get_users);
-    router.get("/api/v1/users/:id", v1_get_user);
+    app.router_mut().get("/api/v1/users", v1_get_users);
+    app.router_mut().get("/api/v1/users/:id", v1_get_user);
     
     // V2 API
-    router.get("/api/v2/users", v2_get_users);
-    router.get("/api/v2/users/:id", v2_get_user);
+    app.router_mut().get("/api/v2/users", v2_get_users);
+    app.router_mut().get("/api/v2/users/:id", v2_get_user);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 

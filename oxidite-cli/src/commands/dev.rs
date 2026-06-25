@@ -1,5 +1,8 @@
 use colored::*;
+use nix::sys::signal::{kill, Signal};
+use nix::unistd::Pid;
 use notify::{event::ModifyKind, Event, RecursiveMode, Watcher};
+use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
@@ -25,11 +28,8 @@ fn find_project_root() -> Option<PathBuf> {
 }
 
 /// Load `.env` from the project root, if present.
-/// Skipped when `OXIDITE_SKIP_DOTENV` is set, allowing users to rely
-/// exclusively on `oxidite.toml` (including its `[env]` table) for config.
 fn load_dotenv() {
     if env::var("OXIDITE_SKIP_DOTENV").is_err() {
-        // Try to load from project root first, then fall back to CWD
         if let Some(root) = find_project_root() {
             let env_path = root.join(".env");
             if env_path.exists() {
@@ -37,7 +37,6 @@ fn load_dotenv() {
                 return;
             }
         }
-        // Fallback: load from CWD
         let _ = dotenv::dotenv();
     }
 }
@@ -47,6 +46,7 @@ pub struct RunOptions {
     pub host: Option<String>,
     pub port: Option<u16>,
     pub env: Option<String>,
+    pub bin: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -61,9 +61,7 @@ pub fn run_project_once(
     release: bool,
     options: &RunOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Load .env so all variables are available
     load_dotenv();
-    
     output::debug("Loading environment variables from .env");
 
     if release {
@@ -71,10 +69,9 @@ pub fn run_project_once(
     } else {
         output::info("Starting Oxidite project in debug mode");
     }
-    
     output::debug(&format!("Server options: {:?}", options));
 
-    let mut child = spawn_project_process(release, options)?;
+    let mut child = spawn_cargo_run(release, options)?;
     let status = child.wait()?;
     if status.success() {
         output::success("Process completed successfully");
@@ -85,7 +82,6 @@ pub fn run_project_once(
 }
 
 pub fn start_dev_server(options: DevOptions) -> Result<(), Box<dyn std::error::Error>> {
-    // Load .env once at startup so the CLI and child process both see it
     load_dotenv();
 
     if !options.hot_reload {
@@ -93,47 +89,52 @@ pub fn start_dev_server(options: DevOptions) -> Result<(), Box<dyn std::error::E
         return run_project_once(false, &options.run);
     }
 
+    let project_root = find_project_root()
+        .ok_or("No Cargo.toml found in current or parent directories")?;
+
+    // Determine binary name and path
+    let (bin_name, binary_path) = resolve_binary_path(&project_root, &options.run);
+    output::debug(&format!("Binary target: {}", bin_name));
+    output::debug(&format!("Binary path: {}", binary_path.display()));
+
     output::success("Starting Oxidite development server");
     output::info("Watching for file changes");
-    
-    output::debug(&format!("Watch paths: {:?}", options.watch));
-    output::debug(&format!("Ignore patterns: {:?}", options.ignore));
-    output::debug(&format!("Run options: {:?}", options.run));
+
+    // Build once, then start the server
+    if !build_project(&project_root, &bin_name)? {
+        output::error("Initial build failed");
+        std::process::exit(1);
+    }
 
     let child_process: Arc<Mutex<Option<Child>>> = Arc::new(Mutex::new(None));
-    restart_process(&child_process, &options.run)?;
+    start_binary(&child_process, &binary_path, &options.run)?;
 
     let watch_paths = if options.watch.is_empty() {
-        vec![PathBuf::from(".")]
+        vec![project_root.clone()]
     } else {
         options.watch.clone()
     };
     let ignore_patterns = default_ignore_patterns(&options.ignore);
 
-    let child_clone = child_process.clone();
-    let run_options = options.run.clone();
     let (tx, rx) = std::sync::mpsc::channel();
-
     let mut watcher = notify::recommended_watcher(move |res| {
         let _ = tx.send(res);
     })?;
 
-    let mut watched_any = false;
     for path in &watch_paths {
         if path.exists() {
             watcher.watch(path, RecursiveMode::Recursive)?;
-            watched_any = true;
         } else {
             println!("⚠️  Watch path not found: {}", path.display());
         }
     }
 
-    if !watched_any {
-        watcher.watch(Path::new("."), RecursiveMode::Recursive)?;
-    }
+    // State for the compile-ahead loop
+    let should_rebuild: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
+    let build_in_progress: Arc<Mutex<bool>> = Arc::new(Mutex::new(false));
 
     let mut last_restart = Instant::now();
-    let debounce_duration = Duration::from_millis(300);
+    let debounce_duration = Duration::from_millis(200);
 
     for res in rx {
         match res {
@@ -141,50 +142,157 @@ pub fn start_dev_server(options: DevOptions) -> Result<(), Box<dyn std::error::E
                 if should_reload(&event, &ignore_patterns) {
                     let now = Instant::now();
                     if now.duration_since(last_restart) > debounce_duration {
-                        stop_process(&child_clone)?;
-                        println!("\n{}", "Changes detected, restarting server...".yellow());
-                        thread::sleep(Duration::from_millis(100));
-                        restart_process(&child_clone, &run_options)?;
+                        *should_rebuild.lock().unwrap() = true;
                         last_restart = now;
                     }
                 }
             }
             Err(err) => println!("Watch error: {err:?}"),
         }
+
+        // Try to rebuild if requested and not already building
+        let rebuild_requested = *should_rebuild.lock().unwrap();
+        let already_building = *build_in_progress.lock().unwrap();
+
+        if rebuild_requested && !already_building {
+            *should_rebuild.lock().unwrap() = false;
+            *build_in_progress.lock().unwrap() = true;
+
+            println!("\n{}", "Changes detected, rebuilding...".yellow());
+
+            // Spawn a build thread — the old server keeps running
+            let root = project_root.clone();
+            let bname = bin_name.clone();
+            let child_lock = child_process.clone();
+            let bpath = binary_path.clone();
+            let run_opts = options.run.clone();
+            let build_flag = build_in_progress.clone();
+
+            thread::spawn(move || {
+                let success = build_project(&root, &bname).unwrap_or(false);
+                if success {
+                    // Graceful swap: SIGTERM → wait → start new binary
+                    graceful_stop(&child_lock);
+                    let _ = start_binary(&child_lock, &bpath, &run_opts);
+                    println!("{}", "Server restarted with new code.".green());
+                } else {
+                    println!(
+                        "{}",
+                        "Build failed — old server is still running.".yellow()
+                    );
+                }
+                *build_flag.lock().unwrap() = false;
+            });
+        }
     }
 
     Ok(())
 }
 
-fn stop_process(child_lock: &Arc<Mutex<Option<Child>>>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut lock = child_lock.lock().unwrap();
-    if let Some(mut child) = lock.take() {
-        let _ = child.kill();
-        let _ = child.wait();
+/// Build the project binary. Returns true on success.
+fn build_project(project_root: &Path, bin_name: &str) -> Result<bool, Box<dyn std::error::Error>> {
+    let mut cmd = Command::new("cargo");
+    cmd.arg("build")
+        .arg("--bin")
+        .arg(bin_name)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .current_dir(project_root);
+
+    let mut child = cmd.spawn()?;
+
+    // Stream stderr in real-time so the user sees compilation progress
+    let stderr = child.stderr.take().unwrap();
+    let reader = BufReader::new(stderr);
+    for line in reader.lines() {
+        if let Ok(line) = line {
+            eprintln!("{}", line);
+        }
     }
-    Ok(())
+
+    let status = child.wait()?;
+    Ok(status.success())
 }
 
-fn restart_process(
+/// Start the compiled binary in the background. Returns immediately.
+fn start_binary(
     child_lock: &Arc<Mutex<Option<Child>>>,
+    binary_path: &Path,
     options: &RunOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut lock = child_lock.lock().unwrap();
-    if let Some(mut child) = lock.take() {
-        let _ = child.kill();
-        let _ = child.wait();
-    }
-
-    let child = spawn_project_process(false, options)?;
-    *lock = Some(child);
+    let mut cmd = Command::new(binary_path);
+    apply_run_env(&mut cmd, options);
+    let child = cmd
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .stdin(Stdio::inherit())
+        .spawn()?;
+    *child_lock.lock().unwrap() = Some(child);
     Ok(())
 }
 
-fn spawn_project_process(release: bool, options: &RunOptions) -> std::io::Result<Child> {
+/// Resolve the binary path from project metadata.
+fn resolve_binary_path(project_root: &Path, options: &RunOptions) -> (String, PathBuf) {
+    let bin_name = options
+        .bin
+        .clone()
+        .unwrap_or_else(|| {
+            // Read package name from Cargo.toml
+            let cargo_toml = project_root.join("Cargo.toml");
+            if let Ok(content) = std::fs::read_to_string(&cargo_toml) {
+                for line in content.lines() {
+                    if let Some(name) = line.strip_prefix("name = ") {
+                        return name
+                            .trim_matches('"')
+                            .trim()
+                            .to_string();
+                    }
+                }
+            }
+            "app".to_string()
+        });
+    let binary_path = project_root.join("target").join("debug").join(&bin_name);
+    (bin_name, binary_path)
+}
+
+/// Gracefully stop a running process with SIGTERM, then SIGKILL if needed.
+fn graceful_stop(child_lock: &Arc<Mutex<Option<Child>>>) {
+    let mut lock = child_lock.lock().unwrap();
+    if let Some(ref mut child) = *lock {
+        let pid = child.id();
+
+        // SIGTERM — allow graceful shutdown for in-flight requests
+        let _ = kill(Pid::from_raw(pid as i32), Signal::SIGTERM);
+
+        // Wait up to 2s for graceful shutdown
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while Instant::now() < deadline {
+            match child.try_wait() {
+                Ok(Some(_)) => {
+                    *lock = None;
+                    return;
+                }
+                Ok(None) => thread::sleep(Duration::from_millis(50)),
+                Err(_) => break,
+            }
+        }
+
+        // Force kill if still running
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    *lock = None;
+}
+
+/// Spawn `cargo run` (used by `serve` / `run_project_once`).
+fn spawn_cargo_run(release: bool, options: &RunOptions) -> std::io::Result<Child> {
     let mut command = Command::new("cargo");
     command.arg("run");
     if release {
         command.arg("--release");
+    }
+    if let Some(bin) = &options.bin {
+        command.arg("--bin").arg(bin);
     }
     apply_run_env(&mut command, options);
     command
@@ -194,9 +302,7 @@ fn spawn_project_process(release: bool, options: &RunOptions) -> std::io::Result
         .spawn()
 }
 
-fn apply_run_env(command: &mut Command, options: &RunOptions) {
-    // .env is already loaded at startup; child inherits parent env by default.
-    // Only override if explicit CLI flags were provided.
+pub fn apply_run_env(command: &mut Command, options: &RunOptions) {
     if let Some(host) = &options.host {
         command.env("SERVER_HOST", host);
     }

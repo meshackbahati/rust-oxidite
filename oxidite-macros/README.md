@@ -6,7 +6,7 @@ Procedural macros used by Oxidite crates.
 
 ```toml
 [dependencies]
-oxidite-macros = "2.3.3"
+oxidite-macros = "2.3.4"
 ```
 
 This crate currently provides:

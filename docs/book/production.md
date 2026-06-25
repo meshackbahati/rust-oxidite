@@ -81,10 +81,11 @@ async fn main() -> Result<()> {
         .unwrap_or_else(|_| config.database.url.clone());
 
     // Initialize database, cache, etc.
-    let router = create_routes().await?;
-    let server = Server::new(router);
+    let mut app = Application::new(config);
+    create_routes(app.router_mut()).await?;
 
-    server.listen(format!("{}:{}", config.server.host, config.server.port).parse()?).await
+    app.run().await;
+    // Alternative: create_routes() → Router::new() → Server::new(router).listen(addr)
 }
 ```
 

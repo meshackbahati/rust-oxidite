@@ -14,6 +14,7 @@ pub struct RequestIdMiddleware<S> {
 }
 
 impl<S> RequestIdMiddleware<S> {
+    /// Create a new `RequestIdMiddleware` wrapping the inner service
     pub fn new(inner: S) -> Self {
         Self { inner }
     }
@@ -63,6 +64,7 @@ where
 pub struct RequestIdLayer;
 
 impl RequestIdLayer {
+    /// Create a new `RequestIdLayer`
     pub fn new() -> Self {
         Self
     }

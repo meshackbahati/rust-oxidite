@@ -8,6 +8,7 @@ use oxidite_core::Result;
 pub struct PluginLoader;
 
 impl PluginLoader {
+    /// Create a new plugin loader.
     pub fn new() -> Self {
         Self
     }

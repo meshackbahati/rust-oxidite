@@ -6,7 +6,7 @@ Testing utilities for Oxidite handlers and routers.
 
 ```toml
 [dev-dependencies]
-oxidite-testing = "2.3.3"
+oxidite-testing = "2.3.4"
 ```
 
 ## Available API

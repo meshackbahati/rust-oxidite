@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Routing | Oxidite v2.3.3-1</title>
+        <title>Routing | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -194,14 +194,13 @@ async fn hello_world(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Register a GET route at "/"
-    router.get("/", hello_world);
+    app.router_mut().get("/", hello_world);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="supported-http-methods"><a class="header" href="#supported-http-methods">Supported HTTP Methods</a></h2>
 <p>Oxidite supports all standard HTTP methods:</p>
@@ -229,17 +228,16 @@ async fn handle_patch(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/resource", handle_get);
-    router.post("/resource", handle_post);
-    router.put("/resource", handle_put);
-    router.delete("/resource", handle_delete);
-    router.patch("/resource", handle_patch);
+    app.router_mut().get("/resource", handle_get);
+    app.router_mut().post("/resource", handle_post);
+    app.router_mut().put("/resource", handle_put);
+    app.router_mut().delete("/resource", handle_delete);
+    app.router_mut().patch("/resource", handle_patch);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="path-parameters"><a class="header" href="#path-parameters">Path Parameters</a></h2>
 <p>Oxidite supports path parameters that can be extracted using the <code>Path</code> extractor:</p>
@@ -266,17 +264,16 @@ async fn get_user_post(Path((user_id, post_id)): Path&lt;(u32, u32)&gt;) -&gt; R
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Single parameter: /users/123
-    router.get("/users/:user_id", get_user);
+    app.router_mut().get("/users/:user_id", get_user);
     
     // Multiple parameters: /users/123/posts/456
-    router.get("/users/:user_id/posts/:post_id", get_user_post);
+    app.router_mut().get("/users/:user_id/posts/:post_id", get_user_post);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h3 id="named-struct-for-path-parameters"><a class="header" href="#named-struct-for-path-parameters">Named Struct for Path Parameters</a></h3>
 <p>You can also use a named struct for better organization:</p>
@@ -343,14 +340,13 @@ async fn get_users(Query(params): Query&lt;UserQuery&gt;) -&gt; Result&lt;Respon
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Handles: /users?page=2&amp;limit=20&amp;sort=name&amp;active=true
-    router.get("/users", get_users);
+    app.router_mut().get("/users", get_users);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-groups-and-nesting"><a class="header" href="#route-groups-and-nesting">Route Groups and Nesting</a></h2>
 <p>You can group related routes for better organization:</p>
@@ -367,15 +363,14 @@ async fn v2_users(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Versioned APIs
-    router.get("/api/v1/users", v1_users);
-    router.get("/api/v2/users", v2_users);
+    app.router_mut().get("/api/v1/users", v1_users);
+    app.router_mut().get("/api/v2/users", v2_users);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="wildcard-routes"><a class="header" href="#wildcard-routes">Wildcard Routes</a></h2>
 <p>Oxidite supports wildcard routes for catch-all functionality:</p>
@@ -387,19 +382,18 @@ async fn catch_all(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Register your specific routes first
-    router.get("/", |_req| async { Ok(Response::text("Home page".to_string())) });
-    router.get("/about", |_req| async { Ok(Response::text("About page".to_string())) });
+    app.router_mut().get("/", |_req| async { Ok(Response::text("Home page".to_string())) });
+    app.router_mut().get("/about", |_req| async { Ok(Response::text("About page".to_string())) });
     
     // Wildcard route should be registered last
     // This will catch any routes not matched by previous handlers
-    router.get("/*", catch_all);
+    app.router_mut().get("/*", catch_all);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-middleware"><a class="header" href="#route-middleware">Route Middleware</a></h2>
 <p>You can apply middleware to specific routes or route groups:</p>
@@ -418,16 +412,15 @@ async fn protected_route(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Apply middleware to a specific route
-    router.get("/protected")
+    app.router_mut().get("/protected")
         .middleware(logging_middleware)
         .handler(protected_route);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-organization-best-practices"><a class="header" href="#route-organization-best-practices">Route Organization Best Practices</a></h2>
 <h3 id="1-order-matters"><a class="header" href="#1-order-matters">1. Order Matters</a></h3>

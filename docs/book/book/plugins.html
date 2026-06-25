@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Plugin System | Oxidite v2.3.3-1</title>
+        <title>Plugin System | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -320,15 +320,17 @@ async fn main() -&gt; Result&lt;()&gt; {
     // Register the logging plugin
     plugin_manager.register_plugin(Arc::new(LoggingPlugin::new("INFO")));
     
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    // Initialize plugins
-    plugin_manager.initialize_plugins(&amp;mut router).await?;
+    // Initialize plugins (uses the app's internal router)
+    plugin_manager.initialize_plugins(app.router_mut()).await?;
     
     // Add routes
-    router.get("/", |_req| async { Ok(Response::text("Hello, World!".to_string())) });
+    app.router_mut().get("/", |_req| async { Ok(Response::text("Hello, World!".to_string())) });
     
-    // Create server with plugin middleware
+    // Extract router for custom server setup with plugins
+    let router = app.into_router();
     let server = Server::new(router)
         .with_plugin_manager(plugin_manager);
     
@@ -1141,7 +1143,7 @@ mod plugin_tests {
         let init_called = plugin_arc.initialize_called.clone();
         
         let server = TestServer::new(move |router| {
-            router.get("/test", |_req| async { 
+            app.router_mut().get("/test", |_req| async { 
                 Ok(Response::text("test response".to_string())) 
             });
         }).await;
@@ -1157,7 +1159,8 @@ mod plugin_tests {
         assert!(*before_called.lock().await);
         
         // Test initialize
-        let mut router = Router::new();
+        let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
         plugin_arc.initialize(&amp;mut router).await.unwrap();
         assert!(*init_called.lock().await);
         
@@ -1172,7 +1175,7 @@ mod plugin_tests {
         let cors_plugin = Arc::new(CorsPlugin::new());
         
         let server = TestServer::new(move |router| {
-            router.get("/api/test")
+            app.router_mut().get("/api/test")
                 .handler(|_req| async { Ok(Response::text("API response".to_string())) });
         }).await;
         

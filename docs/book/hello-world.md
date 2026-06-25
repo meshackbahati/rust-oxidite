@@ -15,12 +15,10 @@ async fn hello(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", hello);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    let mut app = Application::new(());
+    app.router_mut().get("/", hello);
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -31,10 +29,9 @@ Let's break this down:
 3. `_req: Request` - The incoming request (we use `_` since we don't use it)
 4. `Ok(Response::text(...))` - Creates a text response
 5. `Result<Response>` - The handler returns a Result with either a Response or an Error
-6. `Router::new()` - Creates a new router to define routes
-7. `router.get("/", hello)` - Registers the hello function to handle GET requests to "/"
-8. `Server::new(router)` - Creates a server with the configured router
-9. `.listen(...)` - Starts the server on port 3000
+6. `Application::new(())` - Creates a new application instance
+7. `app.router_mut().get("/", hello)` - Registers the hello function to handle GET requests to "/"
+8. `.run().await` - Starts the server on the configured address
 
 ## Different Response Types
 
@@ -84,15 +81,14 @@ async fn contact(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
-    router.get("/", home);
-    router.get("/about", about);
-    router.get("/contact", contact);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
+    app.router_mut().get("/contact", contact);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -117,17 +113,16 @@ async fn user_details(Path(user_id): Path<u32>) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Path parameter: /greet/Alice will extract "Alice"
-    router.get("/greet/:name", greet);
+    app.router_mut().get("/greet/:name", greet);
     
     // Numeric parameter: /users/123 will extract 123
-    router.get("/users/:user_id", user_details);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.router_mut().get("/users/:user_id", user_details);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -160,12 +155,11 @@ async fn personalized_greeting(Query(params): Query<GreetingParams>) -> Result<R
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/greet", personalized_greeting);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    let mut app = Application::new(());
+    app.router_mut().get("/greet", personalized_greeting);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 
 // This handles URLs like:
@@ -201,12 +195,11 @@ async fn create_user(Json(payload): Json<CreateUser>) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.post("/users", create_user);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    let mut app = Application::new(());
+    app.router_mut().post("/users", create_user);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.post(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -233,14 +226,13 @@ async fn not_found_handler(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
-    router.get("/maybe-error", maybe_error);
-    router.get("/not-found", not_found_handler);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.router_mut().get("/maybe-error", maybe_error);
+    app.router_mut().get("/not-found", not_found_handler);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -313,16 +305,15 @@ async fn greet_user(Path(name): Path<String>) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
-    router.get("/", home);
-    router.get("/api/hello", api_hello);
-    router.get("/users", get_users);
-    router.get("/greet/:name", greet_user);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.router_mut().get("/", home);
+    app.router_mut().get("/api/hello", api_hello);
+    app.router_mut().get("/users", get_users);
+    app.router_mut().get("/greet/:name", greet_user);
+    
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 

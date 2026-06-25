@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Extractors | Oxidite v2.3.3-1</title>
+        <title>Extractors | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -413,15 +413,14 @@ async fn main() -&gt; Result&lt;()&gt; {
         database_url: "postgresql://localhost/myapp".to_string(),
     });
 
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Attach state to router
-    router.with_state(app_state);
-    router.get("/info", handler_with_state);
+    app.router_mut().with_state(app_state);
+    app.router_mut().get("/info", handler_with_state);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="combining-multiple-extractors"><a class="header" href="#combining-multiple-extractors">Combining Multiple Extractors</a></h2>
 <p>You can use multiple extractors in a single handler:</p>

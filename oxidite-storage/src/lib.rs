@@ -2,16 +2,22 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use std::path::{Component, Path};
 
+/// Local filesystem storage backend
 pub mod local;
+/// File validation utilities
 pub mod validation;
 
 #[cfg(feature = "s3")]
+/// S3-compatible storage backend
 pub mod s3;
 
+/// Re-export of [`LocalStorage`]
 pub use local::LocalStorage;
+/// Re-export of [`FileValidator`] and [`ValidationRules`]
 pub use validation::{FileValidator, ValidationRules};
 
 #[cfg(feature = "s3")]
+/// Re-export of [`S3Storage`]
 pub use s3::S3Storage;
 
 use std::collections::HashMap;
@@ -64,6 +70,7 @@ pub struct StorageManager {
 }
 
 impl StorageManager {
+    /// Create a new empty storage manager with a default "local" disk
     pub fn new() -> Self {
         Self {
             backends: RwLock::new(HashMap::new()),
@@ -71,18 +78,22 @@ impl StorageManager {
         }
     }
     
+    /// Register a named storage backend
     pub async fn add_disk(&self, name: &str, backend: Arc<dyn Storage>) {
         self.backends.write().await.insert(name.to_string(), backend);
     }
     
+    /// Set the default disk by name
     pub async fn set_default(&self, name: &str) {
         *self.default_disk.write().await = name.to_string();
     }
     
+    /// Get a storage backend by name
     pub async fn disk(&self, name: &str) -> Option<Arc<dyn Storage>> {
         self.backends.read().await.get(name).cloned()
     }
     
+    /// Get the currently configured default storage backend
     pub async fn default_disk(&self) -> Option<Arc<dyn Storage>> {
         let name = self.default_disk.read().await.clone();
         self.disk(&name).await
@@ -114,43 +125,58 @@ pub trait Storage: Send + Sync {
 /// Stored file information
 #[derive(Debug, Clone)]
 pub struct StoredFile {
+    /// Relative path of the stored file
     pub path: String,
+    /// File size in bytes
     pub size: u64,
+    /// MIME type of the file
     pub mime_type: String,
+    /// Optional public URL for accessing the file
     pub url: Option<String>,
 }
 
 /// File metadata
 #[derive(Debug, Clone)]
 pub struct FileMetadata {
+    /// File size in bytes
     pub size: u64,
+    /// MIME type of the file
     pub mime_type: String,
+    /// Unix timestamp of file creation, if available
     pub created_at: Option<u64>,
+    /// Unix timestamp of last modification, if available
     pub modified_at: Option<u64>,
 }
 
 /// Storage errors
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
+    /// File not found
     #[error("File not found: {0}")]
     NotFound(String),
     
+    /// I/O error
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
     
+    /// Invalid path
     #[error("Invalid path: {0}")]
     InvalidPath(String),
     
+    /// Validation error
     #[error("Validation error: {0}")]
     Validation(String),
 
+    /// S3 error
     #[error("S3 error: {0}")]
     S3(String),
     
+    /// Other storage error
     #[error("Storage error: {0}")]
     Other(String),
 }
 
+/// Storage result type alias
 pub type Result<T> = std::result::Result<T, StorageError>;
 
 pub(crate) fn validate_storage_path(path: &str) -> Result<()> {

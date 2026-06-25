@@ -8,6 +8,8 @@ pub struct Filters {
 }
 
 impl Filters {
+    /// Create a new `Filters` registry with all built-in filters pre-registered
+    /// (uppercase, lowercase, capitalize, trim, length, reverse, truncate, slugify, title, default)
     pub fn new() -> Self {
         let mut filters = HashMap::new();
         
@@ -28,6 +30,9 @@ impl Filters {
         Self { filters }
     }
 
+    /// Apply a named filter to the input string
+    ///
+    /// Returns `FilterNotFound` if no filter with that name is registered.
     pub fn apply(&self, name: &str, input: &str) -> Result<String> {
         if let Some(filter_fn) = self.filters.get(name) {
             Ok(filter_fn(input))
@@ -36,6 +41,9 @@ impl Filters {
         }
     }
 
+    /// Register a custom filter function
+    ///
+    /// Once registered, templates can use it with `{{ var | filter_name }}`.
     pub fn register(&mut self, name: String, filter: fn(&str) -> String) {
         self.filters.insert(name, filter);
     }

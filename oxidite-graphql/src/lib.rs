@@ -2,12 +2,18 @@
 //!
 //! Provides GraphQL API capabilities with automatic schema generation
 
+/// Schema definitions for GraphQL.
 pub mod schema;
+/// Resolver extension points.
 pub mod resolver;
+/// GraphQL request context.
 pub mod context;
 
+/// Re-export of the schema type.
 pub use schema::GraphQLSchema;
+/// Re-export of the context type.
 pub use context::Context;
+/// Re-export of resolver traits and types.
 pub use resolver::{ResolverExtension, ResolverRegistry};
 
 use oxidite_core::{Router, Result};
@@ -21,6 +27,7 @@ pub struct GraphQLHandler {
 }
 
 impl GraphQLHandler {
+    /// Create a new `GraphQLHandler` with the given schema.
     pub fn new(schema: RootNode<'static, schema::QueryRoot, schema::MutationRoot, juniper::EmptySubscription<Context>>) -> Self {
         Self {
             schema: std::sync::Arc::new(schema),

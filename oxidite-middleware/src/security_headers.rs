@@ -11,6 +11,7 @@ pub struct SecurityHeadersMiddleware<S> {
     config: SecurityHeadersConfig,
 }
 
+/// Configuration for the security headers middleware
 #[derive(Clone, Debug)]
 pub struct SecurityHeadersConfig {
     pub csp: Option<String>,
@@ -21,6 +22,7 @@ pub struct SecurityHeadersConfig {
     pub referrer_policy: Option<String>,
 }
 
+/// X-Frame-Options header values
 #[derive(Clone, Debug)]
 pub enum FrameOptions {
     Deny,
@@ -42,6 +44,7 @@ impl Default for SecurityHeadersConfig {
 }
 
 impl<S> SecurityHeadersMiddleware<S> {
+    /// Create a new security headers middleware with the given config
     pub fn new(inner: S, config: SecurityHeadersConfig) -> Self {
         Self { inner, config }
     }
@@ -126,10 +129,12 @@ pub struct SecurityHeadersLayer {
 }
 
 impl SecurityHeadersLayer {
+    /// Create a new `SecurityHeadersLayer` with the given configuration
     pub fn new(config: SecurityHeadersConfig) -> Self {
         Self { config }
     }
 
+    /// Create a new `SecurityHeadersLayer` with default security settings
     pub fn with_defaults() -> Self {
         Self {
             config: SecurityHeadersConfig::default(),

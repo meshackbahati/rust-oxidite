@@ -25,6 +25,7 @@ pub struct TlsConfig {
 }
 
 impl TlsConfig {
+    /// Create a new TLS configuration referencing the given certificate and key file paths.
     pub fn new(cert_path: impl Into<String>, key_path: impl Into<String>) -> Self {
         Self {
             cert_path: cert_path.into(),
@@ -73,9 +74,12 @@ fn load_private_key(path: &str) -> Result<PrivateKeyDer<'static>> {
 /// HTTP protocol version
 #[derive(Debug, Clone, Copy)]
 pub enum HttpVersion {
+    /// Serve only HTTP/1.1.
     Http1,
+    /// Serve only HTTP/2 (requires TLS).
     Http2,
-    Auto, // Automatically negotiate
+    /// Automatically negotiate the protocol version.
+    Auto,
 }
 
 /// Server builder with HTTPS support
@@ -90,6 +94,9 @@ where
     S: Service<OxiditeRequest, Response = OxiditeResponse, Error = Error> + Clone + Send + Sync + 'static,
     S::Future: Send + 'static,
 {
+    /// Create a new `SecureServer` wrapping the given service.
+    ///
+    /// By default no TLS is configured and HTTP/1.1 is used.
     pub fn new(service: S) -> Self {
         Self {
             service,

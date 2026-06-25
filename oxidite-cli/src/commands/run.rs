@@ -76,35 +76,40 @@ fn run_in_project(
     let src_bin = project_root.join("src").join("bin");
     fs::create_dir_all(&src_bin)?;
 
-    // Determine the binary name from the file stem
     let bin_name = file_path
         .file_stem()
         .and_then(|s| s.to_str())
         .ok_or("Could not determine binary name")?;
 
-    // If the file is not already in src/bin/, copy it there
     let target_path = src_bin.join(format!("{}.rs", bin_name));
 
-    let should_copy = if target_path.exists() {
-        fs::canonicalize(file_path)? != fs::canonicalize(&target_path)?
-    } else {
-        true
-    };
+    let is_already_in_bin = fs::canonicalize(file_path)
+        .ok()
+        .zip(fs::canonicalize(&target_path).ok())
+        .map_or(false, |(a, b)| a == b);
 
-    if should_copy {
+    let cleanup_required = if is_already_in_bin {
+        false
+    } else {
         fs::copy(file_path, &target_path)?;
         output::info(&format!(
             "Copied {} -> {}",
             file_path.display(),
             target_path.display()
         ));
-    }
+        true
+    };
 
-    // Check if Cargo.toml needs dependencies added
-    if let Some(deps) = extra_deps {
-        output::debug(&format!("Adding dependencies: {}", deps));
-        add_dependencies(project_root, deps)?;
-    }
+    let cargo_toml_path = project_root.join("Cargo.toml");
+    let cargo_backup = if extra_deps.is_some() {
+        let original = fs::read_to_string(&cargo_toml_path).ok();
+        if let Some(deps) = extra_deps {
+            add_dependencies(project_root, deps)?;
+        }
+        original
+    } else {
+        None
+    };
 
     output::step(&format!("Running {} in project context", bin_name.bold()));
 
@@ -118,6 +123,16 @@ fn run_in_project(
         .current_dir(project_root)
         .status()?;
 
+    // Cleanup: remove copied file and restore Cargo.toml
+    if cleanup_required {
+        let _ = fs::remove_file(&target_path);
+        output::debug(&format!("Cleaned up {}", target_path.display()));
+    }
+    if let Some(original) = cargo_backup {
+        let _ = fs::write(&cargo_toml_path, &original);
+        output::debug("Restored original Cargo.toml");
+    }
+
     if !status.success() {
         return Err(format!("Script exited with status: {}", status).into());
     }
@@ -130,11 +145,29 @@ fn run_standalone(
     file_path: &Path,
     extra_deps: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Build the dependency list.
-    // Only oxidite (which re-exports all sub-crates) + tokio by default.
     let mut deps: Vec<(String, String)> = vec![
-        ("oxidite".into(), "\"2.3.3\"".into()),
+        ("oxidite".into(), "\"2.3.4\"".into()),
         ("tokio".into(), "{ version = \"1\", features = [\"full\"] }".into()),
+        // Direct sub-crate deps so `use oxidite_auth::*` style imports work.
+        ("oxidite-core".into(),       "\"*\"".into()),
+        ("oxidite-middleware".into(), "\"*\"".into()),
+        ("oxidite-config".into(),     "\"*\"".into()),
+        ("oxidite-db".into(),         "\"*\"".into()),
+        ("oxidite-auth".into(),       "\"*\"".into()),
+        ("oxidite-queue".into(),      "\"*\"".into()),
+        ("oxidite-cache".into(),      "\"*\"".into()),
+        ("oxidite-realtime".into(),   "\"*\"".into()),
+        ("oxidite-template".into(),   "\"*\"".into()),
+        ("oxidite-mail".into(),       "\"*\"".into()),
+        ("oxidite-storage".into(),    "\"*\"".into()),
+        ("oxidite-security".into(),   "\"*\"".into()),
+        ("oxidite-macros".into(),     "\"*\"".into()),
+        ("oxidite-utils".into(),      "\"*\"".into()),
+        ("oxidite-openapi".into(),    "\"*\"".into()),
+        ("oxidite-graphql".into(),    "\"*\"".into()),
+        ("oxidite-plugin".into(),     "\"*\"".into()),
+        ("serde".into(),              "{ version = \"1\", features = [\"derive\"] }".into()),
+        ("serde_json".into(),         "\"1\"".into()),
     ];
 
     // Parse extra dependencies

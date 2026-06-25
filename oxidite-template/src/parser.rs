@@ -66,12 +66,16 @@ pub struct Parser {
 }
 
 impl Parser {
+    /// Create a new parser for the given template source string
     pub fn new(source: &str) -> Self {
         Self {
             source: source.to_string(),
         }
     }
 
+    /// Parse the template source into a vector of AST nodes
+    ///
+    /// Returns `TemplateError::ParseError` on invalid syntax.
     pub fn parse(&self) -> Result<Vec<TemplateNode>> {
         let mut nodes = Vec::new();
         let mut pos = 0;

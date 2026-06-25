@@ -1,7 +1,17 @@
 use thiserror::Error;
 
+/// Error type for Oxidite applications.
+///
+/// Covers common HTTP error conditions as well as low-level
+/// errors from hyper, serde, I/O, and other dependencies.
+/// Use [`Error::internal`] to wrap arbitrary errors while preserving
+/// the original source chain.
 #[derive(Error, Debug)]
 pub enum Error {
+    /// A generic internal server error with a message string.
+    ///
+    /// Prefer [`Error::internal`] when you have access to the original
+    /// source error so its type information and backtrace are preserved.
     #[error("Internal server error: {0}")]
     InternalServerError(String),
     /// Internal server error that preserves the original source error for debugging.
@@ -14,34 +24,67 @@ pub enum Error {
         #[source]
         source: Box<dyn std::error::Error + Send + Sync>,
     },
+    /// The requested resource could not be found.
+    ///
+    /// Maps to HTTP 404.
     #[error("Resource not found: {0}")]
     NotFound(String),
+    /// The request was malformed or contains invalid parameters.
+    ///
+    /// Maps to HTTP 400.
     #[error("Bad request: {0}")]
     BadRequest(String),
+    /// Authentication is required and has failed or not been provided.
+    ///
+    /// Maps to HTTP 401.
     #[error("Unauthorized access: {0}")]
     Unauthorized(String),
+    /// The server understood the request but refuses to authorize it.
+    ///
+    /// Maps to HTTP 403.
     #[error("Forbidden: {0}")]
     Forbidden(String),
+    /// The request conflicts with the current state of the resource.
+    ///
+    /// Maps to HTTP 409.
     #[error("Resource conflict: {0}")]
     Conflict(String),
+    /// Input validation failed.
+    ///
+    /// Maps to HTTP 422.
     #[error("Validation failed: {0}")]
     Validation(String),
+    /// Too many requests have been made in a given time window.
+    ///
+    /// Maps to HTTP 429.
     #[error("Rate limit exceeded: {0}")]
     RateLimited(String),
+    /// The server is temporarily unable to handle the request.
+    ///
+    /// Maps to HTTP 503.
     #[error("Service temporarily unavailable: {0}")]
     ServiceUnavailable(String),
+    /// The HTTP method is not allowed for the requested resource.
+    ///
+    /// Maps to HTTP 405.
     #[error("Method not allowed: {0}")]
     MethodNotAllowed(String),
+    /// An error from the underlying hyper HTTP library.
     #[error(transparent)]
     Hyper(#[from] hyper::Error),
+    /// An I/O error (e.g. file not found, connection reset).
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    /// JSON serialization or deserialization error.
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
+    /// URL-encoded form data deserialization error.
     #[error(transparent)]
     SerdeUrlEncoded(#[from] serde_urlencoded::de::Error),
+    /// An error from the `http` crate (e.g. invalid header or status code).
     #[error(transparent)]
     Http(#[from] http::Error),
+    /// A string could not be decoded as valid UTF-8.
     #[error(transparent)]
     Utf8(#[from] std::str::Utf8Error),
 }

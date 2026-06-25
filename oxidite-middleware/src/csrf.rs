@@ -18,6 +18,7 @@ pub struct CsrfMiddleware<S> {
     config: CsrfConfig,
 }
 
+/// Configuration for the CSRF protection middleware
 #[derive(Clone, Debug)]
 pub struct CsrfConfig {
     pub token_length: usize,
@@ -34,6 +35,7 @@ impl Default for CsrfConfig {
 }
 
 impl<S> CsrfMiddleware<S> {
+    /// Create a new `CsrfMiddleware` with the given configuration
     pub fn new(inner: S, config: CsrfConfig) -> Self {
         Self { inner, config }
     }
@@ -131,10 +133,12 @@ pub struct CsrfLayer {
 }
 
 impl CsrfLayer {
+    /// Create a new `CsrfLayer` with the given configuration
     pub fn new(config: CsrfConfig) -> Self {
         Self { config }
     }
 
+    /// Create a new `CsrfLayer` with default settings
     pub fn with_defaults() -> Self {
         Self {
             config: CsrfConfig::default(),

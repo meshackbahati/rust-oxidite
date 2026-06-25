@@ -17,6 +17,7 @@ pub struct Claims {
 }
 
 impl Claims {
+    /// Create new claims for the given user expiring in `expiry_secs`.
     pub fn new(user_id: String, expiry_secs: u64) -> Self {
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -33,16 +34,19 @@ impl Claims {
         }
     }
 
+    /// Attach roles to the claims.
     pub fn with_roles(mut self, roles: Vec<String>) -> Self {
         self.roles = Some(roles);
         self
     }
 
+    /// Attach permissions to the claims.
     pub fn with_permissions(mut self, permissions: Vec<String>) -> Self {
         self.permissions = Some(permissions);
         self
     }
 
+    /// Check whether the claims include the given role.
     pub fn has_role(&self, role: &str) -> bool {
         self.roles
             .as_ref()
@@ -50,6 +54,7 @@ impl Claims {
             .unwrap_or(false)
     }
 
+    /// Check whether the claims include the given permission.
     pub fn has_permission(&self, permission: &str) -> bool {
         self.permissions
             .as_ref()
@@ -64,10 +69,12 @@ pub struct JwtManager {
 }
 
 impl JwtManager {
+    /// Create a new `JwtManager` with the given signing secret.
     pub fn new(secret: String) -> Self {
         Self { secret }
     }
 
+    /// Generate a signed JWT from the given claims.
     pub fn generate_token<T: Serialize>(&self, claims: &T) -> Result<String> {
         let token = encode(
             &Header::default(),
@@ -77,6 +84,7 @@ impl JwtManager {
         Ok(token)
     }
 
+    /// Verify a signed JWT and return its claims.
     pub fn verify(&self, token: &str) -> Result<Claims> {
         let token_data = decode::<Claims>(
             token,

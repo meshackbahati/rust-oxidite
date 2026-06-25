@@ -6,7 +6,7 @@ OpenAPI 3.0 document structures and helpers for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-openapi = "2.3.3"
+oxidite-openapi = "2.3.4"
 ```
 
 ## What This Crate Provides
@@ -39,14 +39,16 @@ assert!(html.contains("SwaggerUIBundle"));
 
 ## Router Integration
 
-If you use `oxidite_core::Router`, you can register docs endpoints in one call:
+Register docs endpoints in one call with the Application:
 
 ```rust
-# use oxidite_core::Router;
-# use oxidite_openapi::{AutoDocs, OpenApiBuilder};
-let router = Router::new();
+use oxidite::prelude::*;
+use oxidite_openapi::{AutoDocs, OpenApiBuilder};
+
+let config = Config::load().unwrap();
+let mut app = Application::new(config);
 let spec = OpenApiBuilder::new("My API", "1.0.0").build();
-let _router = router.with_auto_docs(spec); // mounts /openapi.json and /api/docs
+let _ = app.into_router().with_auto_docs(spec); // mounts /openapi.json and /api/docs
 ```
 
 ## Notes

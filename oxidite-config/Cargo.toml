@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-config"
-version = "2.3.3"
+version = "2.3.4"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Configuration management for the Oxidite web framework"

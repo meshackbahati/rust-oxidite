@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::fs;
 
 pub mod parser;
@@ -21,18 +21,26 @@ pub struct Context {
 }
 
 impl Context {
+    /// Create an empty template context
     pub fn new() -> Self {
         Self {
             data: HashMap::new(),
         }
     }
 
+    /// Insert a value into the template context by key
+    ///
+    /// Supports any type that implements `serde::Serialize`.
+    /// Values can be accessed in templates with `{{ key }}`.
     pub fn set<T: serde::Serialize>(&mut self, key: impl Into<String>, value: T) {
         if let Ok(json_value) = serde_json::to_value(value) {
             self.data.insert(key.into(), json_value);
         }
     }
 
+    /// Look up a value by dotted key path
+    ///
+    /// Supports nested access: `"user.name"` returns the `name` field inside `user`.
     pub fn get(&self, key: &str) -> Option<&Value> {
         // Support dotted notation: user.name
         let parts: Vec<&str> = key.split('.').collect();
@@ -45,6 +53,9 @@ impl Context {
         Some(current)
     }
 
+    /// Build a context from a `serde_json::Value` object
+    ///
+    /// Each top-level key in the JSON object becomes a context variable.
     pub fn from_json(json: Value) -> Self {
         let mut context = Self::new();
         if let Value::Object(map) = json {
@@ -62,13 +73,63 @@ impl Default for Context {
     }
 }
 
-/// Template engine to manage multiple templates
+/// Read-only template configuration, safe to share as `State<TemplateContext>`.
+///
+/// Holds the template directory path. Routes extract it via
+/// `State<TemplateContext>` and call `render()` per-request — the
+/// `TemplateEngine` is instantiated on demand, keeping the core server
+/// runtime decoupled from presentation failures.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use oxidite_template::{Context, TemplateContext};
+///
+/// let templates = TemplateContext::new("templates");
+/// let ctx = Context::new();
+/// let html = templates.render("index.html", &ctx).unwrap();
+/// ```
+#[derive(Debug, Clone)]
+pub struct TemplateContext {
+    directory: PathBuf,
+}
+
+impl TemplateContext {
+    /// Create a new template context pointing at the given directory.
+    pub fn new(dir: impl Into<PathBuf>) -> Self {
+        Self {
+            directory: dir.into(),
+        }
+    }
+
+    /// Render a template by name.
+    ///
+    /// A new `TemplateEngine` is created per-call. This ensures the core
+    /// server runtime is never impacted by template loading errors.
+    pub fn render(&self, template: &str, context: &Context) -> Result<String> {
+        let mut engine = TemplateEngine::new();
+        engine
+            .load_dir(&self.directory)
+            .map_err(|e| TemplateError::RenderError(format!(
+                "failed to load templates from {:?}: {e}",
+                self.directory
+            )))?;
+        engine.render(template, context)
+    }
+}
+
+/// Template engine that compiles, stores, and renders templates
+///
+/// Manages a collection of named `Template` values and registered filter functions.
+/// Use `load_dir()` to batch-load templates from disk, or `add_template()` for
+/// programmatic registration.
 pub struct TemplateEngine {
     templates: HashMap<String, Template>,
     filters: Filters,
 }
 
 impl TemplateEngine {
+    /// Create an empty template engine with default built-in filters
     pub fn new() -> Self {
         Self {
             templates: HashMap::new(),
@@ -76,12 +137,17 @@ impl TemplateEngine {
         }
     }
 
+    /// Register a template by name from its source string
+    ///
+    /// The template is parsed immediately; a parse error is returned if the
+    /// source contains invalid template syntax.
     pub fn add_template(&mut self, name: impl Into<String>, source: impl Into<String>) -> Result<()> {
         let template = Template::new(source)?;
         self.templates.insert(name.into(), template);
         Ok(())
     }
 
+    /// Look up a compiled template by name
     pub fn get_template(&self, name: &str) -> Option<&Template> {
         self.templates.get(name)
     }
@@ -101,6 +167,7 @@ impl TemplateEngine {
         self.filters.register(name.into(), filter);
     }
 
+    /// Render a named template with the given context and return the output string
     pub fn render(&self, name: &str, context: &Context) -> Result<String> {
         let template = self.get_template(name)
             .ok_or_else(|| TemplateError::RenderError(format!("Template not found: {}", name)))?;
@@ -176,6 +243,9 @@ pub struct Template {
 }
 
 impl Template {
+    /// Parse source text into a compiled template
+    ///
+    /// Returns `Err` if the template contains invalid syntax.
     pub fn new(source: impl Into<String>) -> Result<Self> {
         let source = source.into();
         let parser = Parser::new(&source);
@@ -184,6 +254,7 @@ impl Template {
         Ok(Self { _source: source, parsed })
     }
 
+    /// Render this template with the given context (standalone, no engine needed)
     pub fn render(&self, context: &Context) -> Result<String> {
         let mut renderer = Renderer::new(context, None);
         renderer.render(self)
@@ -212,6 +283,7 @@ pub enum TemplateError {
     FilterNotFound(String),
 }
 
+/// Convenience alias for template operations that may fail
 pub type Result<T> = std::result::Result<T, TemplateError>;
 
 #[cfg(test)]

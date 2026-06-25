@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Responses | Oxidite v2.3.3-1</title>
+        <title>Responses | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -251,7 +251,7 @@ async fn custom_response(_req: Request) -&gt; Result&lt;Response&gt; {
 use oxidite_template::{TemplateEngine, Context};
 
 async fn template_handler(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     engine.add_template("index", "&lt;h1&gt;Hello {{ name }}!&lt;/h1&gt;")?;
     
     let mut context = Context::new();

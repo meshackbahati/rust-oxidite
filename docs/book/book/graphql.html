@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>GraphQL | Oxidite v2.3.3-1</title>
+        <title>GraphQL | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -618,20 +618,19 @@ fn serve_graphql_playground() -&gt; Result&lt;Response&gt; {
 async fn main() -&gt; Result&lt;()&gt; {
     let schema = Arc::new(create_advanced_schema());
     
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add GraphQL endpoint
-    router.post("/graphql")
+    app.router_mut().post("/graphql")
         .with_state(schema.clone())
         .handler(graphql_endpoint);
     
-    router.get("/graphql")
+    app.router_mut().get("/graphql")
         .with_state(schema)
         .handler(graphql_endpoint);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="database-integration"><a class="header" href="#database-integration">Database Integration</a></h2>
 <p>Connect GraphQL resolvers to your database:</p>
@@ -1267,7 +1266,7 @@ mod graphql_tests {
     async fn test_graphql_query() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -1300,7 +1299,7 @@ mod graphql_tests {
     async fn test_graphql_mutation() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -1335,7 +1334,7 @@ mod graphql_tests {
     async fn test_graphql_error_handling() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -1366,7 +1365,7 @@ mod graphql_tests {
         // Test authenticated GraphQL endpoint
         let schema = Arc::new(create_secured_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .middleware(graphql_auth_middleware)
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);

@@ -11,6 +11,7 @@ pub struct RedisCache {
 }
 
 impl RedisCache {
+    /// Create a new Redis cache from a connection URL
     pub fn new(url: &str) -> Result<Self> {
         let client = Client::open(url)?;
         
@@ -20,6 +21,7 @@ impl RedisCache {
         })
     }
 
+    /// Create a new Redis cache with a custom default TTL
     pub fn with_default_ttl(url: &str, ttl: Duration) -> Result<Self> {
         validate_ttl(Some(ttl))?;
         let client = Client::open(url)?;

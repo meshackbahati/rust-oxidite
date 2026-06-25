@@ -2,6 +2,7 @@ use crate::config::Config;
 use oxidite_middleware::CorsLayer;
 use tower_http::cors::Any;
 
+/// Build a [`CorsLayer`] from the application configuration
 pub fn cors_layer_from_config(config: &Config) -> CorsLayer {
     let mut layer = CorsLayer::new();
 

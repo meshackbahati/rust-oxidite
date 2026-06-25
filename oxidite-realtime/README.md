@@ -6,7 +6,7 @@ WebSocket and real-time features for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-realtime = "2.3.3"
+oxidite-realtime = "2.3.4"
 ```
 
 ## Usage

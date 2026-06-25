@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Features | Oxidite v2.3.3-1</title>
+        <title>Features | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -199,12 +199,11 @@ async fn hello_world(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello_world);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello_world);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h3 id="2-type-safe-request-handling"><a class="header" href="#2-type-safe-request-handling">2. Type-Safe Request Handling</a></h3>
 <ul>
@@ -633,7 +632,7 @@ mod tests {
     #[tokio::test]
     async fn test_hello_world() {
         let server = TestServer::new(|router| {
-            router.get("/", hello_world);
+            app.router_mut().get("/", hello_world);
         }).await;
         
         let response = server.get("/").send().await;

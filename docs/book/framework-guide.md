@@ -1,4 +1,4 @@
-# Framework Guide: Building Real Applications with Oxidite (v2.3.3)
+# Framework Guide: Building Real Applications with Oxidite (v2.3.4)
 
 This guide is a practical map for building production services with Oxidite.
 

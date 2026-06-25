@@ -78,15 +78,14 @@ Register your plugins using the `router.plugin()` method:
 ```rust,ignore
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
 
     // Register plugins
-    router.plugin(RequestTrackerPlugin);
-    router.plugin(DatabasePlugin::new("sqlite::memory:"));
+    app.router_mut().plugin(RequestTrackerPlugin);
+    app.router_mut().plugin(DatabasePlugin::new("sqlite::memory:"));
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.plugin(...) → Server::new(router).listen(addr)
 }
 ```
 

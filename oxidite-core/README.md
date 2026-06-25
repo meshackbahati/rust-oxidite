@@ -6,7 +6,7 @@ Core HTTP server, router, request/response types, and extractors for Oxidite.
 
 ```toml
 [dependencies]
-oxidite-core = "2.3.3"
+oxidite-core = "2.3.4"
 ```
 
 ## Key Components
@@ -19,7 +19,7 @@ oxidite-core = "2.3.3"
 ## Basic Example
 
 ```rust
-use oxidite_core::{Router, Server, Request, Response, Result};
+use oxidite_core::{Application, Request, Response, Result};
 
 async fn hello(_req: Request) -> Result<Response> {
     Ok(Response::text("Hello, Oxidite!"))
@@ -27,14 +27,14 @@ async fn hello(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", hello);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    let config = oxidite_config::Config::default();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", hello);
+    app.run().await
 }
 ```
+
+> **Alternative**: The manual approach using `Router::new()` + `Server::new(router).listen(addr)` works identically under the hood.
 
 ## Notes
 

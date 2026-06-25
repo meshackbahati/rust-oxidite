@@ -5,8 +5,10 @@ use tokio::sync::{RwLock, broadcast};
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use uuid::Uuid;
 
+/// Room/channel management for WebSocket connections.
 pub mod rooms;
 
+/// Re-export of room types.
 pub use rooms::{Room, RoomManager};
 
 /// WebSocket message types
@@ -28,14 +30,17 @@ pub enum Message {
 }
 
 impl Message {
+    /// Create a text message.
     pub fn text(content: impl Into<String>) -> Self {
         Self::Text { content: content.into() }
     }
 
+    /// Create a JSON message.
     pub fn json(data: serde_json::Value) -> Self {
         Self::Json { data }
     }
 
+    /// Convert to a `tungstenite::Message`.
     pub fn to_ws_message(&self) -> Result<WsMessage> {
         match self {
             Message::Text { content } => Ok(WsMessage::Text(content.clone())),
@@ -50,6 +55,7 @@ impl Message {
         }
     }
 
+    /// Parse from a `tungstenite::Message`.
     pub fn from_ws_message(msg: WsMessage) -> Result<Self> {
         match msg {
             WsMessage::Text(text) => {
@@ -71,12 +77,15 @@ impl Message {
 
 /// WebSocket connection
 pub struct WebSocketConnection {
+    /// Unique connection ID.
     pub id: String,
+    /// Optional authenticated user ID.
     pub user_id: Option<String>,
     tx: broadcast::Sender<Message>,
 }
 
 impl WebSocketConnection {
+    /// Create a new connection, returning a (connection, receiver) pair.
     pub fn new(user_id: Option<String>) -> (Self, broadcast::Receiver<Message>) {
         let (tx, rx) = broadcast::channel(100);
         let id = Uuid::new_v4().to_string();
@@ -91,6 +100,7 @@ impl WebSocketConnection {
         )
     }
 
+    /// Send a message to this connection.
     pub fn send(&self, message: Message) -> Result<()> {
         self.tx.send(message)
             .map_err(|_| WebSocketError::SendError)?;
@@ -105,6 +115,7 @@ pub struct WebSocketManager {
 }
 
 impl WebSocketManager {
+    /// Create a new `WebSocketManager`.
     pub fn new() -> Self {
         Self {
             connections: Arc::new(RwLock::new(HashMap::new())),
@@ -112,11 +123,13 @@ impl WebSocketManager {
         }
     }
 
+    /// Register a new connection.
     pub async fn add_connection(&self, conn: Arc<WebSocketConnection>) {
         let mut connections = self.connections.write().await;
         connections.insert(conn.id.clone(), conn);
     }
 
+    /// Remove a connection and clean up room membership.
     pub async fn remove_connection(&self, conn_id: &str) {
         let mut connections = self.connections.write().await;
         connections.remove(conn_id);
@@ -125,6 +138,7 @@ impl WebSocketManager {
         self.room_manager.remove_from_all_rooms(conn_id).await;
     }
 
+    /// Broadcast a message to all connected clients.
     pub async fn broadcast(&self, message: Message) -> Result<()> {
         let connections = self.connections.read().await;
         let mut failed = 0usize;
@@ -139,6 +153,7 @@ impl WebSocketManager {
         Ok(())
     }
 
+    /// Send a message to all connections for a given user.
     pub async fn send_to_user(&self, user_id: &str, message: Message) -> Result<()> {
         let connections = self.connections.read().await;
         let mut matched = 0usize;
@@ -154,6 +169,7 @@ impl WebSocketManager {
         Ok(())
     }
 
+    /// Get a reference to the room manager.
     pub fn room_manager(&self) -> Arc<RoomManager> {
         self.room_manager.clone()
     }
@@ -192,6 +208,7 @@ pub enum WebSocketError {
     UserNotConnected(String),
 }
 
+/// Convenience alias for WebSocket operation results.
 pub type Result<T> = std::result::Result<T, WebSocketError>;
 
 #[cfg(test)]

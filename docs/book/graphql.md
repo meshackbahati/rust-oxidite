@@ -450,20 +450,19 @@ fn serve_graphql_playground() -> Result<Response> {
 async fn main() -> Result<()> {
     let schema = Arc::new(create_advanced_schema());
     
-    let mut router = Router::new();
+    let mut app = Application::new(schema.clone());
     
     // Add GraphQL endpoint
-    router.post("/graphql")
+    app.router_mut().post("/graphql")
         .with_state(schema.clone())
         .handler(graphql_endpoint);
     
-    router.get("/graphql")
+    app.router_mut().get("/graphql")
         .with_state(schema)
         .handler(graphql_endpoint);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get/post(...) → Server::new(router).listen(addr)
 }
 ```
 

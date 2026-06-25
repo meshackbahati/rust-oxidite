@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use std::path::Path;
 use std::process::Command;
 
 mod commands;
@@ -31,6 +32,15 @@ enum Commands {
         /// Environment override passed to the project as OXIDITE_ENV
         #[arg(long)]
         env: Option<String>,
+        /// Run a specific binary target instead of the default
+        #[arg(long)]
+        bin: Option<String>,
+        /// Run in debug mode (default is release)
+        #[arg(long)]
+        debug: bool,
+        /// Skip cargo build; run existing binary (use with caution)
+        #[arg(long)]
+        skip_build: bool,
     },
     /// Create a new Oxidite project
     New {
@@ -114,17 +124,41 @@ enum Commands {
         target: Option<String>,
         #[arg(long)]
         features: Option<String>,
+        /// Build all features
+        #[arg(long)]
+        all_features: bool,
+        /// Disable default features
+        #[arg(long)]
+        no_default_features: bool,
+        /// Copy final artifacts to this directory
+        #[arg(long)]
+        out_dir: Option<String>,
+        /// Require Cargo.lock is up to date
+        #[arg(long)]
+        frozen: bool,
+        /// Require Cargo.lock is present
+        #[arg(long)]
+        locked: bool,
+        /// Path to Cargo.toml
+        #[arg(long)]
+        manifest_path: Option<String>,
         #[arg(short = 'v', long)]
         verbose: bool,
     },
     /// Start development server with hot reload
     Dev {
+        /// Address to bind to (host:port)
+        #[arg(short, long)]
+        addr: Option<String>,
         #[arg(long)]
         host: Option<String>,
         #[arg(long)]
         port: Option<u16>,
         #[arg(long)]
         env: Option<String>,
+        /// Run a specific binary target instead of the default
+        #[arg(long)]
+        bin: Option<String>,
         #[arg(long = "watch")]
         watch: Vec<String>,
         #[arg(long = "ignore")]
@@ -156,6 +190,15 @@ enum Commands {
         /// Extra dependencies to include (crate names, comma-separated)
         #[arg(long)]
         deps: Option<String>,
+    },
+    /// Generate deployment artifacts for serverless/container targets
+    Deploy {
+        /// Target platform (aws-lambda, docker, cloudflare)
+        #[arg(short, long, default_value = "aws-lambda")]
+        target: String,
+        /// Output directory for artifacts
+        #[arg(short, long, default_value = "deploy")]
+        output: String,
     },
     /// Process management (PM2-style)
     #[command(name = "pm2")]
@@ -283,12 +326,10 @@ async fn main() {
             host,
             port,
             env,
-        } => {
-            match resolve_run_options(addr, host, port, env) {
-                Ok(options) => commands::dev::run_project_once(true, &options).map_err(|e| e as Box<dyn std::error::Error>),
-                Err(e) => Err(e),
-            }
-        }
+            bin,
+            debug,
+            skip_build,
+        } => serve_command(addr, host, port, env, bin, debug, skip_build),
         Commands::New {
             name,
             project_type,
@@ -347,27 +388,39 @@ async fn main() {
             profile,
             target,
             features,
+            all_features,
+            no_default_features,
+            out_dir,
+            frozen,
+            locked,
+            manifest_path,
             verbose,
         } => {
-            build_project(release, profile, target, features, verbose)
+            build_project(BuildOptions {
+                release,
+                profile,
+                target,
+                features,
+                all_features,
+                no_default_features,
+                out_dir,
+                frozen,
+                locked,
+                manifest_path,
+                verbose,
+            })
         }
         Commands::Dev {
+            addr,
             host,
             port,
             env,
+            bin,
             watch,
             ignore,
             hot_reload: _,
             no_hot_reload,
-        } => {
-            let options = commands::dev::DevOptions {
-                run: commands::dev::RunOptions { host, port, env },
-                watch: watch.into_iter().map(Into::into).collect(),
-                ignore,
-                hot_reload: !no_hot_reload,
-            };
-            commands::dev::start_dev_server(options)
-        }
+        } => dev_command(addr, host, port, env, bin, watch, ignore, no_hot_reload),
         Commands::Version => {
             println!("oxidite {}", env!("CARGO_PKG_VERSION"));
             Ok(())
@@ -381,6 +434,9 @@ async fn main() {
         }
         Commands::Run { file, deps } => {
             commands::run::run_file(&file, deps.as_deref())
+        }
+        Commands::Deploy { target, output } => {
+            commands::deploy::generate_artifacts(&target, &output)
         }
         Commands::Process { action } => {
             match action {
@@ -444,6 +500,64 @@ fn run_generator(generator: Generator) -> std::result::Result<(), Box<dyn std::e
     Ok(())
 }
 
+fn serve_command(
+    addr: Option<String>,
+    host: Option<String>,
+    port: Option<u16>,
+    env: Option<String>,
+    bin: Option<String>,
+    debug: bool,
+    skip_build: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mut run_opts = resolve_run_options(addr, host, port, env)?;
+    run_opts.bin = bin;
+    let release = !debug;
+    if skip_build {
+        let bin_name = run_opts.bin.as_deref().unwrap_or("app");
+        let binary_path = if release { "target/release/" } else { "target/debug/" };
+        let full_path = format!("{}{}", binary_path, bin_name);
+        if !Path::new(&full_path).exists() {
+            commands::output::error("Binary not found, build first or remove --skip-build");
+            std::process::exit(1);
+        }
+        let mut cmd = Command::new(&full_path);
+        commands::dev::apply_run_env(&mut cmd, &run_opts);
+        let status = cmd.status()?;
+        if !status.success() {
+            std::process::exit(status.code().unwrap_or(1));
+        }
+        Ok(())
+    } else {
+        commands::dev::run_project_once(release, &run_opts)
+            .map_err(|e| e as Box<dyn std::error::Error>)
+    }
+}
+
+fn dev_command(
+    addr: Option<String>,
+    host: Option<String>,
+    port: Option<u16>,
+    env: Option<String>,
+    bin: Option<String>,
+    watch: Vec<String>,
+    ignore: Vec<String>,
+    no_hot_reload: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let run_opts = resolve_run_options(addr, host, port, env.clone())?;
+    let options = commands::dev::DevOptions {
+        run: commands::dev::RunOptions {
+            host: run_opts.host,
+            port: run_opts.port,
+            env,
+            bin,
+        },
+        watch: watch.into_iter().map(Into::into).collect(),
+        ignore,
+        hot_reload: !no_hot_reload,
+    };
+    commands::dev::start_dev_server(options)
+}
+
 async fn run_queue_command(
     queue: QueueCommand,
 ) -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -456,34 +570,63 @@ async fn run_queue_command(
     Ok(())
 }
 
-fn build_project(
+struct BuildOptions {
     release: bool,
     profile: Option<String>,
     target: Option<String>,
     features: Option<String>,
+    all_features: bool,
+    no_default_features: bool,
+    out_dir: Option<String>,
+    frozen: bool,
+    locked: bool,
+    manifest_path: Option<String>,
     verbose: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+}
+
+fn build_project(opts: BuildOptions) -> Result<(), Box<dyn std::error::Error>> {
     header("Building Oxidite project");
 
     let mut command = Command::new("cargo");
     command.arg("build");
 
-    if let Some(profile) = profile {
+    if let Some(profile) = opts.profile {
         command.arg("--profile").arg(profile);
-    } else if release {
+    } else if opts.release {
         command.arg("--release");
         info("Building in release mode");
     }
 
-    if let Some(target) = target {
+    if let Some(target) = opts.target {
         command.arg("--target").arg(target);
     }
 
-    if let Some(features) = features {
+    if let Some(features) = opts.features {
         command.arg("--features").arg(features);
     }
+    if opts.all_features {
+        command.arg("--all-features");
+    }
+    if opts.no_default_features {
+        command.arg("--no-default-features");
+    }
 
-    if verbose {
+    if let Some(out_dir) = opts.out_dir {
+        command.arg("--out-dir").arg(out_dir);
+    }
+
+    if opts.frozen {
+        command.arg("--frozen");
+    }
+    if opts.locked {
+        command.arg("--locked");
+    }
+
+    if let Some(manifest_path) = opts.manifest_path {
+        command.arg("--manifest-path").arg(manifest_path);
+    }
+
+    if opts.verbose {
         command.arg("-v");
     }
 
@@ -512,6 +655,7 @@ fn resolve_run_options(
                 host: host.or(addr_host),
                 port: port.or(addr_port),
                 env,
+                bin: None,
             })
         }
         Err(e) => Err(e),

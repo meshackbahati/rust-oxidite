@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>API Versioning | Oxidite v2.3.3-1</title>
+        <title>API Versioning | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -244,19 +244,18 @@ async fn v2_get_user(Path(user_id): Path&lt;u32&gt;) -&gt; Result&lt;Response&gt
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // V1 API
-    router.get("/api/v1/users", v1_get_users);
-    router.get("/api/v1/users/:id", v1_get_user);
+    app.router_mut().get("/api/v1/users", v1_get_users);
+    app.router_mut().get("/api/v1/users/:id", v1_get_user);
     
     // V2 API
-    router.get("/api/v2/users", v2_get_users);
-    router.get("/api/v2/users/:id", v2_get_user);
+    app.router_mut().get("/api/v2/users", v2_get_users);
+    app.router_mut().get("/api/v2/users/:id", v2_get_user);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="header-based-versioning"><a class="header" href="#header-based-versioning">Header-Based Versioning</a></h2>
 <p>Use HTTP headers to specify the API version:</p>
@@ -883,7 +882,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_v1_api() {
         let server = TestServer::new(|router| {
-            router.get("/api/v1/users", v1_get_users);
+            app.router_mut().get("/api/v1/users", v1_get_users);
         }).await;
         
         let response = server
@@ -901,7 +900,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_v2_api() {
         let server = TestServer::new(|router| {
-            router.get("/api/v2/users", v2_get_users);
+            app.router_mut().get("/api/v2/users", v2_get_users);
         }).await;
         
         let response = server
@@ -919,7 +918,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_header_versioning() {
         let server = TestServer::new(|router| {
-            router.get("/users")
+            app.router_mut().get("/users")
                 .middleware(version_middleware)
                 .handler(get_users_by_version);
         }).await;
@@ -941,7 +940,7 @@ mod version_tests {
         let policy = Arc::new(VersionDeprecationPolicy::new());
         let server = TestServer::new(move |router| {
             let policy_clone = policy.clone();
-            router.get("/users")
+            app.router_mut().get("/users")
                 .with_state(policy_clone)
                 .middleware(deprecation_middleware)
                 .handler(|_| async { Ok(Response::json(serde_json::json!({"test": true}))) });

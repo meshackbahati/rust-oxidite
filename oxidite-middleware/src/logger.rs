@@ -4,12 +4,14 @@ use oxidite_core::{OxiditeRequest, OxiditeResponse, Error};
 use std::future::Future;
 use std::pin::Pin;
 
+/// Tower service that logs incoming requests and outgoing responses
 #[derive(Clone)]
 pub struct Logger<S> {
     inner: S,
 }
 
 impl<S> Logger<S> {
+    /// Create a new `Logger` wrapping the inner service
     pub fn new(inner: S) -> Self {
         Self { inner }
     }
@@ -46,6 +48,7 @@ where
     }
 }
 
+/// Tower layer that wraps a service with [`Logger`]
 pub struct LoggerLayer;
 
 impl<S> Layer<S> for LoggerLayer {

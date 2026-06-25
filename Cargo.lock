@@ -2839,7 +2839,7 @@ checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
 
 [[package]]
 name = "oxidite"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "chrono",
  "oxidite-auth",
@@ -2868,7 +2868,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-auth"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "argon2",
  "async-trait",
@@ -2898,7 +2898,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cache"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "redis",
@@ -2910,7 +2910,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-cli"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "bytes",
  "chrono",
@@ -2950,7 +2950,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-config"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "dotenv",
  "notify",
@@ -2963,7 +2963,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-core"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2976,6 +2976,7 @@ dependencies = [
  "http-body-util",
  "hyper 1.8.1",
  "hyper-util",
+ "oxidite-config",
  "quinn",
  "regex",
  "rustls 0.23.36",
@@ -2994,7 +2995,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-db"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3012,7 +3013,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-graphql"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3030,7 +3031,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-macros"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "oxidite-db",
  "proc-macro2",
@@ -3042,7 +3043,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-mail"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3055,7 +3056,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-middleware"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -3077,7 +3078,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-openapi"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "oxidite-core",
  "serde",
@@ -3086,7 +3087,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-plugin"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3101,7 +3102,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-queue"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -3117,7 +3118,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-realtime"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "futures",
@@ -3132,7 +3133,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-security"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",
@@ -3145,7 +3146,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-storage"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "aws-config",
@@ -3160,7 +3161,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-template"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "bytes",
  "http 1.4.0",
@@ -3176,7 +3177,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-testing"
-version = "2.3.3-1"
+version = "2.3.4"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3193,7 +3194,7 @@ dependencies = [
 
 [[package]]
 name = "oxidite-utils"
-version = "2.3.3"
+version = "2.3.4"
 dependencies = [
  "base64 0.22.1",
  "chrono",

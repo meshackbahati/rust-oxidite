@@ -19,12 +19,11 @@ async fn hello_world(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", hello_world);
+    let mut app = Application::new(());
+    app.router_mut().get("/", hello_world);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -219,36 +218,19 @@ async fn cors_middleware(req: Request, next: Next) -> Result<Response> {
 
 ```rust,ignore
 use oxidite::prelude::*;
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, TemplateEngine};
 
-async fn template_example(_req: Request) -> Result<Response> {
-    let mut template_engine = TemplateEngine::new();
-    
-    // Add a template
-    template_engine.add_template("welcome", r#"
-        <html>
-        <head><title>{{ title }}</title></head>
-        <body>
-            <h1>{{ greeting }}</h1>
-            <p>Welcome, {{ name }}!</p>
-            <ul>
-            {% for item in items %}
-                <li>{{ item }}</li>
-            {% endfor %}
-            </ul>
-        </body>
-        </html>
-    "#)?;
-    
-    // Create context
-    let mut context = Context::new();
+async fn template_example(
+    State(engine): State<TemplateEngine>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("title", "Welcome Page");
     context.set("greeting", "Hello!");
     context.set("name", "User");
     context.set("items", vec!["Feature 1", "Feature 2", "Feature 3"]);
     
     // Render as response
-    let response = template_engine.render_response("welcome", &context)
+    let response = engine.render_response("welcome", &context)
         .map_err(|e| Error::InternalServerError(e.to_string()))?;
     
     Ok(response)

@@ -10,6 +10,7 @@ pub struct PostgresBackend {
 }
 
 impl PostgresBackend {
+    /// Create a new PostgreSQL queue backend
     pub async fn new(pool: PgPool, table_name: &str) -> Result<Self> {
         let backend = Self {
             pool,

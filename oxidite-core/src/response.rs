@@ -211,13 +211,13 @@ pub mod helpers {
         OxiditeResponse::html(body)
     }
 
-    /// Create an empty 200 OK response.
+    /// Create an empty 200 OK response with no body.
     #[inline]
     pub fn ok() -> OxiditeResponse {
         OxiditeResponse::ok()
     }
 
-    /// Create an empty 204 No Content response.
+    /// Create an empty 204 No Content response with no body.
     #[inline]
     pub fn no_content() -> OxiditeResponse {
         OxiditeResponse::no_content()

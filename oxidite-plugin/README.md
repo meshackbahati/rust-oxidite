@@ -20,8 +20,8 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-plugin = "2.3.3"
-oxidite = "2.3.3"
+oxidite-plugin = "2.3.4"
+oxidite = "2.3.4"
 ```
 
 ## Features
@@ -83,15 +83,14 @@ impl Plugin for HelloWorldPlugin {
 // Register the plugin
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
     
     // Load and initialize the plugin
     let plugin = HelloWorldPlugin;
-    plugin.init(&mut router)?;
+    plugin.init(app.router_mut())?;
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    app.run().await
 }
 ```
 
@@ -274,7 +273,8 @@ use oxidite_plugin::{PluginManager, PluginLoader};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
     let mut plugin_manager = PluginManager::new();
     
     // Load plugins from configuration
@@ -283,11 +283,9 @@ async fn main() -> Result<()> {
         .await?;
     
     // Initialize all plugins
-    plugin_manager.initialize(&mut router).await?;
+    plugin_manager.initialize(app.router_mut()).await?;
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    app.run().await
 }
 ```
 

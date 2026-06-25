@@ -45,16 +45,15 @@ async fn handler(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Add middleware to a specific route
-    router.get("/protected")
+    app.router_mut().get("/protected")
         .middleware(basic_middleware)
         .handler(handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -80,17 +79,16 @@ async fn about(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Add global middleware
-    router.middleware(global_middleware);
+    app.router_mut().middleware(global_middleware);
     
-    router.get("/", home);
-    router.get("/about", about);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -259,26 +257,26 @@ use oxidite::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let router = Router::new()
-        .with_cors(CorsConfig {
-            allowed_origins: vec!["http://localhost:3000".to_string()],
-            allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
-            allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
-            allow_credentials: true,
-            max_age: 3600,
-        });
+    let mut app = Application::new(());
+    app.router_mut().set_cors(CorsConfig {
+        allowed_origins: vec!["http://localhost:3000".to_string()],
+        allowed_methods: vec!["GET".to_string(), "POST".to_string(), "PUT".to_string(), "DELETE".to_string()],
+        allowed_headers: vec!["Content-Type".to_string(), "Authorization".to_string()],
+        allow_credentials: true,
+        max_age: 3600,
+    });
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new().with_cors(...) → Server::new(router).listen(addr)
 }
 ```
 
 For development, you can use the permissive config:
 
 ```rust,ignore
-let router = Router::new()
-    .with_cors(CorsConfig::permissive());
+let mut app = Application::new(());
+app.router_mut().set_cors(CorsConfig::permissive());
+// Alternative: Router::new().with_cors(CorsConfig::permissive())
 ```
 
 The framework-level CORS automatically:
@@ -396,18 +394,17 @@ async fn handler(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Middlewares are executed in the order they're added
-    router.middleware(middleware_a);
-    router.middleware(middleware_b);
-    router.middleware(middleware_c);
+    app.router_mut().middleware(middleware_a);
+    app.router_mut().middleware(middleware_b);
+    app.router_mut().middleware(middleware_c);
     
-    router.get("/", handler);
+    app.router_mut().get("/", handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.middleware(...) → router.get(...) → Server::new(router).listen(addr)
 }
 
 // Output would be:
@@ -474,15 +471,14 @@ async fn web_handler(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.middleware(conditional_middleware);
+    let mut app = Application::new(());
+    app.router_mut().middleware(conditional_middleware);
     
-    router.get("/api/data", api_handler);
-    router.get("/web/page", web_handler);
+    app.router_mut().get("/api/data", api_handler);
+    app.router_mut().get("/web/page", web_handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.middleware(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -517,15 +513,13 @@ async fn main() -> Result<()> {
         maintenance_mode: false,
     });
     
-    let mut router = Router::new();
-    router.with_state(app_state);
-    router.middleware(stateful_middleware);
+    let mut app = Application::new(app_state.clone());
+    app.router_mut().middleware(stateful_middleware);
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.with_state(state) → Server::new(router).listen(addr)
 }
 ```
 
@@ -539,30 +533,28 @@ use oxidite_middleware::{Logger, RateLimiter, Cors};
 
 // Logger middleware
 async fn with_logger() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Add logging middleware
-    router.middleware(Logger::new());
+    app.router_mut().middleware(Logger::new());
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.middleware(...) → Server::new(router).listen(addr)
 }
 
 // Rate limiting middleware
 async fn with_rate_limit() -> Result<()> {
-    let mut router = Router::new();
+    let mut app = Application::new(());
     
     // Add rate limiting middleware
-    router.middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
+    app.router_mut().middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.middleware(...) → Server::new(router).listen(addr)
 }
 ```
 

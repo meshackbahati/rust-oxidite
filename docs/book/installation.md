@@ -28,7 +28,7 @@ cargo install --path oxidite-cli
 cargo install oxidite-cli
 
 # Or pin this generated CLI build
-cargo install oxidite-cli --version 2.3.3
+cargo install oxidite-cli --version 2.3.4
 ```
 
 ## Creating Your First Project
@@ -77,12 +77,10 @@ async fn hello(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", hello);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    let mut app = Application::new(());
+    app.router_mut().get("/", hello);
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 

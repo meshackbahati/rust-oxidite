@@ -10,6 +10,7 @@ pub struct RedisBackend {
 }
 
 impl RedisBackend {
+    /// Create a new Redis queue backend
     pub fn new(url: &str, queue_key: &str) -> Result<Self> {
         let client = Client::open(url)
             .map_err(|e| QueueError::BackendError(e.to_string()))?;

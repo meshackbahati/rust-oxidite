@@ -34,12 +34,14 @@ pub struct CacheLayer {
 }
 
 impl CacheLayer {
+    /// Create a new `CacheLayer` with the given configuration
     pub fn new(config: CacheConfig) -> Self {
         Self {
             config,
         }
     }
 
+    /// Create a builder for constructing a `CacheLayer` with a fluent API
     pub fn builder() -> CacheLayerBuilder {
         CacheLayerBuilder::new()
     }
@@ -99,32 +101,38 @@ pub struct CacheLayerBuilder {
 }
 
 impl CacheLayerBuilder {
+    /// Create a new `CacheLayerBuilder` with default settings
     pub fn new() -> Self {
         Self {
             config: CacheConfig::default(),
         }
     }
 
+    /// Set the maximum number of cache entries
     pub fn max_entries(mut self, max: usize) -> Self {
         self.config.max_entries = max;
         self
     }
 
+    /// Set the default TTL for cached responses
     pub fn default_ttl(mut self, ttl: Duration) -> Self {
         self.config.default_ttl = ttl;
         self
     }
 
+    /// Enable or disable caching of GET requests
     pub fn cache_get(mut self, enable: bool) -> Self {
         self.config.cache_get = enable;
         self
     }
 
+    /// Enable or disable caching of POST requests
     pub fn cache_post(mut self, enable: bool) -> Self {
         self.config.cache_post = enable;
         self
     }
 
+    /// Build the `CacheLayer` with the configured settings
     pub fn build(self) -> CacheLayer {
         CacheLayer::new(self.config)
     }

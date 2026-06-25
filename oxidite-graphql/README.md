@@ -6,7 +6,7 @@ GraphQL integration for Oxidite using Juniper.
 
 ```toml
 [dependencies]
-oxidite-graphql = "2.3.3"
+oxidite-graphql = "2.3.4"
 ```
 
 ## What This Crate Provides
@@ -23,19 +23,20 @@ use oxidite_graphql::create_handler;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
 
     // Mount at /graphql (POST for queries, GET for playground)
-    create_handler().mount(&mut router)?;
+    create_handler().mount(app.router_mut())?;
 
     // or custom path
-    // create_handler().mount_at(&mut router, "/api/graphql")?;
+    // create_handler().mount_at(app.router_mut(), "/api/graphql")?;
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    app.run().await
 }
 ```
+
+> **Alternative**: The manual approach using `Router::new()` → `create_handler().mount(&mut router)` → `Server::new(router).listen(addr)` works identically.
 
 ## Notes
 

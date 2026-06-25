@@ -20,6 +20,7 @@ pub struct SessionMiddleware<S> {
 }
 
 impl<S> SessionMiddleware<S> {
+    /// Create a new `SessionMiddleware`.
     pub fn new(
         inner: S,
         store: Arc<dyn SessionStore>,
@@ -123,6 +124,7 @@ pub struct SessionLayer {
 }
 
 impl SessionLayer {
+    /// Create a new `SessionLayer` with the given parameters.
     pub fn new(
         store: Arc<dyn SessionStore>,
         cookie_secure: bool,
@@ -137,6 +139,7 @@ impl SessionLayer {
         }
     }
 
+    /// Create a `SessionLayer` with secure cookies and a 1-hour TTL.
     pub fn with_defaults(store: Arc<dyn SessionStore>) -> Self {
         Self::new(store, true, true, 3600)
     }

@@ -5,11 +5,13 @@ use super::{Message, Result, WebSocketError};
 
 /// A room/channel for grouping WebSocket connections
 pub struct Room {
+    /// Room name.
     pub name: String,
-    members: HashSet<String>, // Connection IDs
+    members: HashSet<String>,
 }
 
 impl Room {
+    /// Create a new room with the given name.
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -17,18 +19,22 @@ impl Room {
         }
     }
 
+    /// Add a connection to the room.
     pub fn add_member(&mut self, conn_id: String) {
         self.members.insert(conn_id);
     }
 
+    /// Remove a connection from the room.
     pub fn remove_member(&mut self, conn_id: &str) {
         self.members.remove(conn_id);
     }
 
+    /// Get the set of member connection IDs.
     pub fn members(&self) -> &HashSet<String> {
         &self.members
     }
 
+    /// Return the number of members in the room.
     pub fn member_count(&self) -> usize {
         self.members.len()
     }
@@ -40,12 +46,14 @@ pub struct RoomManager {
 }
 
 impl RoomManager {
+    /// Create a new `RoomManager`.
     pub fn new() -> Self {
         Self {
             rooms: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
+    /// Create a new room if it does not already exist.
     pub async fn create_room(&self, name: String) -> Result<()> {
         let mut rooms = self.rooms.write().await;
         if !rooms.contains_key(&name) {
@@ -54,6 +62,7 @@ impl RoomManager {
         Ok(())
     }
 
+    /// Add a connection to a room, creating the room if needed.
     pub async fn join_room(&self, room_name: &str, conn_id: String) -> Result<()> {
         let mut rooms = self.rooms.write().await;
         
@@ -65,6 +74,7 @@ impl RoomManager {
         Ok(())
     }
 
+    /// Remove a connection from a room, deleting the room if empty.
     pub async fn leave_room(&self, room_name: &str, conn_id: &str) -> Result<()> {
         let mut rooms = self.rooms.write().await;
         
@@ -80,6 +90,7 @@ impl RoomManager {
         Ok(())
     }
 
+    /// Remove a connection from every room, deleting empty rooms.
     pub async fn remove_from_all_rooms(&self, conn_id: &str) {
         let mut rooms = self.rooms.write().await;
         
@@ -90,6 +101,7 @@ impl RoomManager {
         });
     }
 
+    /// Send a message to all members of a room.
     pub async fn broadcast_to_room(&self, room_name: &str, message: Message, manager: &super::WebSocketManager) -> Result<()> {
         let rooms = self.rooms.read().await;
         
@@ -107,6 +119,7 @@ impl RoomManager {
         }
     }
 
+    /// Get the list of connection IDs in a room.
     pub async fn get_room_members(&self, room_name: &str) -> Result<Vec<String>> {
         let rooms = self.rooms.read().await;
         
@@ -117,6 +130,7 @@ impl RoomManager {
         }
     }
 
+    /// List all room names.
     pub async fn list_rooms(&self) -> Vec<String> {
         let rooms = self.rooms.read().await;
         rooms.keys().cloned().collect()

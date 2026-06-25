@@ -56,22 +56,21 @@ cargo install --path oxidite-cli
 
 ```rust
 use oxidite::prelude::*;
-use serde_json::json;
 
 async fn hello(_req: Request) -> Result<Response> {
-    Ok(Response::json(json!({ "message": "Hello from Oxidite!" })))
+    Ok(Response::json(serde_json::json!({ "message": "Hello from Oxidite!" })))
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", hello);
-
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", hello);
+    app.run().await
 }
 ```
+
+> **Alternative**: The manual approach using `Router::new()` → `router.get(...)` → `Server::new(router).listen(addr)` works identically.
 
 ## Architecture & Modular Ecosystem
 

@@ -268,15 +268,11 @@ async fn main() -> Result<()> {
         database_url: "postgresql://localhost/myapp".to_string(),
     });
 
-    let mut router = Router::new();
+    let mut app = Application::new(app_state);
+    app.router_mut().get("/info", handler_with_state);
     
-    // Attach state to router
-    router.with_state(app_state);
-    router.get("/info", handler_with_state);
-    
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.with_state(state) → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 
@@ -521,14 +517,12 @@ async fn main() -> Result<()> {
         },
     });
 
-    let mut router = Router::new();
-    router.with_state(state);
-    router.get("/users", list_users);
-    router.post("/users", create_user);
+    let mut app = Application::new(state);
+    app.router_mut().get("/users", list_users);
+    app.router_mut().post("/users", create_user);
 
-    Server::new(router)
-        .listen("0.0.0.0:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.with_state(state) → Server::new(router).listen(addr)
 }
 ```
 

@@ -4,130 +4,175 @@ use std::collections::HashMap;
 /// OpenAPI 3.0 Specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpenApiSpec {
+    /// OpenAPI specification version (e.g. `3.0.0`).
     pub openapi: String,
+    /// API information metadata.
     pub info: Info,
+    /// Map of path strings to their definitions.
     pub paths: HashMap<String, PathItem>,
+    /// Reusable components.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub components: Option<Components>,
+    /// API server definitions.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub servers: Option<Vec<Server>>,
 }
 
+/// API information metadata.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Info {
+    /// API title.
     pub title: String,
+    /// API version string.
     pub version: String,
+    /// Optional API description.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
+/// API server definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Server {
+    /// Server URL.
     pub url: String,
+    /// Optional server description.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
+/// Describes the operations available on a single path.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PathItem {
+    /// GET operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub get: Option<Operation>,
+    /// POST operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub post: Option<Operation>,
+    /// PUT operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub put: Option<Operation>,
+    /// DELETE operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub delete: Option<Operation>,
 }
 
 impl PathItem {
+    /// Set the GET operation for this path.
     pub fn with_get(mut self, operation: Operation) -> Self {
         self.get = Some(operation);
         self
     }
 
+    /// Set the POST operation for this path.
     pub fn with_post(mut self, operation: Operation) -> Self {
         self.post = Some(operation);
         self
     }
 
+    /// Set the PUT operation for this path.
     pub fn with_put(mut self, operation: Operation) -> Self {
         self.put = Some(operation);
         self
     }
 
+    /// Set the DELETE operation for this path.
     pub fn with_delete(mut self, operation: Operation) -> Self {
         self.delete = Some(operation);
         self
     }
 }
 
+/// Describes a single API operation.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Operation {
+    /// Short summary of the operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<String>,
+    /// Detailed description of the operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// API tags for grouping operations.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<Vec<String>>,
+    /// Parameters for the operation.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parameters: Option<Vec<Parameter>>,
+    /// Request body schema.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub request_body: Option<RequestBody>,
+    /// Possible responses keyed by status code.
     pub responses: HashMap<String, Response>,
 }
 
 impl Operation {
+    /// Set the operation description.
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
+    /// Add a tag to the operation.
     pub fn add_tag(mut self, tag: impl Into<String>) -> Self {
         let tags = self.tags.get_or_insert_with(Vec::new);
         tags.push(tag.into());
         self
     }
 
+    /// Add a parameter to the operation.
     pub fn add_parameter(mut self, parameter: Parameter) -> Self {
         let parameters = self.parameters.get_or_insert_with(Vec::new);
         parameters.push(parameter);
         self
     }
 
+    /// Set the request body.
     pub fn with_request_body(mut self, request_body: RequestBody) -> Self {
         self.request_body = Some(request_body);
         self
     }
 
+    /// Add a response by status code.
     pub fn add_response(mut self, status_code: impl Into<String>, response: Response) -> Self {
         self.responses.insert(status_code.into(), response);
         self
     }
 }
 
+/// Location of a parameter in the request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ParameterLocation {
+    /// Query parameter.
     Query,
+    /// Path parameter.
     Path,
+    /// Header parameter.
     Header,
+    /// Cookie parameter.
     Cookie,
 }
 
+/// A request parameter.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Parameter {
+    /// Parameter name.
     pub name: String,
+    /// Parameter location (`query`, `path`, `header`, or `cookie`).
     #[serde(rename = "in")]
-    pub location: String, // "query", "path", "header", "cookie"
+    pub location: String,
+    /// Optional parameter description.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Whether the parameter is required.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
+    /// Parameter schema.
     pub schema: Schema,
 }
 
 impl Parameter {
+    /// Create a new parameter with the given name, location, and schema.
     pub fn new(
         name: impl Into<String>,
         location: ParameterLocation,
@@ -150,44 +195,55 @@ impl Parameter {
         }
     }
 
+    /// Create a query parameter.
     pub fn query(name: impl Into<String>, schema: Schema) -> Self {
         Self::new(name, ParameterLocation::Query, schema)
     }
 
+    /// Create a path parameter (required by default).
     pub fn path(name: impl Into<String>, schema: Schema) -> Self {
         let mut p = Self::new(name, ParameterLocation::Path, schema);
         p.required = Some(true);
         p
     }
 
+    /// Create a header parameter.
     pub fn header(name: impl Into<String>, schema: Schema) -> Self {
         Self::new(name, ParameterLocation::Header, schema)
     }
 
+    /// Create a cookie parameter.
     pub fn cookie(name: impl Into<String>, schema: Schema) -> Self {
         Self::new(name, ParameterLocation::Cookie, schema)
     }
 
+    /// Set the parameter description.
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
+    /// Set whether the parameter is required.
     pub fn required(mut self, required: bool) -> Self {
         self.required = Some(required);
         self
     }
 }
 
+/// A request body definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RequestBody {
+    /// Optional body description.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+    /// Whether the body is required.
     pub required: bool,
+    /// Map of media types to their schemas.
     pub content: HashMap<String, MediaType>,
 }
 
 impl RequestBody {
+    /// Create a request body with JSON content.
     pub fn json(schema: Schema) -> Self {
         let mut content = HashMap::new();
         content.insert("application/json".to_string(), MediaType { schema });
@@ -198,25 +254,31 @@ impl RequestBody {
         }
     }
 
+    /// Set the request body description.
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
 
+    /// Set whether the request body is required.
     pub fn required(mut self, required: bool) -> Self {
         self.required = required;
         self
     }
 }
 
+/// An API response.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Response {
+    /// Response description.
     pub description: String,
+    /// Optional response content by media type.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<HashMap<String, MediaType>>,
 }
 
 impl Response {
+    /// Create a new response with the given description.
     pub fn new(description: impl Into<String>) -> Self {
         Self {
             description: description.into(),
@@ -224,6 +286,7 @@ impl Response {
         }
     }
 
+    /// Create a JSON response with the given description and schema.
     pub fn json(description: impl Into<String>, schema: Schema) -> Self {
         let mut content = HashMap::new();
         content.insert("application/json".to_string(), MediaType { schema });
@@ -234,55 +297,71 @@ impl Response {
     }
 }
 
+/// A media type definition.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MediaType {
+    /// Media type schema.
     pub schema: Schema,
 }
 
+/// JSON Schema representation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Schema {
+    /// A simple scalar type.
     Simple {
+        /// Schema type name (e.g. `string`, `integer`).
         #[serde(rename = "type")]
         type_name: String,
     },
+    /// An object type with named properties.
     Object {
+        /// Always `object`.
         #[serde(rename = "type")]
         type_name: String,
+        /// Map of property names to their schemas.
         properties: HashMap<String, Box<Schema>>,
     },
+    /// An array type with a single item schema.
     Array {
+        /// Always `array`.
         #[serde(rename = "type")]
         type_name: String,
+        /// Schema for array items.
         items: Box<Schema>,
     },
 }
 
 impl Schema {
+    /// Create a string schema.
     pub fn string() -> Self {
         Self::Simple {
             type_name: "string".to_string(),
         }
     }
 
+    /// Create an integer schema.
     pub fn integer() -> Self {
         Self::Simple {
             type_name: "integer".to_string(),
         }
     }
 
+    /// Create a number schema.
     pub fn number() -> Self {
         Self::Simple {
             type_name: "number".to_string(),
         }
     }
 
+    /// Create a boolean schema.
     pub fn boolean() -> Self {
         Self::Simple {
             type_name: "boolean".to_string(),
         }
     }
 
+    /// Create an object schema with the given properties.
     pub fn object(properties: HashMap<String, Schema>) -> Self {
         Self::Object {
             type_name: "object".to_string(),
@@ -293,6 +372,7 @@ impl Schema {
         }
     }
 
+    /// Create an array schema with the given item type.
     pub fn array(items: Schema) -> Self {
         Self::Array {
             type_name: "array".to_string(),
@@ -303,6 +383,7 @@ impl Schema {
 
 /// Lightweight schema inference trait for common Rust types.
 pub trait ToSchema {
+    /// Resolve the schema representation for this type.
     fn schema() -> Schema;
 }
 
@@ -352,8 +433,10 @@ impl<T: ToSchema> ToSchema for Vec<T> {
     }
 }
 
+/// Reusable components container.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Components {
+    /// Map of schema names to their definitions.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub schemas: Option<HashMap<String, Schema>>,
 }
@@ -364,6 +447,7 @@ pub struct OpenApiBuilder {
 }
 
 impl OpenApiBuilder {
+    /// Create a new builder with the given title and version.
     pub fn new(title: impl Into<String>, version: impl Into<String>) -> Self {
         Self {
             spec: OpenApiSpec {
@@ -380,11 +464,13 @@ impl OpenApiBuilder {
         }
     }
 
+    /// Set the API description.
     pub fn description(mut self, desc: impl Into<String>) -> Self {
         self.spec.info.description = Some(desc.into());
         self
     }
 
+    /// Add a server URL.
     pub fn server(mut self, url: impl Into<String>, description: Option<String>) -> Self {
         let servers = self.spec.servers.get_or_insert_with(Vec::new);
         servers.push(Server {
@@ -394,15 +480,18 @@ impl OpenApiBuilder {
         self
     }
 
+    /// Add a path item.
     pub fn path(mut self, path: impl Into<String>, item: PathItem) -> Self {
         self.spec.paths.insert(path.into(), item);
         self
     }
 
+    /// Build the final [`OpenApiSpec`].
     pub fn build(self) -> OpenApiSpec {
         self.spec
     }
 
+    /// Serialize the spec to pretty-printed JSON.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(&self.spec)
     }

@@ -1,6 +1,7 @@
 use oxidite_db::sqlx;
 use oxidite_db::sqlx::FromRow;
 
+/// A role that can be assigned to users.
 #[derive(FromRow, Clone, Debug)]
 pub struct Role {
     pub id: i64,
@@ -10,6 +11,7 @@ pub struct Role {
     pub updated_at: i64,
 }
 
+/// A permission that can be granted to roles.
 #[derive(FromRow, Clone, Debug)]
 pub struct Permission {
     pub id: i64,

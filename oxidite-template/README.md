@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-template = "2.3.3"
+oxidite-template = "2.3.4"
 ```
 
 ## Features
@@ -38,18 +38,21 @@ oxidite-template = "2.3.3"
 
 ### Basic Setup
 
-Initialize the template engine and register templates:
+Create a shared template context for rendering templates:
 
 ```rust
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::TemplateContext;
 
-// Create a new template engine
-let mut engine = TemplateEngine::new();
-engine.load_dir("./templates")?;
-
-// Load all templates from the directory
-engine.load_templates().await?;
+// Point to your templates directory
+let templates = TemplateContext::new("./templates");
 ```
+
+> **Alternative**: Use `TemplateEngine` directly for one-off rendering:
+> ```rust
+> let mut engine = TemplateEngine::new();
+> engine.load_dir("./templates")?;
+> engine.load_templates().await?;
+> ```
 
 ### Creating Templates
 
@@ -105,25 +108,27 @@ Create a child template (`templates/page.html`) that extends the base:
 Render templates with dynamic data:
 
 ```rust
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, Context};
+
+let templates = TemplateContext::new("templates");
 
 // Create context with data
-let mut context = Context::new();
-context.insert("page_title", "My Page");
-context.insert("heading", "Welcome!");
-context.insert("content", "This is my content.");
-context.insert("show_button", true);
-context.insert("button_text", "Click Me");
+let mut ctx = Context::new();
+ctx.set("page_title", "My Page");
+ctx.set("heading", "Welcome!");
+ctx.set("content", "This is my content.");
+ctx.set("show_button", true);
+ctx.set("button_text", "Click Me");
 
 // Add a vector of items
 let items = vec![
     Item { name: "First".to_string() },
     Item { name: "Second".to_string() },
 ];
-context.insert("items", items);
+ctx.set("items", items);
 
 // Render the template
-let html = engine.render("page.html", &context).await?;
+let html = templates.render("page.html", &ctx)?;
 ```
 
 ### Template Filters
@@ -199,19 +204,28 @@ Include reusable template parts:
 Using templates with Oxidite's response utilities:
 
 ```rust
+use std::sync::Arc;
 use oxidite::prelude::*;
+use oxidite_template::{TemplateContext, Context};
 
 async fn home_page(
     _req: Request,
-    State(template_engine): State<TemplateEngine>
+    State(templates): State<Arc<TemplateContext>>
 ) -> Result<Response> {
-    let mut context = Context::new();
-    context.insert("title", "Home Page");
-    context.insert("welcome_message", "Welcome to our site!");
+    let mut ctx = Context::new();
+    ctx.set("title", "Home Page");
+    ctx.set("welcome_message", "Welcome to our site!");
     
-    let html = template_engine.render("home.html", &context).await?;
+    let html = templates.render("home.html", &ctx)?;
     Ok(response::html(html))
 }
+```
+
+Register the shared template context with the router:
+
+```rust
+let templates = Arc::new(TemplateContext::new("templates"));
+app.router_mut().with_state(templates);
 ```
 
 ## Security

@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-middleware = "2.3.3"
+oxidite-middleware = "2.3.4"
 ```
 
 ## Features
@@ -47,17 +47,18 @@ use oxidite_middleware::{ServiceBuilder, LoggerLayer, CorsLayer, CompressionLaye
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", handler);
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", handler);
     
     // Compose multiple middleware layers
-    let app = ServiceBuilder::new()
+    let service = ServiceBuilder::new()
         .layer(LoggerLayer::new())
         .layer(CorsLayer::permissive())
         .layer(CompressionLayer::new())
-        .service(router);
+        .service(app.into_router());
     
-    Server::new(app)
+    Server::new(service)
         .listen("127.0.0.1:3000".parse().unwrap())
         .await
 }
@@ -222,12 +223,13 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", home_handler);
-    router.post("/api/users", create_user_handler);
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", home_handler);
+    app.router_mut().post("/api/users", create_user_handler);
     
     // Build a comprehensive middleware stack
-    let app = ServiceBuilder::new()
+    let service = ServiceBuilder::new()
         // Security
         .layer(SecurityHeadersLayer::new())
         .layer(CorsLayer::permissive())
@@ -242,9 +244,9 @@ async fn main() -> Result<()> {
         // Observability
         .layer(LoggerLayer::new())
         
-        .service(router);
+        .service(app.into_router());
     
-    Server::new(app)
+    Server::new(service)
         .listen("127.0.0.1:3000".parse().unwrap())
         .await
 }
@@ -311,13 +313,14 @@ async fn handler(_req: Request) -> Result<Response> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
-    router.get("/", handler);
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", handler);
     
     // Wrap the router with middleware
     let service = ServiceBuilder::new()
         .layer(LoggerLayer::new())
-        .service(router);
+        .service(app.into_router());
     
     Server::new(service)
         .listen("127.0.0.1:3000".parse().unwrap())

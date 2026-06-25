@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Printable Version | Oxidite v2.3.3-1</title>
+        <title>Printable Version | Oxidite v2.3.4</title>
         <meta name="robots" content="noindex">
 
 
@@ -273,12 +273,11 @@ async fn hello(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <p>Run this with:</p>
 <pre><code class="language-bash">cargo run
@@ -318,12 +317,11 @@ async fn hello(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <p>Let’s break this down:</p>
 <ol>
@@ -332,10 +330,10 @@ async fn main() -&gt; Result&lt;()&gt; {
 <li><code>_req: Request</code> - The incoming request (we use <code>_</code> since we don’t use it)</li>
 <li><code>Ok(Response::text(...))</code> - Creates a text response</li>
 <li><code>Result&lt;Response&gt;</code> - The handler returns a Result with either a Response or an Error</li>
-<li><code>Router::new()</code> - Creates a new router to define routes</li>
-<li><code>router.get("/", hello)</code> - Registers the hello function to handle GET requests to “/”</li>
-<li><code>Server::new(router)</code> - Creates a server with the configured router</li>
-<li><code>.listen(...)</code> - Starts the server on port 3000</li>
+<li><code>Application::new(config)</code> - Creates an app with config (or use <code>Router::new()</code> for manual setup)</li>
+<li><code>app.router_mut().get("/", hello)</code> - Registers routes on the app's router</li>
+<li><code>app.run().await</code> - Starts the server using config host:port</li>
+<li>Alternative: <code>Server::new(router).listen(addr).await</code></li>
 </ol>
 <h2 id="different-response-types"><a class="header" href="#different-response-types">Different Response Types</a></h2>
 <p>Let’s explore different ways to respond:</p>
@@ -376,15 +374,14 @@ async fn contact(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/", home);
-    router.get("/about", about);
-    router.get("/contact", contact);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
+    app.router_mut().get("/contact", contact);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="using-path-parameters"><a class="header" href="#using-path-parameters">Using Path Parameters</a></h2>
 <p>Oxidite supports path parameters that you can extract:</p>
@@ -404,17 +401,16 @@ async fn user_details(Path(user_id): Path&lt;u32&gt;) -&gt; Result&lt;Response&g
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Path parameter: /greet/Alice will extract "Alice"
-    router.get("/greet/:name", greet);
+    app.router_mut().get("/greet/:name", greet);
     
     // Numeric parameter: /users/123 will extract 123
-    router.get("/users/:user_id", user_details);
+    app.router_mut().get("/users/:user_id", user_details);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="using-query-parameters"><a class="header" href="#using-query-parameters">Using Query Parameters</a></h2>
 <p>You can also extract query parameters:</p>
@@ -442,12 +438,11 @@ async fn personalized_greeting(Query(params): Query&lt;GreetingParams&gt;) -&gt;
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/greet", personalized_greeting);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/greet", personalized_greeting);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // This handles URLs like:
@@ -478,12 +473,11 @@ async fn create_user(Json(payload): Json&lt;CreateUser&gt;) -&gt; Result&lt;Resp
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.post("/users", create_user);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().post("/users", create_user);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <p>Let’s add some error handling:</p>
@@ -505,14 +499,13 @@ async fn not_found_handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/maybe-error", maybe_error);
-    router.get("/not-found", not_found_handler);
+    app.router_mut().get("/maybe-error", maybe_error);
+    app.router_mut().get("/not-found", not_found_handler);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="complete-example-with-multiple-features"><a class="header" href="#complete-example-with-multiple-features">Complete Example with Multiple Features</a></h2>
 <p>Here’s a more complete example combining multiple features:</p>
@@ -573,16 +566,15 @@ async fn greet_user(Path(name): Path&lt;String&gt;) -&gt; Result&lt;Response&gt;
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/", home);
-    router.get("/api/hello", api_hello);
-    router.get("/users", get_users);
-    router.get("/greet/:name", greet_user);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/api/hello", api_hello);
+    app.router_mut().get("/users", get_users);
+    app.router_mut().get("/greet/:name", greet_user);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="running-your-application"><a class="header" href="#running-your-application">Running Your Application</a></h2>
 <p>To run any of these examples:</p>
@@ -616,14 +608,13 @@ async fn hello_world(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Register a GET route at "/"
-    router.get("/", hello_world);
+    app.router_mut().get("/", hello_world);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="supported-http-methods"><a class="header" href="#supported-http-methods">Supported HTTP Methods</a></h2>
 <p>Oxidite supports all standard HTTP methods:</p>
@@ -651,17 +642,16 @@ async fn handle_patch(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/resource", handle_get);
-    router.post("/resource", handle_post);
-    router.put("/resource", handle_put);
-    router.delete("/resource", handle_delete);
-    router.patch("/resource", handle_patch);
+    app.router_mut().get("/resource", handle_get);
+    app.router_mut().post("/resource", handle_post);
+    app.router_mut().put("/resource", handle_put);
+    app.router_mut().delete("/resource", handle_delete);
+    app.router_mut().patch("/resource", handle_patch);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="path-parameters"><a class="header" href="#path-parameters">Path Parameters</a></h2>
 <p>Oxidite supports path parameters that can be extracted using the <code>Path</code> extractor:</p>
@@ -688,17 +678,16 @@ async fn get_user_post(Path((user_id, post_id)): Path&lt;(u32, u32)&gt;) -&gt; R
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Single parameter: /users/123
-    router.get("/users/:user_id", get_user);
+    app.router_mut().get("/users/:user_id", get_user);
     
     // Multiple parameters: /users/123/posts/456
-    router.get("/users/:user_id/posts/:post_id", get_user_post);
+    app.router_mut().get("/users/:user_id/posts/:post_id", get_user_post);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h3 id="named-struct-for-path-parameters"><a class="header" href="#named-struct-for-path-parameters">Named Struct for Path Parameters</a></h3>
 <p>You can also use a named struct for better organization:</p>
@@ -765,14 +754,13 @@ async fn get_users(Query(params): Query&lt;UserQuery&gt;) -&gt; Result&lt;Respon
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Handles: /users?page=2&amp;limit=20&amp;sort=name&amp;active=true
-    router.get("/users", get_users);
+    app.router_mut().get("/users", get_users);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-groups-and-nesting"><a class="header" href="#route-groups-and-nesting">Route Groups and Nesting</a></h2>
 <p>You can group related routes for better organization:</p>
@@ -789,15 +777,14 @@ async fn v2_users(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Versioned APIs
-    router.get("/api/v1/users", v1_users);
-    router.get("/api/v2/users", v2_users);
+    app.router_mut().get("/api/v1/users", v1_users);
+    app.router_mut().get("/api/v2/users", v2_users);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="wildcard-routes"><a class="header" href="#wildcard-routes">Wildcard Routes</a></h2>
 <p>Oxidite supports wildcard routes for catch-all functionality:</p>
@@ -809,19 +796,18 @@ async fn catch_all(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Register your specific routes first
-    router.get("/", |_req| async { Ok(Response::text("Home page".to_string())) });
-    router.get("/about", |_req| async { Ok(Response::text("About page".to_string())) });
+    app.router_mut().get("/", |_req| async { Ok(Response::text("Home page".to_string())) });
+    app.router_mut().get("/about", |_req| async { Ok(Response::text("About page".to_string())) });
     
     // Wildcard route should be registered last
     // This will catch any routes not matched by previous handlers
-    router.get("/*", catch_all);
+    app.router_mut().get("/*", catch_all);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-middleware"><a class="header" href="#route-middleware">Route Middleware</a></h2>
 <p>You can apply middleware to specific routes or route groups:</p>
@@ -840,16 +826,15 @@ async fn protected_route(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Apply middleware to a specific route
-    router.get("/protected")
+    app.router_mut().get("/protected")
         .middleware(logging_middleware)
         .handler(protected_route);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="route-organization-best-practices"><a class="header" href="#route-organization-best-practices">Route Organization Best Practices</a></h2>
 <h3 id="1-order-matters"><a class="header" href="#1-order-matters">1. Order Matters</a></h3>
@@ -1334,7 +1319,7 @@ async fn custom_response(_req: Request) -&gt; Result&lt;Response&gt; {
 use oxidite_template::{TemplateEngine, Context};
 
 async fn template_handler(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     engine.add_template("index", "&lt;h1&gt;Hello {{ name }}!&lt;/h1&gt;")?;
     
     let mut context = Context::new();
@@ -1673,15 +1658,14 @@ async fn main() -&gt; Result&lt;()&gt; {
         database_url: "postgresql://localhost/myapp".to_string(),
     });
 
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Attach state to router
-    router.with_state(app_state);
-    router.get("/info", handler_with_state);
+    app.router_mut().with_state(app_state);
+    app.router_mut().get("/info", handler_with_state);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="combining-multiple-extractors"><a class="header" href="#combining-multiple-extractors">Combining Multiple Extractors</a></h2>
 <p>You can use multiple extractors in a single handler:</p>
@@ -1891,16 +1875,15 @@ async fn handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add middleware to a specific route
-    router.get("/protected")
+    app.router_mut().get("/protected")
         .middleware(basic_middleware)
         .handler(handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="global-middleware"><a class="header" href="#global-middleware">Global Middleware</a></h2>
 <p>Add middleware to apply to all routes:</p>
@@ -1921,17 +1904,16 @@ async fn about(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add global middleware
-    router.middleware(global_middleware);
+    app.router_mut().middleware(global_middleware);
     
-    router.get("/", home);
-    router.get("/about", about);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="requestresponse-modification"><a class="header" href="#requestresponse-modification">Request/Response Modification</a></h2>
 <p>Middleware can modify both requests and responses:</p>
@@ -2170,18 +2152,17 @@ async fn handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Middlewares are executed in the order they're added
-    router.middleware(middleware_a);
-    router.middleware(middleware_b);
-    router.middleware(middleware_c);
+    app.router_mut().middleware(middleware_a);
+    app.router_mut().middleware(middleware_b);
+    app.router_mut().middleware(middleware_c);
     
-    router.get("/", handler);
+    app.router_mut().get("/", handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // Output would be:
@@ -2238,15 +2219,14 @@ async fn web_handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.middleware(conditional_middleware);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().middleware(conditional_middleware);
     
-    router.get("/api/data", api_handler);
-    router.get("/web/page", web_handler);
+    app.router_mut().get("/api/data", api_handler);
+    app.router_mut().get("/web/page", web_handler);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="stateful-middleware"><a class="header" href="#stateful-middleware">Stateful Middleware</a></h2>
 <p>Middleware can use application state:</p>
@@ -2276,15 +2256,14 @@ async fn main() -&gt; Result&lt;()&gt; {
         maintenance_mode: false,
     });
     
-    let mut router = Router::new();
-    router.with_state(app_state);
-    router.middleware(stateful_middleware);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().with_state(app_state);
+    app.router_mut().middleware(stateful_middleware);
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="built-in-middleware"><a class="header" href="#built-in-middleware">Built-in Middleware</a></h2>
 <p>Oxidite provides several built-in middleware options:</p>
@@ -2293,30 +2272,28 @@ use oxidite_middleware::{Logger, RateLimiter, Cors};
 
 // Logger middleware
 async fn with_logger() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add logging middleware
-    router.middleware(Logger::new());
+    app.router_mut().middleware(Logger::new());
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // Rate limiting middleware
 async fn with_rate_limit() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add rate limiting middleware
-    router.middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
+    app.router_mut().middleware(RateLimiter::new(100, std::time::Duration::from_secs(60))); // 100 requests per minute
     
     // ... add routes
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="performance-considerations-1"><a class="header" href="#performance-considerations-1">Performance Considerations</a></h2>
 <ol>
@@ -2336,7 +2313,7 @@ async fn with_rate_limit() -&gt; Result&lt;()&gt; {
 <p>Middleware in Oxidite is a powerful way to handle cross-cutting concerns:</p>
 <ul>
 <li>Use <code>async fn(Request, Next) -&gt; Result&lt;Response&gt;</code> signature</li>
-<li>Apply globally with <code>router.middleware()</code> or to specific routes</li>
+<li>Apply globally with <code>app.router_mut().middleware()</code> or to specific routes</li>
 <li>Modify requests before and responses after the handler</li>
 <li>Handle authentication, logging, CORS, rate limiting, etc.</li>
 <li>Compose multiple middleware functions</li>
@@ -4046,7 +4023,7 @@ use oxidite_template::{TemplateEngine, Context};
 
 async fn setup_template_example(_req: Request) -&gt; Result&lt;Response&gt; {
     // Create a new template engine
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     
     // Add a simple template
     engine.add_template(
@@ -4068,7 +4045,7 @@ async fn setup_template_example(_req: Request) -&gt; Result&lt;Response&gt; {
 <pre><code class="language-rust ignore">use std::path::PathBuf;
 
 async fn file_templates_example(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     
     // Load all templates from a directory (assuming you have template files)
     let templates_dir = PathBuf::from("templates");
@@ -4141,7 +4118,7 @@ let context = Context::from_json(json_data);</code></pre>
 <h3 id="render-to-string"><a class="header" href="#render-to-string">Render to String</a></h3>
 <pre><code class="language-rust ignore">use oxidite_template::{TemplateEngine, Context};
 
-let mut engine = TemplateEngine::new();
+let templates = TemplateContext::new("templates");
 engine.add_template("greeting", "Hello {{ name }}!")?;
 
 let mut context = Context::new();
@@ -4154,7 +4131,7 @@ assert_eq!(html, "Hello World!");</code></pre>
 use oxidite_template::{TemplateEngine, Context};
 
 async fn render_as_response(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     engine.add_template("page", "&lt;h1&gt;{{ title }}&lt;/h1&gt;&lt;div&gt;{{ content }}&lt;/div&gt;")?;
     
     let mut context = Context::new();
@@ -4302,19 +4279,18 @@ async fn main() -&gt; Result&lt;()&gt; {
     
     let app_state = AppState { template_engine };
     
-    let mut router = Router::new();
-    router.get("/", {
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", {
         let state = app_state.clone();
         move |_| home_page(State(state))
     });
-    router.get("/blog", {
+    app.router_mut().get("/blog", {
         let state = app_state.clone();
         move |_| blog_page(State(state))
     });
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <ol>
@@ -4352,12 +4328,11 @@ async fn hello_world(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello_world);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello_world);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h3 id="2-type-safe-request-handling"><a class="header" href="#2-type-safe-request-handling">2. Type-Safe Request Handling</a></h3>
 <ul>
@@ -4786,7 +4761,7 @@ mod tests {
     #[tokio::test]
     async fn test_hello_world() {
         let server = TestServer::new(|router| {
-            router.get("/", hello_world);
+            app.router_mut().get("/", hello_world);
         }).await;
         
         let response = server.get("/").send().await;
@@ -6471,19 +6446,18 @@ async fn v2_get_user(Path(user_id): Path&lt;u32&gt;) -&gt; Result&lt;Response&gt
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // V1 API
-    router.get("/api/v1/users", v1_get_users);
-    router.get("/api/v1/users/:id", v1_get_user);
+    app.router_mut().get("/api/v1/users", v1_get_users);
+    app.router_mut().get("/api/v1/users/:id", v1_get_user);
     
     // V2 API
-    router.get("/api/v2/users", v2_get_users);
-    router.get("/api/v2/users/:id", v2_get_user);
+    app.router_mut().get("/api/v2/users", v2_get_users);
+    app.router_mut().get("/api/v2/users/:id", v2_get_user);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="header-based-versioning"><a class="header" href="#header-based-versioning">Header-Based Versioning</a></h2>
 <p>Use HTTP headers to specify the API version:</p>
@@ -7110,7 +7084,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_v1_api() {
         let server = TestServer::new(|router| {
-            router.get("/api/v1/users", v1_get_users);
+            app.router_mut().get("/api/v1/users", v1_get_users);
         }).await;
         
         let response = server
@@ -7128,7 +7102,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_v2_api() {
         let server = TestServer::new(|router| {
-            router.get("/api/v2/users", v2_get_users);
+            app.router_mut().get("/api/v2/users", v2_get_users);
         }).await;
         
         let response = server
@@ -7146,7 +7120,7 @@ mod version_tests {
     #[tokio::test]
     async fn test_header_versioning() {
         let server = TestServer::new(|router| {
-            router.get("/users")
+            app.router_mut().get("/users")
                 .middleware(version_middleware)
                 .handler(get_users_by_version);
         }).await;
@@ -7168,7 +7142,7 @@ mod version_tests {
         let policy = Arc::new(VersionDeprecationPolicy::new());
         let server = TestServer::new(move |router| {
             let policy_clone = policy.clone();
-            router.get("/users")
+            app.router_mut().get("/users")
                 .with_state(policy_clone)
                 .middleware(deprecation_middleware)
                 .handler(|_| async { Ok(Response::json(serde_json::json!({"test": true}))) });
@@ -7606,7 +7580,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_hello_endpoint() {
         let server = TestServer::new(|router| {
-            router.get("/hello", hello_handler);
+            app.router_mut().get("/hello", hello_handler);
         }).await;
 
         let response = server.get("/hello").send().await;
@@ -7621,7 +7595,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_user_endpoint() {
         let server = TestServer::new(|router| {
-            router.get("/users/:id", user_handler);
+            app.router_mut().get("/users/:id", user_handler);
         }).await;
 
         let response = server.get("/users/123").send().await;
@@ -7637,7 +7611,7 @@ mod integration_tests {
     #[tokio::test]
     async fn test_not_found() {
         let server = TestServer::new(|router| {
-            router.get("/hello", hello_handler);
+            app.router_mut().get("/hello", hello_handler);
         }).await;
 
         let response = server.get("/nonexistent").send().await;
@@ -7680,7 +7654,7 @@ mod state_tests {
         let server = TestServer::new(move |router| {
             let state_clone = app_state.clone();
             router.with_state(state_clone);
-            router.get("/info", stateful_handler);
+            app.router_mut().get("/info", stateful_handler);
         }).await;
 
         let response = server.get("/info").send().await;
@@ -7723,7 +7697,7 @@ mod middleware_tests {
     #[tokio::test]
     async fn test_auth_middleware_success() {
         let server = TestServer::new(|router| {
-            router.get("/protected")
+            app.router_mut().get("/protected")
                 .middleware(auth_middleware)
                 .handler(|_req| async { Ok(Response::text("Protected content".to_string())) });
         }).await;
@@ -7741,7 +7715,7 @@ mod middleware_tests {
     #[tokio::test]
     async fn test_auth_middleware_failure() {
         let server = TestServer::new(|router| {
-            router.get("/protected")
+            app.router_mut().get("/protected")
                 .middleware(auth_middleware)
                 .handler(|_req| async { Ok(Response::text("Protected content".to_string())) });
         }).await;
@@ -7925,7 +7899,7 @@ mod mock_tests {
         let service_clone = mock_service.clone();
 
         let server = TestServer::new(move |router| {
-            router.post("/contact")
+            app.router_mut().post("/contact")
                 .with_state(service_clone.clone() as Arc&lt;dyn EmailService&gt;)
                 .handler(contact_handler);
         }).await;
@@ -8158,7 +8132,7 @@ mod configured_tests {
     #[tokio::test]
     async fn test_with_context() {
         let test_server = TestServerWithContext::new(|router, _ctx| {
-            router.get("/test", |_req| async { 
+            app.router_mut().get("/test", |_req| async { 
                 Ok(Response::text("Test response".to_string())) 
             });
         }).await;
@@ -8624,15 +8598,17 @@ async fn main() -&gt; Result&lt;()&gt; {
     // Register the logging plugin
     plugin_manager.register_plugin(Arc::new(LoggingPlugin::new("INFO")));
     
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    // Initialize plugins
-    plugin_manager.initialize_plugins(&amp;mut router).await?;
+    // Initialize plugins (uses the app's internal router)
+    plugin_manager.initialize_plugins(app.router_mut()).await?;
     
     // Add routes
-    router.get("/", |_req| async { Ok(Response::text("Hello, World!".to_string())) });
+    app.router_mut().get("/", |_req| async { Ok(Response::text("Hello, World!".to_string())) });
     
-    // Create server with plugin middleware
+    // Extract router for custom server setup with plugins
+    let router = app.into_router();
     let server = Server::new(router)
         .with_plugin_manager(plugin_manager);
     
@@ -8820,7 +8796,7 @@ impl Plugin for DatabasePlugin {
         println!("Initializing database connection to: {}", self.connection_string);
         
         // Store connection in router state
-        // _router.with_state(Arc::new(DatabaseConnection::new(&amp;self.connection_string)?));
+        // _app.router_mut().with_state(Arc::new(DatabaseConnection::new(&amp;self.connection_string)?));
         
         Ok(())
     }
@@ -9445,7 +9421,7 @@ mod plugin_tests {
         let init_called = plugin_arc.initialize_called.clone();
         
         let server = TestServer::new(move |router| {
-            router.get("/test", |_req| async { 
+            app.router_mut().get("/test", |_req| async { 
                 Ok(Response::text("test response".to_string())) 
             });
         }).await;
@@ -9461,7 +9437,8 @@ mod plugin_tests {
         assert!(*before_called.lock().await);
         
         // Test initialize
-        let mut router = Router::new();
+        let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
         plugin_arc.initialize(&amp;mut router).await.unwrap();
         assert!(*init_called.lock().await);
         
@@ -9476,7 +9453,7 @@ mod plugin_tests {
         let cors_plugin = Arc::new(CorsPlugin::new());
         
         let server = TestServer::new(move |router| {
-            router.get("/api/test")
+            app.router_mut().get("/api/test")
                 .handler(|_req| async { Ok(Response::text("API response".to_string())) });
         }).await;
         
@@ -10042,20 +10019,19 @@ fn serve_graphql_playground() -&gt; Result&lt;Response&gt; {
 async fn main() -&gt; Result&lt;()&gt; {
     let schema = Arc::new(create_advanced_schema());
     
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add GraphQL endpoint
-    router.post("/graphql")
+    app.router_mut().post("/graphql")
         .with_state(schema.clone())
         .handler(graphql_endpoint);
     
-    router.get("/graphql")
+    app.router_mut().get("/graphql")
         .with_state(schema)
         .handler(graphql_endpoint);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="database-integration"><a class="header" href="#database-integration">Database Integration</a></h2>
 <p>Connect GraphQL resolvers to your database:</p>
@@ -10691,7 +10667,7 @@ mod graphql_tests {
     async fn test_graphql_query() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -10724,7 +10700,7 @@ mod graphql_tests {
     async fn test_graphql_mutation() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -10759,7 +10735,7 @@ mod graphql_tests {
     async fn test_graphql_error_handling() {
         let schema = Arc::new(create_advanced_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
         }).await;
@@ -10790,7 +10766,7 @@ mod graphql_tests {
         // Test authenticated GraphQL endpoint
         let schema = Arc::new(create_secured_schema());
         let server = TestServer::new(move |router| {
-            router.post("/graphql")
+            app.router_mut().post("/graphql")
                 .middleware(graphql_auth_middleware)
                 .with_state(schema.clone())
                 .handler(graphql_endpoint);
@@ -11931,10 +11907,11 @@ async fn init_cache(config: &amp;CacheConfig) -&gt; Result&lt;()&gt; {
 }
 
 async fn create_routes(_config: &amp;AppConfig) -&gt; Result&lt;Router&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Add routes
-    router.get("/", |_req| async { Ok(Response::text("Hello from production!".to_string())) });
+    app.router_mut().get("/", |_req| async { Ok(Response::text("Hello from production!".to_string())) });
     
     Ok(router)
 }</code></pre>
@@ -14518,8 +14495,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_home_route() {
-        let mut router = Router::new();
-        router.get("/", home);
+        let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+        app.router_mut().get("/", home);
         
         let client = TestClient::new(router);
         let response = client.get("/").send().await;
@@ -14531,8 +14509,9 @@ mod tests {
     
     #[tokio::test]
     async fn test_api_route() {
-        let mut router = Router::new();
-        router.get("/api/hello", api_hello);
+        let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+        app.router_mut().get("/api/hello", api_hello);
         
         let client = TestClient::new(router);
         let response = client.get("/api/hello").send().await;

@@ -9,14 +9,23 @@ use crate::Result;
 /// Queue backend trait
 #[async_trait]
 pub trait QueueBackend: Send + Sync {
+    /// Enqueue a job
     async fn enqueue(&self, job: JobWrapper) -> Result<()>;
+    /// Dequeue the next available job
     async fn dequeue(&self) -> Result<Option<JobWrapper>>;
+    /// Mark a job as completed
     async fn complete(&self, job_id: &str) -> Result<()>;
+    /// Mark a job as failed
     async fn fail(&self, job_id: &str, error: String) -> Result<()>;
+    /// Retry a job
     async fn retry(&self, job: JobWrapper) -> Result<()>;
+    /// Move a job to the dead letter queue
     async fn move_to_dead_letter(&self, job: JobWrapper) -> Result<()>;
+    /// List jobs in the dead letter queue
     async fn list_dead_letter(&self) -> Result<Vec<JobWrapper>>;
+    /// Retry a job from the dead letter queue
     async fn retry_from_dead_letter(&self, job_id: &str) -> Result<()>;
+    /// Clear all jobs from the queue
     async fn clear(&self) -> Result<()>;
 }
 
@@ -27,6 +36,7 @@ pub struct MemoryBackend {
 }
 
 impl MemoryBackend {
+    /// Create a new in-memory queue backend
     pub fn new() -> Self {
         Self {
             queue: Arc::new(Mutex::new(VecDeque::new())),
@@ -128,6 +138,7 @@ pub struct Queue {
 }
 
 impl Queue {
+    /// Create a new queue with the given backend
     pub fn new(backend: Arc<dyn QueueBackend>) -> Self {
         Self {
             backend,
@@ -135,10 +146,12 @@ impl Queue {
         }
     }
 
+    /// Create a new queue backed by an in-memory backend
     pub fn memory() -> Self {
         Self::new(Arc::new(MemoryBackend::new()))
     }
 
+    /// Enqueue a job and return its ID
     pub async fn enqueue(&self, job: JobWrapper) -> Result<String> {
         let job_id = job.id.clone();
         self.backend.enqueue(job).await?;
@@ -146,6 +159,7 @@ impl Queue {
         Ok(job_id)
     }
 
+    /// Dequeue the next available job
     pub async fn dequeue(&self) -> Result<Option<JobWrapper>> {
         let job = self.backend.dequeue().await?;
         if job.is_some() {
@@ -154,44 +168,52 @@ impl Queue {
         Ok(job)
     }
 
+    /// Mark a job as completed
     pub async fn complete(&self, job_id: &str) -> Result<()> {
         self.backend.complete(job_id).await?;
         self.stats.increment_processed().await;
         Ok(())
     }
 
+    /// Mark a job as failed
     pub async fn fail(&self, job_id: &str, error: String) -> Result<()> {
         self.backend.fail(job_id, error).await?;
         self.stats.increment_failed().await;
         Ok(())
     }
 
+    /// Retry a job
     pub async fn retry(&self, job: JobWrapper) -> Result<()> {
         self.backend.retry(job).await?;
         self.stats.increment_retried().await;
         Ok(())
     }
 
+    /// Move a job to the dead letter queue
     pub async fn move_to_dead_letter(&self, job: JobWrapper) -> Result<()> {
         self.backend.move_to_dead_letter(job).await?;
         self.stats.increment_dead_letter().await;
         Ok(())
     }
 
+    /// List jobs in the dead letter queue
     pub async fn list_dead_letter(&self) -> Result<Vec<JobWrapper>> {
         self.backend.list_dead_letter().await
     }
 
+    /// Retry a job from the dead letter queue
     pub async fn retry_from_dead_letter(&self, job_id: &str) -> Result<()> {
         self.backend.retry_from_dead_letter(job_id).await
     }
 
+    /// Clear all jobs from the queue
     pub async fn clear(&self) -> Result<()> {
         self.backend.clear().await?;
         self.stats.reset().await;
         Ok(())
     }
 
+    /// Get current queue statistics
     pub async fn get_stats(&self) -> crate::stats::QueueStats {
         self.stats.get_stats().await
     }

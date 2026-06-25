@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Templates | Oxidite v2.3.3-1</title>
+        <title>Templates | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -191,7 +191,7 @@ use oxidite_template::{TemplateEngine, Context};
 
 async fn setup_template_example(_req: Request) -&gt; Result&lt;Response&gt; {
     // Create a new template engine
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     
     // Add a simple template
     engine.add_template(
@@ -213,7 +213,7 @@ async fn setup_template_example(_req: Request) -&gt; Result&lt;Response&gt; {
 <pre><code class="language-rust ignore">use std::path::PathBuf;
 
 async fn file_templates_example(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     
     // Load all templates from a directory (assuming you have template files)
     let templates_dir = PathBuf::from("templates");
@@ -286,7 +286,7 @@ let context = Context::from_json(json_data);</code></pre>
 <h3 id="render-to-string"><a class="header" href="#render-to-string">Render to String</a></h3>
 <pre><code class="language-rust ignore">use oxidite_template::{TemplateEngine, Context};
 
-let mut engine = TemplateEngine::new();
+let templates = TemplateContext::new("templates");
 engine.add_template("greeting", "Hello {{ name }}!")?;
 
 let mut context = Context::new();
@@ -299,7 +299,7 @@ assert_eq!(html, "Hello World!");</code></pre>
 use oxidite_template::{TemplateEngine, Context};
 
 async fn render_as_response(_req: Request) -&gt; Result&lt;Response&gt; {
-    let mut engine = TemplateEngine::new();
+    let templates = TemplateContext::new("templates");
     engine.add_template("page", "&lt;h1&gt;{{ title }}&lt;/h1&gt;&lt;div&gt;{{ content }}&lt;/div&gt;")?;
     
     let mut context = Context::new();
@@ -513,19 +513,18 @@ async fn main() -&gt; Result&lt;()&gt; {
     
     let app_state = AppState { template_engine };
     
-    let mut router = Router::new();
-    router.get("/", {
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", {
         let state = app_state.clone();
         move |_| home_page(State(state))
     });
-    router.get("/blog", {
+    app.router_mut().get("/blog", {
         let state = app_state.clone();
         move |_| blog_page(State(state))
     });
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="best-practices"><a class="header" href="#best-practices">Best Practices</a></h2>
 <ol>
@@ -548,7 +547,7 @@ async fn main() -&gt; Result&lt;()&gt; {
 <p>You can register custom filters to extend the template engine with project-specific transformations:</p>
 <pre><code class="language-rust ignore">use oxidite_template::{TemplateEngine, Context};
 
-let mut engine = TemplateEngine::new();
+let templates = TemplateContext::new("templates");
 
 // Register a custom filter
 engine.register_filter("shout", |s: &amp;str| s.to_uppercase() + "!!!");

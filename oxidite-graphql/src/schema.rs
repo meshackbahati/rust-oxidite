@@ -1,7 +1,7 @@
 use juniper::{RootNode, GraphQLObject, GraphQLInputObject, FieldResult};
 use crate::context::Context;
 
-// Define basic query root
+/// GraphQL query root.
 pub struct QueryRoot;
 
 #[juniper::graphql_object(Context = Context)]
@@ -15,7 +15,7 @@ impl QueryRoot {
     }
 }
 
-// Define basic mutation root
+/// GraphQL mutation root.
 pub struct MutationRoot;
 
 #[juniper::graphql_object(Context = Context)]
@@ -25,7 +25,7 @@ impl MutationRoot {
     }
 }
 
-// Create the schema
+/// Create the default GraphQL schema with query and mutation roots.
 pub fn create_schema() -> RootNode<'static, QueryRoot, MutationRoot, juniper::EmptySubscription<Context>> {
     RootNode::new(
         QueryRoot,
@@ -34,20 +34,25 @@ pub fn create_schema() -> RootNode<'static, QueryRoot, MutationRoot, juniper::Em
     )
 }
 
-// Export the schema type
+/// Convenience type alias for the generated GraphQL schema.
 pub type GraphQLSchema = RootNode<'static, QueryRoot, MutationRoot, juniper::EmptySubscription<Context>>;
 
-// Example of how to define a custom object
+/// A to-do item.
 #[derive(GraphQLObject)]
 pub struct Todo {
+    /// Unique identifier.
     pub id: i32,
+    /// To-do item text.
     pub text: String,
+    /// Whether the to-do is completed.
     pub completed: bool,
 }
 
-// Example of how to define an input object
+/// Input for creating a new to-do item.
 #[derive(GraphQLInputObject)]
 pub struct NewTodo {
+    /// To-do item text.
     pub text: String,
+    /// Optional completion status.
     pub completed: Option<bool>,
 }

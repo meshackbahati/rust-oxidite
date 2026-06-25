@@ -3,6 +3,7 @@ use sha2::{Sha256, Digest};
 use rand::Rng;
 use base64::Engine;
 
+/// An API key record stored in the database.
 #[derive(FromRow, Clone, Debug)]
 pub struct ApiKey {
     pub id: i64,

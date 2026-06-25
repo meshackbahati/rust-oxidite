@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-core"
-version = "2.3.3-1"
+version = "2.3.4"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "High-performance HTTP kernel and routing engine for the Oxidite framework."
@@ -32,6 +32,7 @@ rustls-pemfile = "2.1"
 cookie = "0.18"
 sha1 = "0.10"
 base64 = "0.22"
+oxidite-config = { path = "../oxidite-config", version = "2.3.4" }
 
 [dependencies.h3]
 version = "0.0.8"

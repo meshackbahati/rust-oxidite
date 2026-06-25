@@ -10,10 +10,12 @@ pub struct TimeoutMiddleware {
 }
 
 impl TimeoutMiddleware {
+    /// Create a new `TimeoutMiddleware` with the given duration
     pub fn new(duration: Duration) -> Self {
         Self { duration }
     }
     
+    /// Create a new `TimeoutMiddleware` with a duration in seconds
     pub fn seconds(seconds: u64) -> Self {
         Self::new(Duration::from_secs(seconds))
     }
@@ -29,6 +31,7 @@ impl TimeoutMiddleware {
     }
 }
 
+/// Errors that can occur during timeout operations
 #[derive(Debug, thiserror::Error)]
 pub enum TimeoutError {
     #[error("Request timeout elapsed")]
@@ -41,12 +44,14 @@ pub struct RequestIdMiddleware {
 }
 
 impl RequestIdMiddleware {
+    /// Create a new `RequestIdMiddleware` with the default header name
     pub fn new() -> Self {
         Self {
             header_name: "X-Request-ID".to_string(),
         }
     }
     
+    /// Set a custom header name for the request ID
     pub fn with_header(mut self, header: String) -> Self {
         self.header_name = header;
         self

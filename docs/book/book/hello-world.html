@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Hello World | Oxidite v2.3.3-1</title>
+        <title>Hello World | Oxidite v2.3.4</title>
 
 
         <!-- Custom HTML head -->
@@ -193,12 +193,11 @@ async fn hello(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <p>Let’s break this down:</p>
 <ol>
@@ -207,10 +206,10 @@ async fn main() -&gt; Result&lt;()&gt; {
 <li><code>_req: Request</code> - The incoming request (we use <code>_</code> since we don’t use it)</li>
 <li><code>Ok(Response::text(...))</code> - Creates a text response</li>
 <li><code>Result&lt;Response&gt;</code> - The handler returns a Result with either a Response or an Error</li>
-<li><code>Router::new()</code> - Creates a new router to define routes</li>
+<li><code>Application::new(config)</code> - Creates an app with config (or use <code>Router::new()</code> for manual setup)</li>
 <li><code>router.get("/", hello)</code> - Registers the hello function to handle GET requests to “/”</li>
-<li><code>Server::new(router)</code> - Creates a server with the configured router</li>
-<li><code>.listen(...)</code> - Starts the server on port 3000</li>
+<li><code>app.run().await</code> - Starts the server using config host:port</li>
+<li>Alternative: <code>Server::new(router).listen(addr).await</code></li>
 </ol>
 <h2 id="different-response-types"><a class="header" href="#different-response-types">Different Response Types</a></h2>
 <p>Let’s explore different ways to respond:</p>
@@ -251,15 +250,14 @@ async fn contact(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/", home);
-    router.get("/about", about);
-    router.get("/contact", contact);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/about", about);
+    app.router_mut().get("/contact", contact);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="using-path-parameters"><a class="header" href="#using-path-parameters">Using Path Parameters</a></h2>
 <p>Oxidite supports path parameters that you can extract:</p>
@@ -279,17 +277,16 @@ async fn user_details(Path(user_id): Path&lt;u32&gt;) -&gt; Result&lt;Response&g
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
     // Path parameter: /greet/Alice will extract "Alice"
-    router.get("/greet/:name", greet);
+    app.router_mut().get("/greet/:name", greet);
     
     // Numeric parameter: /users/123 will extract 123
-    router.get("/users/:user_id", user_details);
+    app.router_mut().get("/users/:user_id", user_details);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="using-query-parameters"><a class="header" href="#using-query-parameters">Using Query Parameters</a></h2>
 <p>You can also extract query parameters:</p>
@@ -317,12 +314,11 @@ async fn personalized_greeting(Query(params): Query&lt;GreetingParams&gt;) -&gt;
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/greet", personalized_greeting);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/greet", personalized_greeting);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }
 
 // This handles URLs like:
@@ -353,12 +349,11 @@ async fn create_user(Json(payload): Json&lt;CreateUser&gt;) -&gt; Result&lt;Resp
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.post("/users", create_user);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().post("/users", create_user);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h2>
 <p>Let’s add some error handling:</p>
@@ -380,14 +375,13 @@ async fn not_found_handler(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/maybe-error", maybe_error);
-    router.get("/not-found", not_found_handler);
+    app.router_mut().get("/maybe-error", maybe_error);
+    app.router_mut().get("/not-found", not_found_handler);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="complete-example-with-multiple-features"><a class="header" href="#complete-example-with-multiple-features">Complete Example with Multiple Features</a></h2>
 <p>Here’s a more complete example combining multiple features:</p>
@@ -448,16 +442,15 @@ async fn greet_user(Path(name): Path&lt;String&gt;) -&gt; Result&lt;Response&gt;
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
     
-    router.get("/", home);
-    router.get("/api/hello", api_hello);
-    router.get("/users", get_users);
-    router.get("/greet/:name", greet_user);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/api/hello", api_hello);
+    app.router_mut().get("/users", get_users);
+    app.router_mut().get("/greet/:name", greet_user);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <h2 id="running-your-application"><a class="header" href="#running-your-application">Running Your Application</a></h2>
 <p>To run any of these examples:</p>

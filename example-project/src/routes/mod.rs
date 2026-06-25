@@ -1,22 +1,23 @@
 use oxidite::prelude::*;
-use oxidite::template::{Context, TemplateEngine};
+use oxidite::template::{Context, TemplateContext};
+use std::sync::Arc;
 
 pub fn register(router: &mut Router) {
+    // Share template config via type-safe State extractor.
+    // Handlers create the engine per-request — no global lifecycle coupling.
+    let templates = Arc::new(TemplateContext::new("templates"));
+    router.with_state(templates);
+
     router.get("/", index);
     router.get("/error-500", error_500);
     router.get("/error-400", error_400);
 }
 
-async fn index(_req: Request) -> Result<Response> {
-    let mut engine = TemplateEngine::new();
-    engine
-        .load_dir("templates")
-        .map_err(|e| Error::InternalServerError(e.to_string()))?;
-
+async fn index(_req: Request, templates: State<Arc<TemplateContext>>) -> Result<Response> {
     let mut context = Context::new();
     context.set("name", "Oxidite");
 
-    let body = engine
+    let body = templates
         .render("index.html", &context)
         .map_err(|e| Error::InternalServerError(e.to_string()))?;
 

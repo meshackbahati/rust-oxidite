@@ -9,21 +9,29 @@ use lettre::transport::smtp::authentication::Credentials;
 /// Transport trait for sending emails
 #[async_trait]
 pub trait Transport: Send + Sync {
+    /// Send an email message
     async fn send(&self, message: Message) -> Result<()>;
+    /// Verify the transport connection is working
     async fn verify(&self) -> Result<()>;
 }
 
 /// SMTP transport configuration
 #[derive(Debug, Clone)]
 pub struct SmtpConfig {
+    /// SMTP server hostname
     pub host: String,
+    /// SMTP server port
     pub port: u16,
+    /// Optional SMTP username for authentication
     pub username: Option<String>,
+    /// Optional SMTP password for authentication
     pub password: Option<String>,
+    /// Whether to use TLS for the connection
     pub use_tls: bool,
 }
 
 impl SmtpConfig  {
+    /// Create a new SMTP configuration
     pub fn new(host: impl Into<String>, port: u16) -> Self {
         Self {
             host: host.into(),
@@ -34,12 +42,14 @@ impl SmtpConfig  {
         }
     }
 
+    /// Set SMTP credentials for authentication
     pub fn credentials(mut self, username: impl Into<String>, password: impl Into<String>) -> Self {
         self.username = Some(username.into());
         self.password = Some(password.into());
         self
     }
 
+    /// Enable or disable TLS
     pub fn use_tls(mut self, use_tls: bool) -> Self {
         self.use_tls = use_tls;
         self
@@ -53,6 +63,7 @@ pub struct SmtpTransport {
 }
 
 impl SmtpTransport {
+    /// Create a new SMTP transport
     pub fn new(host: impl Into<String>, port: u16) -> Result<Self> {
         let config = SmtpConfig::new(host, port);
         let transport = Self::build_transport(&config)?;
@@ -60,6 +71,7 @@ impl SmtpTransport {
         Ok(Self { config, transport })
     }
 
+    /// Create a new SMTP transport from a configuration object
     pub fn from_config(config: SmtpConfig) -> Result<Self> {
         let transport = Self::build_transport(&config)?;
         Ok(Self { config, transport })

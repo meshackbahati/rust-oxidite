@@ -102,16 +102,13 @@ When using the template engine, you can render templates directly as responses:
 
 ```rust,ignore
 use oxidite::prelude::*;
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, TemplateEngine};
 
-async fn template_handler(_req: Request) -> Result<Response> {
-    let mut engine = TemplateEngine::new();
-    engine.add_template("index", "<h1>Hello {{ name }}!</h1>")?;
-    
-    let mut context = Context::new();
+async fn template_handler(
+    State(engine): State<TemplateEngine>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("name", "Oxidite");
-    
-    // Render directly as response
     let response = engine.render_response("index", &context)?;
     Ok(response)
 }

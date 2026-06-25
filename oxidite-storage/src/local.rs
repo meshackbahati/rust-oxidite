@@ -11,6 +11,7 @@ pub struct LocalStorage {
 }
 
 impl LocalStorage {
+    /// Create a new local storage backend rooted at the given directory
     pub fn new(root: impl Into<PathBuf>) -> Result<Self> {
         let root = root.into();
         

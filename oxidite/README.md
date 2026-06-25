@@ -98,15 +98,14 @@ async fn hello(_req: OxiditeRequest) -> Result<OxiditeResponse> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut app = Router::new();
-    
-    app.get("/", hello);
-    
-    Server::new(app)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
+    app.router_mut().get("/", hello);
+    app.run().await
 }
 ```
+
+> **Alternative**: The manual approach using `Router::new()` → `router.get(...)` → `Server::new(router).listen(addr)` works identically.
 
 ### Using Extractors
 
@@ -197,23 +196,24 @@ async fn api_handler(_req: OxiditeRequest) -> Result<OxiditeResponse> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut router = Router::new();
+    let config = Config::load().unwrap();
+    let mut app = Application::new(config);
     
     // Basic routes
-    router.get("/", home);
-    router.get("/api", api_handler);
+    app.router_mut().get("/", home);
+    app.router_mut().get("/api", api_handler);
     
     // Routes with parameters
-    router.get("/users/:id", get_user);
-    router.post("/users", create_user);
-    router.put("/users/:id", update_user);
-    router.delete("/users/:id", delete_user);
+    app.router_mut().get("/users/:id", get_user);
+    app.router_mut().post("/users", create_user);
+    app.router_mut().put("/users/:id", update_user);
+    app.router_mut().delete("/users/:id", delete_user);
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse().unwrap())
-        .await
+    app.run().await
 }
 ```
+
+> **Alternative**: The manual approach using `Router::new()` → `router.get(...)` → `Server::new(router).listen(addr)` works identically.
 
 ### Request Handling
 

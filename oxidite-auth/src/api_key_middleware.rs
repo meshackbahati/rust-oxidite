@@ -9,6 +9,7 @@ pub struct ApiKeyMiddleware {
 }
 
 impl ApiKeyMiddleware {
+    /// Create a new `ApiKeyMiddleware` backed by the given database.
     pub fn new(db: Arc<dyn Database>) -> Self {
         Self { db }
     }

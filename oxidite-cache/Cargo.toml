@@ -1,6 +1,6 @@
 [package]
 name = "oxidite-cache"
-version = "2.3.3"
+version = "2.3.4"
 edition = "2021"
 authors = ["Meshack Bahati Ouma <bahatikylemeshack@gmail.com>"]
 description = "Caching backends (Memory, Redis) for the Oxidite web framework"

@@ -20,7 +20,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oxidite-auth = "2.3.3"
+oxidite-auth = "2.3.4"
 ```
 
 ## Features

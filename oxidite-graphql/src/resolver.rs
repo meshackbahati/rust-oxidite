@@ -18,30 +18,36 @@ pub struct ResolverRegistry {
 }
 
 impl ResolverRegistry {
+    /// Create a new empty resolver registry.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Register a resolver extension.
     pub fn register<E: ResolverExtension + 'static>(&mut self, extension: E) {
         self.extensions.push(Box::new(extension));
     }
 
+    /// Notify all extensions before query execution.
     pub fn notify_before(&self, query: &str, context: &Context) {
         for extension in &self.extensions {
             extension.before_execute(query, context);
         }
     }
 
+    /// Notify all extensions after query execution.
     pub fn notify_after(&self, query: &str, context: &Context) {
         for extension in &self.extensions {
             extension.after_execute(query, context);
         }
     }
 
+    /// Return the number of registered extensions.
     pub fn len(&self) -> usize {
         self.extensions.len()
     }
 
+    /// Return `true` if no extensions are registered.
     pub fn is_empty(&self) -> bool {
         self.extensions.is_empty()
     }

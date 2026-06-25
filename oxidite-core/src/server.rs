@@ -14,13 +14,14 @@ use http_body_util::BodyExt;
 
 use std::task::{Context, Poll};
 
+/// HTTP/3 (QUIC) server module — enabled with the `http3` feature flag.
 #[cfg(feature = "http3")]
 pub mod http3_server;
 
 #[cfg(feature = "http3")]
 pub use http3_server::Http3Server;
 
-/// Adapter to convert hyper::Request<Incoming> to OxiditeRequest
+/// Adapter to convert `hyper::Request<Incoming>` to OxiditeRequest
 #[derive(Clone)]
 pub struct BodyAdapter<S> {
     inner: S,
@@ -28,6 +29,7 @@ pub struct BodyAdapter<S> {
 }
 
 impl<S> BodyAdapter<S> {
+    /// Create a new `BodyAdapter` wrapping the given inner service.
     pub fn new(service: S) -> Self {
         Self {
             inner: service,
@@ -35,6 +37,7 @@ impl<S> BodyAdapter<S> {
         }
     }
 
+    /// Attach a CORS configuration to this adapter.
     pub fn with_cors(mut self, cors_config: Option<CorsConfig>) -> Self {
         self.cors_config = cors_config;
         self
@@ -149,6 +152,11 @@ where
 
 
 
+/// HTTP server that listens for incoming connections and dispatches
+/// requests to a tower service.
+///
+/// Binds a TCP listener, adapts incoming hyper requests via [`BodyAdapter`],
+/// and serves them over HTTP/1.1. Supports optional CORS configuration.
 pub struct Server<S> {
     service: S,
     addr: Option<SocketAddr>,
@@ -160,6 +168,7 @@ where
     S: Service<OxiditeRequest, Response = OxiditeResponse, Error = Error> + Clone + Send + Sync + 'static,
     S::Future: Send + 'static,
 {
+    /// Create a new `Server` wrapping the given service.
     pub fn new(service: S) -> Self {
         Self {
             service,
@@ -168,6 +177,7 @@ where
         }
     }
 
+    /// Set the socket address to bind to and return the server.
     pub fn bind(mut self, addr: SocketAddr) -> Self {
         self.addr = Some(addr);
         self
@@ -179,11 +189,13 @@ where
         self
     }
 
+    /// Start the server using the stored address or fall back to `127.0.0.1:3000`.
     pub async fn run(self) -> Result<()> {
         let addr = self.addr.unwrap_or_else(|| "127.0.0.1:3000".parse().unwrap());
         self.listen(addr).await
     }
 
+    /// Bind a TCP listener to the given address and serve requests forever.
     pub async fn listen(self, addr: SocketAddr) -> Result<()> {
         let listener = TcpListener::bind(addr).await?;
         println!("Listening on http://{}", addr);

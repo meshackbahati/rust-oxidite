@@ -10,24 +10,15 @@ First, you need to set up the template engine:
 
 ```rust,ignore
 use oxidite::prelude::*;
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, TemplateEngine};
 
-async fn setup_template_example(_req: Request) -> Result<Response> {
-    // Create a new template engine
-    let mut engine = TemplateEngine::new();
-    
-    // Add a simple template
-    engine.add_template(
-        "hello", 
-        "<h1>Hello {{ name }}!</h1><p>Welcome to {{ framework }}.</p>"
-    )?;
-    
-    // Create context with data
-    let mut context = Context::new();
+async fn setup_template_example(
+    State(engine): State<TemplateEngine>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("name", "Developer");
     context.set("framework", "Oxidite");
     
-    // Render the template as an HTML response
     let response = engine.render_response("hello", &context)?;
     Ok(response)
 }
@@ -38,18 +29,10 @@ async fn setup_template_example(_req: Request) -> Result<Response> {
 You can load templates from a directory structure:
 
 ```rust,ignore
-use std::path::PathBuf;
-
-async fn file_templates_example(_req: Request) -> Result<Response> {
-    let mut engine = TemplateEngine::new();
-    
-    // Load all templates from a directory (assuming you have template files)
-    let templates_dir = PathBuf::from("templates");
-    let count = engine.load_dir(&templates_dir)?;
-    
-    println!("Loaded {} templates", count);
-    
-    let mut context = Context::new();
+async fn file_templates_example(
+    State(engine): State<TemplateEngine>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("title", "My Page");
     context.set("content", "Page content here");
     
@@ -148,13 +131,12 @@ assert_eq!(html, "Hello World!");
 
 ```rust,ignore
 use oxidite::prelude::*;
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, TemplateEngine};
 
-async fn render_as_response(_req: Request) -> Result<Response> {
-    let mut engine = TemplateEngine::new();
-    engine.add_template("page", "<h1>{{ title }}</h1><div>{{ content }}</div>")?;
-    
-    let mut context = Context::new();
+async fn render_as_response(
+    State(engine): State<TemplateEngine>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("title", "My Page");
     context.set("content", "Page content");
     
@@ -353,15 +335,18 @@ Here's a complete example showing template usage in a web application:
 
 ```rust,ignore
 use oxidite::prelude::*;
-use oxidite_template::{TemplateEngine, Context};
+use oxidite_template::{TemplateContext, TemplateEngine};
 use serde_json::json;
+use std::sync::Arc;
 
 struct AppState {
     template_engine: TemplateEngine,
 }
 
-async fn home_page(state: State<AppState>) -> Result<Response> {
-    let mut context = Context::new();
+async fn home_page(
+    State(engine): State<Arc<TemplateEngine>>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     context.set("title", "Home Page");
     context.set("welcome_message", "Welcome to our application!");
     context.set("features", vec![
@@ -371,23 +356,23 @@ async fn home_page(state: State<AppState>) -> Result<Response> {
         "Full-featured"
     ]);
     
-    let response = state.template_engine
-        .render_response("home.html", &context)?;
+    let response = engine.render_response("home.html", &context)?;
     Ok(response)
 }
 
-async fn blog_page(state: State<AppState>) -> Result<Response> {
+async fn blog_page(
+    State(engine): State<Arc<TemplateEngine>>,
+    TemplateContext(mut context): TemplateContext,
+) -> Result<Response> {
     let posts = vec![
         json!({"title": "First Post", "date": "2025-01-01", "excerpt": "This is the first post"}),
         json!({"title": "Second Post", "date": "2025-01-02", "excerpt": "This is the second post"}),
     ];
     
-    let mut context = Context::new();
     context.set("title", "Blog");
     context.set("posts", posts);
     
-    let response = state.template_engine
-        .render_response("blog.html", &context)?;
+    let response = engine.render_response("blog.html", &context)?;
     Ok(response)
 }
 
@@ -429,21 +414,20 @@ async fn main() -> Result<()> {
         </html>
     "#)?;
     
-    let app_state = AppState { template_engine };
+    let engine = Arc::new(template_engine);
+    let mut app = Application::new(engine.clone());
     
-    let mut router = Router::new();
-    router.get("/", {
-        let state = app_state.clone();
-        move |_| home_page(State(state))
+    app.router_mut().get("/", {
+        let engine = engine.clone();
+        move |_| home_page(State(engine.clone()))
     });
-    router.get("/blog", {
-        let state = app_state.clone();
-        move |_| blog_page(State(state))
+    app.router_mut().get("/blog", {
+        let engine = engine.clone();
+        move |_| blog_page(State(engine.clone()))
     });
     
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await;
+    // Alternative: Router::new() → router.get(...) → Server::new(router).listen(addr)
 }
 ```
 

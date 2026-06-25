@@ -8,18 +8,23 @@ mod models;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // 1. Load Config
     let config = Config::load()
         .map_err(|e| Error::InternalServerError(e.to_string()))?;
-    let addr = format!("{}:{}", config.server.host, config.server.port);
+    let host = config.server.host.clone();
+    let port = config.server.port;
 
-    let mut router = Router::new();
-    routes::register(&mut router);
+    // 2. Build Router via Application coordinator
+    let mut app = Application::new(config);
+    routes::register(app.router_mut());
+    app.router_mut().get("/*", serve_static);
+    let router = app.into_router();
 
-    // Static files fallback
-    router.get("/*", serve_static);
-
-    // Wrap router with request/response logging middleware.
-    let server = Server::new(Logger::new(router));
-    println!("🚀 Server running on http://{}", addr);
-    server.listen(addr.parse().unwrap()).await
+    // 3. Apply middleware
+    // 4. Start Server
+    let addr = format!("{host}:{port}");
+    println!("🚀 Server running on http://{addr}");
+    Server::new(Logger::new(router))
+        .listen(addr.parse().unwrap())
+        .await
 }

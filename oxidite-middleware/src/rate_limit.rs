@@ -28,6 +28,7 @@ pub struct RateLimiter {
 }
 
 impl RateLimiter {
+    /// Create a new in-memory rate limiter with the given configuration
     pub fn new(config: RateLimitConfig) -> Self {
         Self {
             db: None,
@@ -36,6 +37,7 @@ impl RateLimiter {
         }
     }
     
+    /// Create a new rate limiter with a database backend for persistent tracking
     pub fn with_db(config: RateLimitConfig, db: Arc<dyn Database>) -> Self {
         Self {
             db: Some(db),

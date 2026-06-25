@@ -15,27 +15,36 @@ use sqlx::sqlite::{SqlitePool, SqlitePoolOptions, SqliteRow};
 #[cfg(test)]
 extern crate self as oxidite;
 
+/// Re-export of the `sqlx` crate for database access
 pub use sqlx;
 
+/// Re-export module mirroring the crate root
 pub mod db {
     pub use crate::*;
 }
 
+/// Database migration system
 pub mod migrations;
 pub use migrations::{Migration, MigrationManager};
 
+/// Database relation types (HasMany, HasOne, BelongsTo)
 pub mod relations;
 pub use relations::{BelongsTo, HasMany, HasOne};
 
+/// Database schema inspection types
 pub mod schema;
 pub use schema::{TableSchema, ColumnSchema, ColumnType};
 
+/// Optional query result caching
 pub mod cache;
 pub use cache::QueryCache;
 
+/// A specialized `Result` type wrapping `sqlx::Error`
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
+/// A specialized `Result` type wrapping [`OrmError`]
 pub type OrmResult<T> = std::result::Result<T, OrmError>;
 
+/// Errors that can occur during ORM operations
 #[derive(Debug, Error)]
 pub enum OrmError {
     #[error(transparent)]
@@ -50,6 +59,7 @@ pub enum OrmError {
     InvalidPagination(&'static str),
 }
 
+/// Pagination parameters for database queries
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Pagination {
     pub limit: usize,
@@ -57,6 +67,7 @@ pub struct Pagination {
 }
 
 impl Pagination {
+    /// Create a new `Pagination` with the given limit and offset
     pub fn new(limit: usize, offset: usize) -> OrmResult<Self> {
         if limit == 0 {
             return Err(OrmError::InvalidPagination("limit must be greater than 0"));
@@ -64,6 +75,7 @@ impl Pagination {
         Ok(Self { limit, offset })
     }
 
+    /// Create a `Pagination` from a 1-indexed page number and items per page
     pub fn from_page(page: usize, per_page: usize) -> OrmResult<Self> {
         if page == 0 {
             return Err(OrmError::InvalidPagination("page must be 1 or greater"));
@@ -81,10 +93,15 @@ impl Pagination {
     }
 }
 
+/// Re-export of the `async_trait` crate
 pub use async_trait::async_trait;
+/// Re-export of the `chrono` crate for date/time types
 pub use chrono;
+/// Re-export of the `once_cell` crate for lazy initialization
 pub use once_cell;
+/// Re-export of the `oxidite_macros::Model` derive macro
 pub use oxidite_macros::Model;
+/// Re-export of the `regex` crate for pattern matching
 pub use regex;
 
 /// Database backend type
@@ -197,10 +214,12 @@ pub struct DbPool {
 }
 
 impl DbPool {
+    /// Connect to a database using a URL with default options
     pub async fn connect(url: &str) -> Result<Self> {
         Self::connect_with_options(url, PoolOptions::default()).await
     }
 
+    /// Connect to a database using a URL with custom options
     pub async fn connect_with_options(url: &str, options: PoolOptions) -> Result<Self> {
         sqlx::any::install_default_drivers();
         let max_conns = if url.contains(":memory:") {
@@ -303,17 +322,17 @@ impl DbPool {
         }))
     }
 
-    /// Get a reference to the underlying sqlx pool
+    /// Get a reference to the underlying `AnyPool`
     pub fn pool(&self) -> &AnyPool {
         &self.pool
     }
 
-    /// Get a reference to the underlying sqlx pool (alias for .pool())
+    /// Get a reference to the underlying `AnyPool` (alias for [`pool`](Self::pool))
     pub fn as_sqlx_pool(&self) -> &AnyPool {
         &self.pool
     }
 
-    /// Get a reference to the underlying sqlx pool
+    /// Get a reference to the underlying `AnyPool` (alias for [`pool`](Self::pool))
     pub fn inner(&self) -> &AnyPool {
         &self.pool
     }
@@ -846,6 +865,7 @@ impl Database for DbTransaction {
     }
 }
 
+/// Sort direction for ORDER BY clauses
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortDirection {
     Asc,
@@ -861,6 +881,7 @@ impl SortDirection {
     }
 }
 
+/// Internal enum wrapping typed values for query parameter binding
 #[derive(Debug, Clone)]
 #[doc(hidden)]
 pub enum QueryValue {
@@ -927,6 +948,7 @@ impl From<serde_json::Value> for QueryValue {
     }
 }
 
+/// A single filter condition for database queries
 #[derive(Debug, Clone)]
 pub enum Filter {
     Eq { column: String, value: QueryValue },
@@ -951,12 +973,12 @@ pub enum FilterGroup {
 }
 
 impl FilterGroup {
-    /// Create an AND group of filters
+    /// Create an AND group of filters (all must match)
     pub fn and(filters: Vec<Filter>) -> Self {
         FilterGroup::And(filters)
     }
 
-    /// Create an OR group of filters
+    /// Create an OR group of filters (any must match)
     pub fn or(filters: Vec<Filter>) -> Self {
         FilterGroup::Or(filters)
     }
@@ -988,6 +1010,7 @@ impl QueryBuildError {
     }
 }
 
+/// A typed query builder for a specific model type
 #[derive(Debug, Clone)]
 pub struct ModelQuery<M: Model> {
     select_fields: Vec<String>,
@@ -1007,6 +1030,7 @@ impl<M: Model> Default for ModelQuery<M> {
 }
 
 impl<M: Model> ModelQuery<M> {
+    /// Create a new empty query selecting all columns (`*`)
     pub fn new() -> Self {
         Self {
             select_fields: vec!["*".to_string()],
@@ -1020,6 +1044,7 @@ impl<M: Model> ModelQuery<M> {
         }
     }
 
+    /// Restrict the selected columns to the given list; validated against SQL injection
     pub fn select(mut self, fields: &[&str]) -> Self {
         if fields.is_empty() {
             self.build_error = Some(QueryBuildError::EmptySelectFields);
@@ -1042,6 +1067,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add an equality filter: `column = value`
     pub fn filter_eq(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1058,6 +1084,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a LIKE filter: `column LIKE value`
     pub fn filter_like(mut self, column: &str, value: impl Into<String>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1074,6 +1101,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add an IS NULL filter
     pub fn filter_is_null(mut self, column: &str) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1089,6 +1117,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a not-equal filter: `column != value`
     pub fn filter_not_eq(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1104,6 +1133,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a greater-than filter: `column > value`
     pub fn filter_gt(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1119,6 +1149,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a greater-than-or-equal filter: `column >= value`
     pub fn filter_gte(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1134,6 +1165,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a less-than filter: `column < value`
     pub fn filter_lt(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1149,6 +1181,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add a less-than-or-equal filter: `column <= value`
     pub fn filter_lte(mut self, column: &str, value: impl Into<QueryValue>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1164,6 +1197,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add an IN filter: `column IN (values...)`
     pub fn filter_in(mut self, column: &str, values: Vec<impl Into<QueryValue>>) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1179,6 +1213,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add an IS NOT NULL filter
     pub fn filter_is_not_null(mut self, column: &str) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1247,6 +1282,7 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Add an ORDER BY clause for the given column and direction
     pub fn order_by(mut self, column: &str, direction: SortDirection) -> Self {
         if !is_valid_identifier(column) {
             self.build_error = Some(QueryBuildError::InvalidIdentifier {
@@ -1259,22 +1295,26 @@ impl<M: Model> ModelQuery<M> {
         self
     }
 
+    /// Set a maximum number of rows to return
     pub fn limit(mut self, limit: usize) -> Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Skip the first `offset` rows in the result set
     pub fn offset(mut self, offset: usize) -> Self {
         self.offset = Some(offset);
         self
     }
 
+    /// Apply pagination parameters (limit + offset)
     pub fn paginate(mut self, pagination: Pagination) -> Self {
         self.limit = Some(pagination.limit);
         self.offset = Some(pagination.offset);
         self
     }
 
+    /// Include soft-deleted records in the query results
     pub fn with_deleted(mut self) -> Self {
         self.include_soft_deleted = true;
         self
@@ -1478,6 +1518,7 @@ impl<M: Model> ModelQuery<M> {
         Ok((sql, binds))
     }
 
+    /// Execute the query and return all matching rows
     pub async fn fetch_all(self, db: &impl Database) -> OrmResult<Vec<M>> {
         let (sql, binds) = self.build_sql(false)?;
         let mut query = sqlx::query(&sql);
@@ -1501,6 +1542,7 @@ impl<M: Model> ModelQuery<M> {
         Ok(models)
     }
 
+    /// Execute the query and return the first matching row, or `None`
     pub async fn fetch_one(self, db: &impl Database) -> OrmResult<Option<M>> {
         let (sql, binds) = self.limit(1).build_sql(false)?;
         let mut query = sqlx::query(&sql);
@@ -1523,6 +1565,7 @@ impl<M: Model> ModelQuery<M> {
         }
     }
 
+    /// Execute a COUNT query and return the total number of matching rows
     pub async fn count(self, db: &impl Database) -> OrmResult<i64> {
         use sqlx::Row;
 
@@ -1587,7 +1630,7 @@ impl<M: Model> ModelQuery<M> {
     }
 }
 
-/// Query builder (simplified for now)
+/// A simplified SQL query builder for raw queries
 pub struct QueryBuilder {
     table: String,
     select_fields: Vec<String>,
@@ -1598,6 +1641,7 @@ pub struct QueryBuilder {
 }
 
 impl QueryBuilder {
+    /// Create a new query builder for the given table
     pub fn new(table: &str) -> Self {
         Self {
             table: table.to_string(),
@@ -1609,17 +1653,20 @@ impl QueryBuilder {
         }
     }
 
+    /// Set the columns to select
     pub fn select(mut self, fields: &[&str]) -> Self {
         self.select_fields = fields.iter().map(|s| s.to_string()).collect();
         self
     }
 
+    /// Add an equality condition: `column = 'value'`
     pub fn where_eq(mut self, column: &str, value: &str) -> Self {
         self.where_clauses
             .push(format!("{} = '{}'", column, escape_sql_literal(value)));
         self
     }
 
+    /// Add an ORDER BY clause with a direction string ("ASC" or "DESC")
     pub fn order_by(mut self, column: &str, direction: &str) -> Self {
         let normalized = if direction.eq_ignore_ascii_case("desc") {
             "DESC"
@@ -1630,16 +1677,19 @@ impl QueryBuilder {
         self
     }
 
+    /// Set a maximum number of rows to return
     pub fn limit(mut self, limit: usize) -> Self {
         self.limit = Some(limit);
         self
     }
 
+    /// Skip the first `offset` rows
     pub fn offset(mut self, offset: usize) -> Self {
         self.offset = Some(offset);
         self
     }
 
+    /// Build the final SQL query string
     pub fn build(&self) -> String {
         let mut query = format!(
             "SELECT {} FROM {}",

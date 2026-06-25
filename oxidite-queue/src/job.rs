@@ -6,12 +6,18 @@ use crate::Result;
 /// Job status
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum JobStatus {
+    /// Job is waiting to be processed
     Pending,
+    /// Job is currently running
     Running,
+    /// Job completed successfully
     Completed,
+    /// Job failed
     Failed,
+    /// Job is being retried
     Retrying,
-    DeadLetter,  // Permanently failed after max retries
+    /// Permanently failed after max retries
+    DeadLetter,
 }
 
 /// Job result
@@ -47,21 +53,34 @@ pub trait Job: Send + Sync + Serialize + for<'de> Deserialize<'de> {
 /// Job wrapper for storage
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JobWrapper {
+    /// Unique job identifier
     pub id: String,
+    /// Job type name
     pub name: String,
+    /// Serialized job payload
     pub payload: serde_json::Value,
+    /// Current job status
     pub status: JobStatus,
+    /// Number of execution attempts
     pub attempts: u32,
+    /// Maximum number of retries
     pub max_retries: u32,
+    /// Unix timestamp of creation
     pub created_at: i64,
+    /// Optional scheduled run time
     pub scheduled_at: Option<i64>,
+    /// Job priority (higher = more important)
     pub priority: i32,
-    pub cron_schedule: Option<String>,  // Cron expression for recurring jobs
-    pub last_run_at: Option<i64>,       // Last execution timestamp
-    pub error: Option<String>,          // Last error message
+    /// Cron expression for recurring jobs
+    pub cron_schedule: Option<String>,
+    /// Last execution timestamp
+    pub last_run_at: Option<i64>,
+    /// Last error message
+    pub error: Option<String>,
 }
 
 impl JobWrapper {
+    /// Create a new job wrapper from a job implementation
     pub fn new<J: Job>(job: &J) -> Result<Self> {
         let payload = serde_json::to_value(job)?;
         let now = chrono::Utc::now().timestamp();
@@ -82,6 +101,7 @@ impl JobWrapper {
         })
     }
 
+    /// Schedule the job with a delay from now
     pub fn with_delay(mut self, delay: Duration) -> Self {
         let scheduled_time = chrono::Utc::now().timestamp() + delay.as_secs() as i64;
         self.scheduled_at = Some(scheduled_time);

@@ -23,6 +23,7 @@ pub struct OAuth2Client {
 }
 
 impl OAuth2Client {
+    /// Create a new `OAuth2Client` from the given configuration.
     pub fn new(config: OAuth2Config) -> Self {
         Self {
             config,
@@ -133,6 +134,7 @@ impl OAuth2Client {
     }
 }
 
+/// Response from an OAuth2 token endpoint.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenResponse {
     pub access_token: String,

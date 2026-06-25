@@ -4,12 +4,16 @@ use bytes::Bytes;
 /// File validation rules
 #[derive(Debug, Clone)]
 pub struct ValidationRules {
+    /// Maximum allowed file size in bytes
     pub max_size: Option<u64>,
+    /// List of allowed MIME type prefixes
     pub allowed_mime_types: Option<Vec<String>>,
+    /// List of allowed file extensions (without leading dot)
     pub allowed_extensions: Option<Vec<String>>,
 }
 
 impl ValidationRules {
+    /// Create empty validation rules (no restrictions)
     pub fn new() -> Self {
         Self {
             max_size: None,
@@ -18,11 +22,13 @@ impl ValidationRules {
         }
     }
 
+    /// Set the maximum allowed file size in bytes
     pub fn max_size(mut self, max_size: u64) -> Self {
         self.max_size = Some(max_size);
         self
     }
 
+    /// Set the allowed MIME type prefixes
     pub fn allowed_mime_types(mut self, types: Vec<String>) -> Self {
         self.allowed_mime_types = Some(
             types
@@ -33,6 +39,7 @@ impl ValidationRules {
         self
     }
 
+    /// Set the allowed file extensions (without leading dot)
     pub fn allowed_extensions(mut self, extensions: Vec<String>) -> Self {
         self.allowed_extensions = Some(
             extensions
@@ -56,10 +63,12 @@ pub struct FileValidator {
 }
 
 impl FileValidator {
+    /// Create a new file validator with the given rules
     pub fn new(rules: ValidationRules) -> Self {
         Self { rules }
     }
 
+    /// Validate a file by filename and data against the configured rules
     pub fn validate(&self, filename: &str, data: &Bytes) -> Result<()> {
         // Validate file size
         if let Some(max_size) = self.rules.max_size {

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-06-25
+
+### Changed
+- **Version Bump**: All workspace crates bumped to `2.3.4`.
+
+### Added
+- **`Application` Boot Coordinator** (`oxidite-core`): New `Application` struct orchestrates the predictable startup sequence: Config → Router → Middleware → Server. Routes are registered macro-free via `app.router_mut()`. Fully backward-compatible — existing `Router::new()` / `Server::new()` patterns continue to work.
+- **`TemplateContext`** (`oxidite-template`): Read-only template rendering context for use with `State<T>` extractor. Holds template directory path; `TemplateEngine` is instantiated per-request to keep the server runtime decoupled from presentation failures.
+- **`oxidite-config` Integration** (`oxidite-core`): `Application` depends on `oxidite-config` for server host/port configuration, removing manual address parsing from user code.
+
+### Changed
+- **Docs**: Updated `oxidite` facade Quick Start to use `Application` builder pattern.
+- **Example Project**: Updated `src/main.rs` and `src/routes/mod.rs` to demonstrate `Application` builder and `State<Arc<TemplateContext>>` extractor usage.
+- **CLI Scaffolds**: Updated all `oxidite new` templates (Fullstack, API, Microservice, Serverless) to emit `Application` builder pattern with comments explaining the boot sequence and the alternative manual `Router::new()` + `Server::new()` approach. Fullstack template now uses `TemplateContext` + `State` extractor in generated routes.
+
 ## [2.3.3-1] - 2026-06-23
 
 ### Added

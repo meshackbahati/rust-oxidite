@@ -11,6 +11,7 @@ pub struct Attachment {
 }
 
 impl Attachment {
+    /// Create a new attachment with the given filename
     pub fn new(filename: impl Into<String>) -> Self {
         Self {
             filename: filename.into(),

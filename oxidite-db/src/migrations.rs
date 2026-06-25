@@ -6,8 +6,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
+/// A specialized `Result` type wrapping [`MigrationError`]
 pub type MigrationResult<T> = std::result::Result<T, MigrationError>;
 
+/// Errors that can occur during migration operations
 #[derive(Debug, Error)]
 pub enum MigrationError {
     #[error(transparent)]
@@ -28,6 +30,7 @@ pub struct Migration {
 }
 
 impl Migration {
+    /// Create a new migration with a timestamp-based version
     pub fn new(name: &str) -> Self {
         let timestamp = Utc::now().format("%Y%m%d%H%M%S").to_string();
         let version = format!("{}_{}", timestamp, name);
@@ -40,6 +43,7 @@ impl Migration {
         }
     }
 
+    /// Load a migration from a `.sql` file, converting non-IO errors to `io::Error`
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, std::io::Error> {
         Self::from_file_checked(path).map_err(|err| match err {
             MigrationError::Io(io) => io,
@@ -47,6 +51,7 @@ impl Migration {
         })
     }
 
+    /// Load a migration from a `.sql` file, returning a [`MigrationError`] on failure
     pub fn from_file_checked(path: impl AsRef<Path>) -> MigrationResult<Self> {
         let path = path.as_ref();
         let content = fs::read_to_string(path)?;
@@ -86,6 +91,7 @@ impl Migration {
         })
     }
 
+    /// Write the migration SQL file to the given directory
     pub fn save(&self, migrations_dir: impl AsRef<Path>) -> Result<PathBuf, std::io::Error> {
         let migrations_dir = migrations_dir.as_ref();
         fs::create_dir_all(migrations_dir)?;
@@ -111,12 +117,14 @@ pub struct MigrationManager {
 }
 
 impl MigrationManager {
+    /// Create a new `MigrationManager` for the given migrations directory
     pub fn new(migrations_dir: impl AsRef<Path>) -> Self {
         Self {
             migrations_dir: migrations_dir.as_ref().to_path_buf(),
         }
     }
 
+    /// List all migration files in the migrations directory, sorted by version
     pub fn list_migrations(&self) -> Result<Vec<Migration>, std::io::Error> {
         self.list_migrations_checked().map_err(|err| match err {
             MigrationError::Io(io) => io,
@@ -124,6 +132,7 @@ impl MigrationManager {
         })
     }
 
+    /// List all migration files, returning a [`MigrationResult`]
     pub fn list_migrations_checked(&self) -> MigrationResult<Vec<Migration>> {
         let mut migrations = Vec::new();
 
@@ -147,6 +156,7 @@ impl MigrationManager {
         Ok(migrations)
     }
 
+    /// Create a new migration file with the given name, returning the file path
     pub fn create_migration(&self, name: &str) -> Result<PathBuf, std::io::Error> {
         self.create_migration_checked(name)
             .map_err(|err| match err {
@@ -155,6 +165,7 @@ impl MigrationManager {
             })
     }
 
+    /// Create a new migration file, returning a [`MigrationResult`]
     pub fn create_migration_checked(&self, name: &str) -> MigrationResult<PathBuf> {
         let migration = Migration::new(name);
         Ok(migration.save(&self.migrations_dir)?)

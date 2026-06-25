@@ -2,17 +2,35 @@ use http_body_util::combinators::BoxBody as HttpBoxBody;
 use bytes::Bytes;
 use hyper::{Request, Response};
 
+/// Boxed HTTP body type used throughout Oxidite.
+///
+/// Wraps `http_body_util::combinators::BoxBody` with concrete type parameters
+/// for `Bytes` as the data chunk type and `hyper::Error` as the error type.
 pub type BoxBody = HttpBoxBody<Bytes, hyper::Error>;
+
+/// Alias for [`BoxBody`], the body type carried by [`OxiditeRequest`].
 pub type OxiditeBody = HttpBoxBody<Bytes, hyper::Error>;
+
+/// The Oxidite HTTP request type.
+///
+/// Alias for `hyper::Request` parameterized with [`OxiditeBody`].
 pub type OxiditeRequest = Request<OxiditeBody>;
 
+/// The Oxidite HTTP response type.
+///
+/// A newtype wrapper around `hyper::Response<BoxBody>` that provides
+/// convenience constructors (see [`OxiditeResponse::json`], [`OxiditeResponse::text`],
+/// [`OxiditeResponse::html`]) and implements `Into<hyper::Response<B>>` for
+/// arbitrary body types via the `From` trait.
 pub struct OxiditeResponse(pub Response<BoxBody>);
 
 impl OxiditeResponse {
+    /// Create a new `OxiditeResponse` from a raw hyper response.
     pub fn new(response: Response<BoxBody>) -> Self {
         Self(response)
     }
 
+    /// Consume the wrapper and return the inner `hyper::Response<BoxBody>`.
     pub fn into_inner(self) -> Response<BoxBody> {
         self.0
     }
@@ -52,7 +70,7 @@ impl From<Response<BoxBody>> for OxiditeResponse {
     }
 }
 
-/// Generic conversion from OxiditeResponse to any hyper::Response<B> where B: Default + From<BoxBody>
+/// Generic conversion from `OxiditeResponse` to any `hyper::Response<B>` where `B: Default + From<BoxBody>`
 impl<B: Default + From<BoxBody>> From<OxiditeResponse> for hyper::Response<B> {
     fn from(wrapper: OxiditeResponse) -> Self {
         let (parts, body) = wrapper.0.into_parts();

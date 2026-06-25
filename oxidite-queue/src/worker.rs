@@ -12,6 +12,7 @@ pub struct Worker {
 }
 
 impl Worker {
+    /// Create a new worker with the given queue
     pub fn new(queue: Arc<Queue>) -> Self {
         Self {
             queue,
@@ -20,16 +21,19 @@ impl Worker {
         }
     }
 
+    /// Set the number of concurrent workers
     pub fn worker_count(mut self, count: usize) -> Self {
         self.worker_count = count;
         self
     }
 
+    /// Set the poll interval when no jobs are available
     pub fn poll_interval(mut self, interval: Duration) -> Self {
         self.poll_interval = interval;
         self
     }
 
+    /// Start the worker (runs forever)
     pub async fn start(self) {
         println!("Starting {} workers...", self.worker_count);
         

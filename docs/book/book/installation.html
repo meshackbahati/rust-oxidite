@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Installation Guide | Oxidite v2.3.3-1</title>
+        <title>Installation Guide | Oxidite v2.3.4</title>
         <meta name="description" content="Step-by-step guide to installing Oxidite CLI and setting up your first high-performance Rust web project.">
         <meta name="keywords" content="Oxidite Installation, Rust Setup, Oxidite CLI, Rust Web Framework Setup">
         <meta property="og:title" content="Installation Guide - Oxidite Framework">
@@ -232,12 +232,11 @@ async fn hello(_req: Request) -&gt; Result&lt;Response&gt; {
 
 #[tokio::main]
 async fn main() -&gt; Result&lt;()&gt; {
-    let mut router = Router::new();
-    router.get("/", hello);
+    let mut app = Application::new(config);
+    // Alternative: let mut router = Router::new(); (same API)
+    app.router_mut().get("/", hello);
 
-    Server::new(router)
-        .listen("127.0.0.1:3000".parse()?)
-        .await
+    app.run().await
 }</code></pre>
 <p>Run this with:</p>
 <pre><code class="language-bash">cargo run
