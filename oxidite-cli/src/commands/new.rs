@@ -271,6 +271,9 @@ async fn test_health_endpoint() {
 // ---------------------------------------------------------------------------
 
 fn create_cargo_toml(path: &Path, name: &str, p_type: ProjectType) -> std::io::Result<()> {
+    // Dependency version for consumer projects — always points to the latest
+    // published release on crates.io, not the CLI's own version.
+    const OXIDITE_VERSION: &str = "2.3.4";
     let (features_comment, features_list, extra_deps) = match p_type {
         ProjectType::Fullstack => (
             "full — everything included",
@@ -285,7 +288,9 @@ fn create_cargo_toml(path: &Path, name: &str, p_type: ProjectType) -> std::io::R
         ProjectType::Microservice => (
             "all features except templates (use fullstack if you need HTML)",
             r#"default-features = false, features = ["database", "auth", "queue", "cache", "realtime", "mail", "storage", "graphql", "plugin", "security", "utils"]"#,
-            "",
+            r#"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }"#,
         ),
         ProjectType::Serverless => (
             "minimal — add features as needed (database, auth, queue, ...)",
@@ -305,7 +310,7 @@ edition = "2021"
 [dependencies]
 # Oxidite — only the features this project type needs: {features_comment}.
 # To add more: oxidite = {{ features = ["auth", "realtime", ...] }}
-oxidite = {{ version = "2.3.4", {features_list} }}
+        oxidite = {{ version = "{OXIDITE_VERSION}", {features_list} }}
 
 tokio = {{ version = "1", features = ["full"] }}
 
@@ -313,9 +318,10 @@ serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"{extra_deps}
 
 [dev-dependencies]
-oxidite-testing = "2.3.4"
+oxidite-testing = "{OXIDITE_VERSION}"
 "#,
         name = name,
+        OXIDITE_VERSION = OXIDITE_VERSION,
         features_comment = features_comment,
         features_list = features_list,
         extra_deps = extra_deps,
@@ -1207,11 +1213,12 @@ fn register_generated(router: &mut Router) {
     let _ = router;
 }
 
-async fn index(_req: Request, templates: State<Arc<TemplateContext>>) -> Result<Response> {
+async fn index(templates: State<Arc<TemplateContext>>) -> Result<Response> {
     let mut context = Context::new();
     context.set("name", "Oxidite");
 
-    let body = templates
+    // State is a tuple struct — deref with `.0` to access the inner TemplateContext
+    let body = templates.0
         .render("index.html", &context)
         .map_err(|e| Error::InternalServerError(e.to_string()))?;
 
@@ -1751,4 +1758,117 @@ LOG_LEVEL=debug
     )?;
 
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Tests — verify that generated projects compile for every project type
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn project_type_arg(p_type: ProjectType) -> &'static str {
+        match p_type {
+            ProjectType::Fullstack => "fullstack",
+            ProjectType::Api => "api",
+            ProjectType::Microservice => "microservice",
+            ProjectType::Serverless => "serverless",
+        }
+    }
+
+    fn workspace_root() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .expect("CARGO_MANIFEST_DIR parent")
+            .to_path_buf()
+    }
+
+    fn patch_section() -> String {
+        let root = workspace_root();
+        let crates = [
+            "oxidite",
+            "oxidite-testing",
+            "oxidite-core",
+            "oxidite-config",
+            "oxidite-middleware",
+            "oxidite-db",
+            "oxidite-auth",
+            "oxidite-queue",
+            "oxidite-cache",
+            "oxidite-realtime",
+            "oxidite-template",
+            "oxidite-mail",
+            "oxidite-storage",
+            "oxidite-macros",
+            "oxidite-utils",
+            "oxidite-openapi",
+            "oxidite-graphql",
+            "oxidite-plugin",
+            "oxidite-security",
+        ];
+        let mut section = String::from("\n[patch.crates-io]\n");
+        for krate in &crates {
+            let path = root.join(krate).display().to_string();
+            section.push_str(&format!("{krate} = {{ path = \"{path}\" }}\n"));
+        }
+        section
+    }
+
+    fn run_test(p_type: ProjectType) {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(dir.path()).expect("chdir");
+
+        let name = match p_type {
+            ProjectType::Fullstack => "test-fullstack",
+            ProjectType::Api => "test-api",
+            ProjectType::Microservice => "test-microservice",
+            ProjectType::Serverless => "test-serverless",
+        };
+
+        create_project(name, Some(project_type_arg(p_type).into()), None, &[])
+            .expect("create_project should succeed");
+
+        let cargo_path = dir.path().join(name).join("Cargo.toml");
+        let mut content = std::fs::read_to_string(&cargo_path).expect("read Cargo.toml");
+        content.push_str(&patch_section());
+        std::fs::write(&cargo_path, content).expect("write patched Cargo.toml");
+
+        let output = std::process::Command::new("cargo")
+            .args(["check"])
+            .current_dir(dir.path().join(name))
+            .output()
+            .expect("cargo check");
+
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+
+        std::env::set_current_dir(original).expect("restore cwd");
+
+        assert!(
+            output.status.success(),
+            "cargo check failed for {p_type:?}\nstdout:\n{stdout}\nstderr:\n{stderr}"
+        );
+    }
+
+    #[test]
+    fn test_fullstack_project_compiles() {
+        run_test(ProjectType::Fullstack);
+    }
+
+    #[test]
+    fn test_api_project_compiles() {
+        run_test(ProjectType::Api);
+    }
+
+    #[test]
+    fn test_microservice_project_compiles() {
+        run_test(ProjectType::Microservice);
+    }
+
+    #[test]
+    fn test_serverless_project_compiles() {
+        run_test(ProjectType::Serverless);
+    }
 }

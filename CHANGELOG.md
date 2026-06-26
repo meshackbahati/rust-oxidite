@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.5] - 2026-06-26
+
+### Fixed
+- **CLI Scaffolds (`oxidite new`)**: Fixed Fullstack template bugs in generated `routes/mod.rs`. Removed unused `Request` extractor parameter from handler (does not implement `FromRequest`). Added `.0` dereference on `State<Arc<TemplateContext>>` tuple struct. Type annotation removed from `map_err` closure.
+
+### Changed
+- **CLI Version**: `oxidite-cli` Cargo.toml template now uses the dynamic `env!("CARGO_PKG_VERSION")` instead of a hardcoded version string.
+- **CLI (`run` command)**: Standalone script dependency version also uses `env!("CARGO_PKG_VERSION")`.
+
 ## [2.3.4] - 2026-06-25
 
 ### Changed

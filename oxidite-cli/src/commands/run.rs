@@ -146,7 +146,7 @@ fn run_standalone(
     extra_deps: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut deps: Vec<(String, String)> = vec![
-        ("oxidite".into(), "\"2.3.4\"".into()),
+        ("oxidite".into(), format!("\"{}\"", env!("CARGO_PKG_VERSION"))),
         ("tokio".into(), "{ version = \"1\", features = [\"full\"] }".into()),
         // Direct sub-crate deps so `use oxidite_auth::*` style imports work.
         ("oxidite-core".into(),       "\"*\"".into()),
